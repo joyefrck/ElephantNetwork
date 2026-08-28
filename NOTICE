@@ -1,0 +1,17 @@
+Elephant Network
+Copyright 2026 Elephant Network contributors
+
+This program is a modified distribution of FlClash:
+https://github.com/chen08209/FlClash
+
+FlClash and this modified distribution are licensed under the
+GNU General Public License, version 3. A copy of the license is provided in
+LICENSE.
+
+The upstream project name, author notices, Git history, and license notices are
+retained for attribution. Elephant Network-specific account, branding,
+distribution, and upgrade changes are maintained in this repository.
+
+The proxy core remains a separate upstream component tracked through the
+core/Clash.Meta Git submodule. Its own notices and license files remain in that
+component.

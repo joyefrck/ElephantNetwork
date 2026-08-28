@@ -4,13 +4,22 @@
 
 </div>
 
-## FlClash
+## Elephant Network
 
-[![Downloads](https://img.shields.io/github/downloads/chen08209/FlClash/total?style=flat-square&logo=github)](https://github.com/chen08209/FlClash/releases/)[![Last Version](https://img.shields.io/github/release/chen08209/FlClash/all.svg?style=flat-square)](https://github.com/chen08209/FlClash/releases/)[![License](https://img.shields.io/github/license/chen08209/FlClash?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/github/license/joyefrck/ElephantNetwork?style=flat-square)](LICENSE)
 
-[![Channel](https://img.shields.io/badge/Telegram-Channel-blue?style=flat-square&logo=telegram)](https://t.me/FlClash)
+The official multi-platform client for Elephant Network, based on
+[FlClash](https://github.com/chen08209/FlClash) and ClashMeta.
 
-A multi-platform proxy client based on ClashMeta, simple and easy to use, open-source and ad-free.
+This repository keeps the complete upstream feature set while adding Xboard
+login, account overview, an account-managed subscription, and transaction and
+support entry points. Android, Windows, and macOS are the first-stage release
+targets.
+
+Elephant Network is distributed under GPLv3. Binary releases are accompanied by
+the corresponding source tag, license, modification notice, build instructions,
+and checksums. See [NOTICE](NOTICE), [upstream maintenance](docs/UPSTREAM.md),
+and the [privacy contract](docs/PRIVACY.md).
 
 on Desktop:
 <p style="text-align: center;">
@@ -57,16 +66,11 @@ Support the following actions
     com.follow.clash.action.TOGGLE
    ```
 
-## Download
+## Releases
 
-<a href="https://chen08209.github.io/FlClash-fdroid-repo/repo?fingerprint=789D6D32668712EF7672F9E58DEEB15FBD6DCEEC5AE7A4371EA72F2AAE8A12FD"><img alt="Get it on F-Droid" src="snapshots/get-it-on-fdroid.svg" width="200px"/></a> <a href="https://github.com/chen08209/FlClash/releases"><img alt="Get it on GitHub" src="snapshots/get-it-on-github.svg" width="200px"/></a>
-
-### Homebrew
-
-```bash
-brew tap chen08209/tap
-brew install --cask flclash
-```
+Production downloads are published by Elephant Network after the signed
+three-platform upgrade gates pass. Upstream FlClash releases are not used as the
+in-app update source.
 
 ## Build
 
@@ -128,12 +132,8 @@ brew install --cask flclash
            dart setup.dart macos
            ```
 
-## Star
+## Upstream attribution
 
-The easiest way to support developers is to click on the star (⭐) at the top of the page.
-
-<p style="text-align: center;">
-    <a href="https://api.star-history.com/svg?repos=chen08209/FlClash&Date">
-        <img alt="start" width=50% src="https://api.star-history.com/svg?repos=chen08209/FlClash&Date"/>
-    </a>
-</p>
+FlClash copyright and license notices are retained. Product-specific changes
+are documented in this repository and do not imply endorsement by the upstream
+authors.
