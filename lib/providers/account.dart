@@ -43,6 +43,8 @@ class XboardSessionController extends _$XboardSessionController {
 
   Future<bool> refresh() => _coordinator.refresh();
 
+  Future<bool> syncManagedProfile() => _coordinator.syncManagedProfile();
+
   Future<void> logout() => _coordinator.logout();
 }
 

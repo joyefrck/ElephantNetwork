@@ -70,6 +70,24 @@ class XboardSessionCoordinator {
     return _activate(session.token, persist: false, keepSessionOnFailure: true);
   }
 
+  Future<bool> syncManagedProfile() => _serialized(_syncManagedProfile);
+
+  Future<bool> _syncManagedProfile() async {
+    final session = state.session;
+    if (session == null) return false;
+    try {
+      final subscription = await _api.managedSubscription(session.token);
+      await _managedProfile
+          .reconcile(subscription, session.account)
+          .timeout(const Duration(seconds: 30));
+      _setState(XboardSessionState.authenticated(session));
+      return true;
+    } catch (error) {
+      _setState(XboardSessionState.authenticated(session, error: error));
+      return false;
+    }
+  }
+
   Future<void> logout() => _serialized(_logout);
 
   Future<void> _logout() async {
@@ -94,8 +112,6 @@ class XboardSessionCoordinator {
   }) async {
     try {
       final account = await _api.account(token);
-      final subscription = await _api.managedSubscription(token);
-      await _managedProfile.reconcile(subscription, account);
       if (persist) {
         await _store.saveToken(token);
       }

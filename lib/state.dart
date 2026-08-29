@@ -347,10 +347,16 @@ class GlobalState {
       if (!_didCrashOnPreviousExecution) {
         await container.read(setupActionProvider.notifier).initStatus();
       }
+      final profileReady = await container
+          .read(xboardSessionControllerProvider.notifier)
+          .syncManagedProfile();
       await container
           .read(profilesActionProvider.notifier)
           .autoUpdateProfiles();
       container.read(initProvider.notifier).value = true;
+      if (!profileReady) {
+        showNotifier(currentAppLocalizations.serviceUnavailable);
+      }
     } catch (_) {
       _authenticatedRuntimeStarted = false;
       rethrow;

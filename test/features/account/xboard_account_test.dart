@@ -154,7 +154,76 @@ void main() {
   });
 
   group('XboardSessionCoordinator', () {
-    test('restores account and reconciles the managed profile', () async {
+    test('login completes before managed profile reconciliation', () async {
+      final gateway = _BlockingManagedProfileGateway();
+      addTearDown(() {
+        if (!gateway.release.isCompleted) gateway.release.complete();
+      });
+      final coordinator = XboardSessionCoordinator(
+        api: XboardApi(
+          transport: _FakeTransport({
+            XboardConfig.loginPath: {
+              'status': 'success',
+              'data': {'auth_data': 'token'},
+            },
+            XboardConfig.userInfoPath: {
+              'data': {'email': 'owner@example.com'},
+            },
+            XboardConfig.subscribeInfoPath: {
+              'data': {
+                'subscribe_url':
+                    'https://example.com/subscribe?token=profile-token',
+              },
+            },
+          }),
+        ),
+        store: XboardSessionStore(
+          secureStore: _MemorySecureStore(),
+          legacyStore: _MemoryLegacyStore(null),
+        ),
+        managedProfile: gateway,
+      );
+
+      expect(
+        await coordinator
+            .login('owner@example.com', 'password')
+            .timeout(const Duration(milliseconds: 200)),
+        isTrue,
+      );
+      expect(coordinator.state.isAuthenticated, isTrue);
+      expect(gateway.started.isCompleted, isFalse);
+    });
+
+    test('managed profile synchronization runs after authentication', () async {
+      final gateway = _FakeManagedProfileGateway();
+      final coordinator = _authenticatedCoordinator(gateway);
+
+      expect(await coordinator.login('owner@example.com', 'password'), isTrue);
+      expect(gateway.subscription, isNull);
+
+      expect(await coordinator.syncManagedProfile(), isTrue);
+      expect(gateway.account?.accountId, 'owner@example.com');
+      expect(gateway.subscription?.queryParameters['flag'], 'flclash');
+    });
+
+    test(
+      'managed profile failure preserves the authenticated session',
+      () async {
+        final coordinator = _authenticatedCoordinator(
+          _ThrowingManagedProfileGateway(),
+        );
+
+        expect(
+          await coordinator.login('owner@example.com', 'password'),
+          isTrue,
+        );
+        expect(await coordinator.syncManagedProfile(), isFalse);
+        expect(coordinator.state.isAuthenticated, isTrue);
+        expect(coordinator.state.error, isA<StateError>());
+      },
+    );
+
+    test('restores account before reconciling the managed profile', () async {
       final secure = _MemorySecureStore();
       final store = XboardSessionStore(
         secureStore: secure,
@@ -182,6 +251,9 @@ void main() {
 
       expect(await coordinator.restore(), isTrue);
       expect(coordinator.state.isAuthenticated, isTrue);
+      expect(gateway.account, isNull);
+
+      expect(await coordinator.syncManagedProfile(), isTrue);
       expect(gateway.account?.accountId, 'owner@example.com');
       expect(gateway.subscription?.queryParameters['flag'], 'flclash');
     });
@@ -226,45 +298,49 @@ void main() {
       expect(secure.values, isEmpty);
     });
 
-    test('logout waits for an in-flight restore and remains final', () async {
-      final secure = _MemorySecureStore();
-      final store = XboardSessionStore(
-        secureStore: secure,
-        legacyStore: _MemoryLegacyStore(null),
-      );
-      await store.saveToken('stored-token');
-      final gateway = _BlockingManagedProfileGateway();
-      final coordinator = XboardSessionCoordinator(
-        api: XboardApi(
-          transport: _FakeTransport({
-            XboardConfig.userInfoPath: {
-              'data': {'email': 'owner@example.com'},
-            },
-            XboardConfig.subscribeInfoPath: {
-              'data': {
-                'subscribe_url':
-                    'https://example.com/subscribe?token=profile-token',
+    test(
+      'logout waits for an in-flight profile sync and remains final',
+      () async {
+        final secure = _MemorySecureStore();
+        final store = XboardSessionStore(
+          secureStore: secure,
+          legacyStore: _MemoryLegacyStore(null),
+        );
+        await store.saveToken('stored-token');
+        final gateway = _BlockingManagedProfileGateway();
+        final coordinator = XboardSessionCoordinator(
+          api: XboardApi(
+            transport: _FakeTransport({
+              XboardConfig.userInfoPath: {
+                'data': {'email': 'owner@example.com'},
               },
-            },
-          }),
-        ),
-        store: store,
-        managedProfile: gateway,
-      );
+              XboardConfig.subscribeInfoPath: {
+                'data': {
+                  'subscribe_url':
+                      'https://example.com/subscribe?token=profile-token',
+                },
+              },
+            }),
+          ),
+          store: store,
+          managedProfile: gateway,
+        );
 
-      final restore = coordinator.restore();
-      await gateway.started.future;
-      final logout = coordinator.logout();
-      await Future<void>.delayed(Duration.zero);
-      expect(gateway.removed, isFalse);
-      gateway.release.complete();
+        expect(await coordinator.restore(), isTrue);
+        final sync = coordinator.syncManagedProfile();
+        await gateway.started.future;
+        final logout = coordinator.logout();
+        await Future<void>.delayed(Duration.zero);
+        expect(gateway.removed, isFalse);
+        gateway.release.complete();
 
-      expect(await restore, isTrue);
-      await logout;
-      expect(coordinator.state.status, XboardSessionStatus.unauthenticated);
-      expect(gateway.removed, isTrue);
-      expect(secure.values, isEmpty);
-    });
+        expect(await sync, isTrue);
+        await logout;
+        expect(coordinator.state.status, XboardSessionStatus.unauthenticated);
+        expect(gateway.removed, isTrue);
+        expect(secure.values, isEmpty);
+      },
+    );
   });
 
   group('XboardDomainResolver', () {
@@ -395,6 +471,42 @@ class _FakeManagedProfileGateway implements XboardManagedProfileGateway {
   @override
   Future<void> stopAndRemove() async {
     removed = true;
+  }
+}
+
+XboardSessionCoordinator _authenticatedCoordinator(
+  XboardManagedProfileGateway gateway,
+) {
+  return XboardSessionCoordinator(
+    api: XboardApi(
+      transport: _FakeTransport({
+        XboardConfig.loginPath: {
+          'status': 'success',
+          'data': {'auth_data': 'token'},
+        },
+        XboardConfig.userInfoPath: {
+          'data': {'email': 'owner@example.com'},
+        },
+        XboardConfig.subscribeInfoPath: {
+          'data': {
+            'subscribe_url':
+                'https://example.com/subscribe?token=profile-token',
+          },
+        },
+      }),
+    ),
+    store: XboardSessionStore(
+      secureStore: _MemorySecureStore(),
+      legacyStore: _MemoryLegacyStore(null),
+    ),
+    managedProfile: gateway,
+  );
+}
+
+class _ThrowingManagedProfileGateway extends _FakeManagedProfileGateway {
+  @override
+  Future<void> reconcile(Uri subscription, XboardAccount account) {
+    throw StateError('managed_profile_sync_failed');
   }
 }
 
