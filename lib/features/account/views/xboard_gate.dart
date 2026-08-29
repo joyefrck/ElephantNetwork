@@ -5,8 +5,6 @@ import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'xboard_entry_shell.dart';
-
 class XboardGate extends ConsumerWidget {
   const XboardGate({super.key, required this.child});
 
