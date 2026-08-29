@@ -106,6 +106,66 @@ jobs:
       - name: Run Windows service tests
         run: cargo test --manifest-path services/helper/Cargo.toml --features windows-service
 
+  unsigned-desktop-build:
+    name: Unsigned ${{ matrix.platform }} ${{ matrix.arch }}
+    if: github.event_name == 'workflow_dispatch'
+    needs: [ test, windows-helper-test ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - platform: windows
+            os: windows-2022
+            arch: amd64
+            target: exe
+          - platform: macos
+            os: macos-latest
+            arch: arm64
+            target: dmg
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.4'
+          cache-dependency-path: core/go.sum
+
+      - name: Enable git long paths
+        if: matrix.platform == 'windows'
+        run: git config --global core.longpaths true
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Show Xcode version
+        if: matrix.platform == 'macos'
+        run: xcodebuild -version
+
+      - name: Install dependencies
+        run: |
+          flutter --version
+          flutter pub get
+
+      - name: Build unsigned package
+        run: dart setup.dart ${{ matrix.platform }} --targets ${{ matrix.target }} --env pre -v
+
+      - name: Upload unsigned package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ElephantNetwork-2.0.0-${{ matrix.platform }}-${{ matrix.arch }}-unsigned
+          path: ./dist
+          if-no-files-found: error
+          overwrite: true
+
   build:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: [ test, windows-helper-test ]
