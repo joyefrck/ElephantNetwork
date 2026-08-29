@@ -6,6 +6,19 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+typedef XboardWebsiteUrlLauncher =
+    Future<bool> Function(Uri uri, {LaunchMode mode});
+
+Future<bool> launchXboardWebsite({
+  required XboardApi api,
+  required String token,
+  XboardWebsiteUrlLauncher launcher = launchUrl,
+}) async {
+  final uri = await api.quickLogin(token, 'dashboard');
+  return launcher(uri, mode: LaunchMode.externalApplication);
+}
 
 class ElephantAccountView extends ConsumerWidget {
   const ElephantAccountView({super.key});
@@ -28,6 +41,19 @@ class ElephantAccountView extends ConsumerWidget {
       MaterialPageRoute(
         builder: (_) => ElephantWebViewPage(title: title, uri: uri),
       ),
+    );
+  }
+
+  Future<void> _openWebsite(BuildContext context, WidgetRef ref) async {
+    final session = ref.read(xboardSessionControllerProvider).session;
+    if (session == null) return;
+    await globalState.loadingRun(
+      () => launchXboardWebsite(
+        api: ref.read(xboardApiProvider),
+        token: session.token,
+      ),
+      tag: null,
+      title: context.appLocalizations.openWebsite,
     );
   }
 
@@ -54,15 +80,50 @@ class ElephantAccountView extends ConsumerWidget {
       return const Center(child: CircularProgressIndicator());
     }
     return CommonScaffold(
-      title: l10n.accountOverview,
-      actions: [
-        IconButton(
-          tooltip: l10n.retry,
-          onPressed: () =>
-              ref.read(xboardSessionControllerProvider.notifier).refresh(),
-          icon: const Icon(Icons.refresh),
+      appBar: AppBar(
+        centerTitle: false,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Flexible(
+              child: Text(
+                l10n.accountOverview,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 4),
+            TextButton(
+              key: const Key('open-website-button'),
+              onPressed: () => _openWebsite(context, ref),
+              style: TextButton.styleFrom(
+                minimumSize: Size.zero,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+              child: Text(
+                l10n.openWebsite,
+                style: context.textTheme.labelLarge?.copyWith(
+                  color: context.colorScheme.primary,
+                  decoration: TextDecoration.underline,
+                  decorationColor: context.colorScheme.primary,
+                  decorationThickness: 1.2,
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+        actions: [
+          IconButton(
+            tooltip: l10n.retry,
+            onPressed: () =>
+                ref.read(xboardSessionControllerProvider.notifier).refresh(),
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
+      ),
       body: Align(
         alignment: Alignment.topCenter,
         child: SingleChildScrollView(

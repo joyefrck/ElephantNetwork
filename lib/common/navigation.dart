@@ -7,10 +7,7 @@ import 'package:flutter/material.dart';
 class Navigation {
   static Navigation? _instance;
 
-  List<NavigationItem> getItems({
-    bool openLogs = false,
-    bool hasProxies = false,
-  }) {
+  List<NavigationItem> getItems({bool openLogs = false}) {
     return [
       NavigationItem(
         icon: const Icon(Icons.account_circle),
@@ -30,15 +27,14 @@ class Navigation {
         label: PageLabel.proxies,
         builder: (_) =>
             const ProxiesView(key: GlobalObjectKey(PageLabel.proxies)),
-        modes: hasProxies
-            ? [NavigationItemMode.mobile, NavigationItemMode.desktop]
-            : [],
+        modes: [NavigationItemMode.mobile, NavigationItemMode.desktop],
       ),
       NavigationItem(
         icon: const Icon(Icons.folder),
         label: PageLabel.profiles,
         builder: (_) =>
             const ProfilesView(key: GlobalObjectKey(PageLabel.profiles)),
+        modes: const [],
       ),
       NavigationItem(
         icon: const Icon(Icons.view_timeline),
@@ -46,7 +42,7 @@ class Navigation {
         builder: (_) =>
             const RequestsView(key: GlobalObjectKey(PageLabel.requests)),
         description: 'requestsDesc',
-        modes: [NavigationItemMode.desktop, NavigationItemMode.more],
+        modes: const [],
       ),
       NavigationItem(
         icon: const Icon(Icons.ballot),
@@ -54,7 +50,7 @@ class Navigation {
         builder: (_) =>
             const ConnectionsView(key: GlobalObjectKey(PageLabel.connections)),
         description: 'connectionsDesc',
-        modes: [NavigationItemMode.desktop, NavigationItemMode.more],
+        modes: const [],
       ),
       NavigationItem(
         icon: const Icon(Icons.storage),

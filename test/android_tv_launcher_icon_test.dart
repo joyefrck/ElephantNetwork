@@ -99,4 +99,53 @@ void main() {
     expect(transformedBounds.center.dx, closeTo(safeZone.center.dx, 0.05));
     expect(transformedBounds.center.dy, closeTo(safeZone.center.dy, 0.05));
   });
+
+  test('phone adaptive launcher logo keeps the legacy icon visual size', () {
+    final adaptiveIcon = File(
+      'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
+    ).readAsStringSync();
+    expect(
+      _androidAttribute(adaptiveIcon, 'foreground', 'drawable'),
+      '@drawable/ic_launcher_foreground',
+    );
+
+    final vector = File(
+      'android/app/src/main/res/drawable/ic_launcher_foreground.xml',
+    ).readAsStringSync();
+    final scaleX = _androidDoubleAttribute(vector, 'group', 'scaleX');
+    final scaleY = _androidDoubleAttribute(vector, 'group', 'scaleY');
+    final pivotX = _androidDoubleAttribute(vector, 'group', 'pivotX');
+    final pivotY = _androidDoubleAttribute(vector, 'group', 'pivotY');
+    final viewportWidth = _androidDoubleAttribute(
+      vector,
+      'vector',
+      'viewportWidth',
+    );
+    final viewportHeight = _androidDoubleAttribute(
+      vector,
+      'vector',
+      'viewportHeight',
+    );
+
+    const logoBounds = ui.Rect.fromLTRB(17, 21, 85, 79);
+    final transformedBounds = ui.Rect.fromLTRB(
+      (pivotX + (logoBounds.left - pivotX) * scaleX) /
+          viewportWidth *
+          108,
+      (pivotY + (logoBounds.top - pivotY) * scaleY) /
+          viewportHeight *
+          108,
+      (pivotX + (logoBounds.right - pivotX) * scaleX) /
+          viewportWidth *
+          108,
+      (pivotY + (logoBounds.bottom - pivotY) * scaleY) /
+          viewportHeight *
+          108,
+    );
+
+    expect(transformedBounds.width, lessThanOrEqualTo(48));
+    expect(transformedBounds.height, lessThanOrEqualTo(48));
+    expect(transformedBounds.center.dx, closeTo(54, 1));
+    expect(transformedBounds.center.dy, closeTo(54, 1));
+  });
 }

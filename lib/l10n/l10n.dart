@@ -859,6 +859,16 @@ class AppLocalizations {
     );
   }
 
+  /// `Hello, {email}`
+  String helloUser(Object email) {
+    return Intl.message(
+      'Hello, $email',
+      name: 'helloUser',
+      desc: '',
+      args: [email],
+    );
+  }
+
   /// `Elephant Network is temporarily unavailable`
   String get serviceUnavailable {
     return Intl.message(
@@ -909,6 +919,16 @@ class AppLocalizations {
     return Intl.message(
       'Account overview',
       name: 'accountOverview',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Open website`
+  String get openWebsite {
+    return Intl.message(
+      'Open website',
+      name: 'openWebsite',
       desc: '',
       args: [],
     );

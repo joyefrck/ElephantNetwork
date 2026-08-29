@@ -117,31 +117,40 @@ enum XboardSessionStatus {
 }
 
 class XboardSessionState {
-  const XboardSessionState({required this.status, this.session, this.error});
+  const XboardSessionState({
+    required this.status,
+    this.session,
+    this.email,
+    this.error,
+  });
 
-  const XboardSessionState.loading()
+  const XboardSessionState.loading({this.email})
     : status = XboardSessionStatus.loading,
       session = null,
       error = null;
 
   const XboardSessionState.unauthenticated([this.error])
     : status = XboardSessionStatus.unauthenticated,
-      session = null;
+      session = null,
+      email = null;
 
-  const XboardSessionState.authenticating()
+  const XboardSessionState.authenticating(this.email)
     : status = XboardSessionStatus.authenticating,
       session = null,
       error = null;
 
   const XboardSessionState.authenticated(this.session, {this.error})
-    : status = XboardSessionStatus.authenticated;
+    : status = XboardSessionStatus.authenticated,
+      email = null;
 
   const XboardSessionState.unavailable(this.error)
     : status = XboardSessionStatus.unavailable,
-      session = null;
+      session = null,
+      email = null;
 
   final XboardSessionStatus status;
   final XboardSession? session;
+  final String? email;
   final Object? error;
 
   bool get isAuthenticated => status == XboardSessionStatus.authenticated;

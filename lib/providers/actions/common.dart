@@ -50,6 +50,14 @@ class CommonAction extends _$CommonAction {
     checkUpdateResultHandle(data: res);
   }
 
+  Future<void> checkUpdate() async {
+    final data = await globalState.safeRun<Map<String, dynamic>?>(
+      request.checkForUpdate,
+      title: currentAppLocalizations.checkUpdate,
+    );
+    await checkUpdateResultHandle(data: data, isUser: true);
+  }
+
   Future<void> checkUpdateResultHandle({
     Map<String, dynamic>? data,
     bool isUser = false,

@@ -5,7 +5,6 @@ import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
-import 'package:fl_clash/views/about.dart';
 import 'package:fl_clash/views/access.dart';
 import 'package:fl_clash/views/application_setting.dart';
 import 'package:fl_clash/views/backup_and_restore.dart';
@@ -59,9 +58,9 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     return generateSection(
       title: context.appLocalizations.other,
       items: [
-        const _DisclaimerItem(),
+        const _VersionItem(),
+        const _CheckUpdateItem(),
         if (enableDeveloperMode) const _DeveloperItem(),
-        const _InfoItem(),
       ],
     );
   }
@@ -269,33 +268,29 @@ class _SettingItem extends StatelessWidget {
   }
 }
 
-class _DisclaimerItem extends ConsumerWidget {
-  const _DisclaimerItem();
+class _VersionItem extends StatelessWidget {
+  const _VersionItem();
 
   @override
-  Widget build(BuildContext context, ref) {
+  Widget build(BuildContext context) {
     return ListItem(
-      leading: const Icon(Icons.gavel),
-      title: Text(context.appLocalizations.disclaimer),
-      onTap: () async {
-        final isDisclaimerAccepted = await globalState.showDisclaimer();
-        if (!isDisclaimerAccepted) {
-          await ref.read(systemActionProvider.notifier).handleExit();
-        }
-      },
+      leading: const Icon(Icons.info_outline),
+      title: Text('v${globalState.packageInfo.version}'),
     );
   }
 }
 
-class _InfoItem extends StatelessWidget {
-  const _InfoItem();
+class _CheckUpdateItem extends ConsumerWidget {
+  const _CheckUpdateItem();
 
   @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const Icon(Icons.info),
-      title: Text(context.appLocalizations.about),
-      widget: const AboutView(),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListItem(
+      leading: const Icon(Icons.system_update_alt),
+      title: Text(context.appLocalizations.checkUpdate),
+      onTap: () async {
+        await ref.read(commonActionProvider.notifier).checkUpdate();
+      },
     );
   }
 }

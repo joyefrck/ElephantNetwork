@@ -17,8 +17,18 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 void main() {
+  setUpAll(() {
+    globalState.packageInfo = PackageInfo(
+      appName: 'Elephant Network',
+      packageName: 'com.elphantroute.elephantNetwork',
+      version: '2.0.0',
+      buildNumber: '20000',
+    );
+  });
+
   testWidgets('initial desktop layout does not animate mobile navigation out', (
     tester,
   ) async {
@@ -66,6 +76,11 @@ void main() {
 
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
+    expect(
+      tester.widget<NavigationRail>(find.byType(NavigationRail)).labelType,
+      NavigationRailLabelType.all,
+    );
+    expect(find.byIcon(Icons.menu), findsNothing);
 
     await tester.pump(const Duration(milliseconds: 150));
 

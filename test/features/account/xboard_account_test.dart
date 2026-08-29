@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fl_clash/features/account/account.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   group('XboardApi', () {
@@ -89,6 +90,36 @@ void main() {
         throwsA(isA<XboardApiException>()),
       );
     });
+
+    test('website launcher opens a signed dashboard URL externally', () async {
+      final transport = _FakeTransport({
+        XboardConfig.quickLoginPath: {
+          'data': 'https://active.example/#/login?verify=one-time-code',
+        },
+      });
+      final api = XboardApi(transport: transport);
+      Uri? launchedUri;
+      LaunchMode? launchedMode;
+
+      final launched = await launchXboardWebsite(
+        api: api,
+        token: 'session-token',
+        launcher: (uri, {mode = LaunchMode.platformDefault}) async {
+          launchedUri = uri;
+          launchedMode = mode;
+          return true;
+        },
+      );
+
+      expect(launched, isTrue);
+      expect(
+        launchedUri,
+        Uri.parse('https://active.example/#/login?verify=one-time-code'),
+      );
+      expect(launchedMode, LaunchMode.externalApplication);
+      expect(transport.requests.single.token, 'session-token');
+      expect(transport.requests.single.data, {'redirect': 'dashboard'});
+    });
   });
 
   test('redaction removes secrets and sensitive URLs', () {
@@ -124,6 +155,22 @@ void main() {
   });
 
   group('XboardSessionStore', () {
+    test(
+      'stores the account email with the token for session restore',
+      () async {
+        final secure = _MemorySecureStore();
+        final store = XboardSessionStore(
+          secureStore: secure,
+          legacyStore: _MemoryLegacyStore(null),
+        );
+
+        await store.saveSession('secure-token', ' owner@example.com ');
+
+        expect(await store.readToken(), 'secure-token');
+        expect(await store.readEmail(), 'owner@example.com');
+      },
+    );
+
     test('migrates and deletes a legacy plaintext token', () async {
       final secure = _MemorySecureStore();
       final legacy = _MemoryLegacyStore('legacy-token');

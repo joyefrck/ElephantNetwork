@@ -15,11 +15,54 @@ class XboardGate extends ConsumerWidget {
     final state = ref.watch(xboardSessionControllerProvider);
     return switch (state.status) {
       XboardSessionStatus.authenticated => child,
-      XboardSessionStatus.unauthenticated ||
       XboardSessionStatus.authenticating ||
-      XboardSessionStatus.unavailable ||
-      XboardSessionStatus.loading => const XboardLoginView(),
+      XboardSessionStatus.loading => XboardSessionWaitView(email: state.email),
+      XboardSessionStatus.unauthenticated ||
+      XboardSessionStatus.unavailable => const XboardLoginView(),
     };
+  }
+}
+
+class XboardSessionWaitView extends StatelessWidget {
+  const XboardSessionWaitView({super.key, required this.email});
+
+  final String? email;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedEmail = email?.trim() ?? '';
+    return XboardEntryShell(
+      child: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset('assets/images/icon.png', width: 84, height: 84),
+              const SizedBox(height: 18),
+              Text(
+                appName,
+                style: context.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              if (normalizedEmail.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(
+                  context.appLocalizations.helloUser(normalizedEmail),
+                  style: context.textTheme.bodyLarge,
+                ),
+              ],
+              const SizedBox(height: 28),
+              const SizedBox.square(
+                dimension: 24,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -64,7 +107,6 @@ class _XboardLoginViewState extends ConsumerState<XboardLoginView> {
     final l10n = context.appLocalizations;
     final state = ref.watch(xboardSessionControllerProvider);
     final busy = state.status == XboardSessionStatus.authenticating;
-    final restoring = state.status == XboardSessionStatus.loading;
     final errorText = _errorText(context, state.error);
     return XboardEntryShell(
       child: SafeArea(
@@ -121,7 +163,7 @@ class _XboardLoginViewState extends ConsumerState<XboardLoginView> {
                         const SizedBox(height: 30),
                         TextFormField(
                           controller: _emailController,
-                          enabled: !busy && !restoring,
+                          enabled: !busy,
                           keyboardType: TextInputType.emailAddress,
                           autofillHints: const [AutofillHints.username],
                           textInputAction: TextInputAction.next,
@@ -140,7 +182,7 @@ class _XboardLoginViewState extends ConsumerState<XboardLoginView> {
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _passwordController,
-                          enabled: !busy && !restoring,
+                          enabled: !busy,
                           obscureText: true,
                           autofillHints: const [AutofillHints.password],
                           textInputAction: TextInputAction.done,
@@ -181,8 +223,8 @@ class _XboardLoginViewState extends ConsumerState<XboardLoginView> {
                         ],
                         const SizedBox(height: 24),
                         FilledButton(
-                          onPressed: busy || restoring ? null : _submit,
-                          child: busy || restoring
+                          onPressed: busy ? null : _submit,
+                          child: busy
                               ? const SizedBox.square(
                                   dimension: 20,
                                   child: CircularProgressIndicator(

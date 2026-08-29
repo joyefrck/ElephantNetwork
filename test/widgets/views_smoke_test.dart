@@ -28,9 +28,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:smooth_sheets/smooth_sheets.dart';
 
 void main() {
+  setUpAll(() {
+    globalState.packageInfo = PackageInfo(
+      appName: 'Elephant Network',
+      packageName: 'com.elphantroute.elephantNetwork',
+      version: '2.0.0',
+      buildNumber: '20000',
+    );
+  });
+
   final cases = <String, Widget>{
     'dashboard': const DashboardView(),
     'proxies': const ProxiesView(),
@@ -134,6 +144,43 @@ void main() {
       expect(tester.takeException(), null);
     });
   }
+
+  testWidgets('tools shows version and update without disclaimer or about', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final container = ProviderContainer(
+      overrides: [profilesProvider.overrideWith(_TestProfiles.new)],
+    );
+    addTearDown(container.dispose);
+    globalState.container = container;
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const _TestApp(child: ToolsView()),
+      ),
+    );
+    await tester.pump();
+
+    for (
+      var index = 0;
+      index < 8 && find.text('v2.0.0').evaluate().isEmpty;
+      index++
+    ) {
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -700));
+      await tester.pump();
+    }
+
+    expect(find.text('v2.0.0'), findsOneWidget);
+    expect(find.text('Check for updates'), findsOneWidget);
+    expect(find.text('Disclaimer'), findsNothing);
+    expect(find.text('About'), findsNothing);
+  });
 
   testWidgets('user agent dialog applies a preset', (tester) async {
     tester.view.physicalSize = const Size(1000, 800);

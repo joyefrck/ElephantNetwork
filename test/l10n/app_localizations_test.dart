@@ -139,6 +139,7 @@ List<String> _allMessages(AppLocalizations appLocalizations) {
     appLocalizations.notSelectedTip,
     appLocalizations.tip,
     appLocalizations.invalidCredentials,
+    appLocalizations.helloUser('owner@example.com'),
     appLocalizations.managedSubscriptionUnavailable,
     appLocalizations.account,
     appLocalizations.backup,

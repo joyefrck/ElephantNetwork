@@ -35,6 +35,8 @@ class XboardSessionCoordinator {
     _setState(const XboardSessionState.loading());
     String? token;
     try {
+      final email = await _store.readEmail();
+      _setState(XboardSessionState.loading(email: email));
       token = await _store.readToken();
     } catch (error) {
       _setState(XboardSessionState.unavailable(error));
@@ -52,7 +54,7 @@ class XboardSessionCoordinator {
   }
 
   Future<bool> _login(String email, String password) async {
-    _setState(const XboardSessionState.authenticating());
+    _setState(XboardSessionState.authenticating(email.trim()));
     try {
       final token = await _api.login(email, password);
       return await _activate(token, persist: true);
@@ -113,7 +115,7 @@ class XboardSessionCoordinator {
     try {
       final account = await _api.account(token);
       if (persist) {
-        await _store.saveToken(token);
+        await _store.saveSession(token, account.email);
       }
       _setState(
         XboardSessionState.authenticated(

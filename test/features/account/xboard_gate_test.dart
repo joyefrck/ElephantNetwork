@@ -8,9 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   final entryStates = <String, XboardSessionState>{
-    'loading': const XboardSessionState.loading(),
     'unauthenticated': const XboardSessionState.unauthenticated(),
-    'authenticating': const XboardSessionState.authenticating(),
     'unavailable': XboardSessionState.unavailable(
       StateError('secure_storage_unavailable'),
     ),
@@ -21,14 +19,7 @@ void main() {
       await _pumpGate(tester, entry.value);
 
       expect(find.byType(TextFormField), findsNWidgets(2));
-      if (const {
-        XboardSessionStatus.loading,
-        XboardSessionStatus.authenticating,
-      }.contains(entry.value.status)) {
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      } else {
-        expect(find.text('Sign in'), findsOneWidget);
-      }
+      expect(find.text('Sign in'), findsOneWidget);
       final fieldContext = tester.element(find.byType(TextFormField).first);
       expect(Theme.of(fieldContext).brightness, Brightness.light);
       expect(
@@ -37,6 +28,32 @@ void main() {
       );
     });
   }
+
+  testWidgets('session wait shows branding and the login email only', (
+    tester,
+  ) async {
+    await _pumpGate(
+      tester,
+      const XboardSessionState.loading(email: 'owner@example.com'),
+    );
+
+    expect(find.text('Elephant Network'), findsOneWidget);
+    expect(find.text('Hello, owner@example.com'), findsOneWidget);
+    expect(find.byType(TextFormField), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  testWidgets('active login wait shows the submitted email only', (
+    tester,
+  ) async {
+    await _pumpGate(
+      tester,
+      const XboardSessionState.authenticating('owner@example.com'),
+    );
+
+    expect(find.text('Hello, owner@example.com'), findsOneWidget);
+    expect(find.byType(TextFormField), findsNothing);
+  });
 
   testWidgets('authenticated child keeps the parent dark theme', (
     tester,

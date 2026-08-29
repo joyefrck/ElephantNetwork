@@ -86,6 +86,7 @@ class XboardSessionStore {
        _legacyStore = legacyStore ?? const SharedPreferencesLegacyTokenStore();
 
   static const _tokenKey = 'xboard.auth_token.v2';
+  static const _emailKey = 'xboard.account_email.v1';
 
   final SecureKeyValueStore _secureStore;
   final LegacyTokenStore _legacyStore;
@@ -112,8 +113,20 @@ class XboardSessionStore {
     await _legacyStore.deleteToken();
   }
 
+  Future<String?> readEmail() => _secureStore.read(_emailKey);
+
+  Future<void> saveSession(String token, String email) async {
+    final normalizedEmail = email.trim();
+    if (normalizedEmail.isEmpty) {
+      throw ArgumentError.value(email, 'email');
+    }
+    await saveToken(token);
+    await _secureStore.write(_emailKey, normalizedEmail);
+  }
+
   Future<void> clear() async {
     await _secureStore.delete(_tokenKey);
+    await _secureStore.delete(_emailKey);
     await _legacyStore.deleteToken();
   }
 }
