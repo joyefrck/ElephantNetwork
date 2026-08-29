@@ -36,6 +36,8 @@ void main() {
         selectedMap: const {'Selector': 'Proxy'},
         unfoldSet: const {'Selector'},
         overwriteType: OverwriteType.custom,
+        source: ProfileSource.xboard,
+        ownerAccountId: 'user@example.com',
         scriptId: 7,
         order: 1,
       );

@@ -121,7 +121,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
             }
 
             "didCrashOnPreviousExecution" -> {
-                result.success(GlobalState.didCrashOnPreviousExecution())
+                result.success(false)
             }
 
             else -> {

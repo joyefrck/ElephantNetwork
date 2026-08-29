@@ -1,0 +1,32 @@
+<svg viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <rect width="320" height="180" fill="#F8FAFC" />
+  <path
+    d="M92 62H64C53 62 48 67 48 78V102C48 113 53 118 64 118H92"
+    stroke="#0F172A"
+    stroke-width="13"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M65 90H92"
+    stroke="#10B981"
+    stroke-width="13"
+    stroke-linecap="round"
+  />
+  <text
+    x="116"
+    y="87"
+    fill="#0F172A"
+    font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+    font-size="25"
+    font-weight="700"
+  >Elephant</text>
+  <text
+    x="116"
+    y="113"
+    fill="#10B981"
+    font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+    font-size="25"
+    font-weight="700"
+  >Network</text>
+</svg>

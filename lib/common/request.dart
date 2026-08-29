@@ -6,6 +6,8 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/account/xboard_config.dart';
+import 'package:fl_clash/features/account/xboard_domain_resolver.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/cupertino.dart';
@@ -71,18 +73,58 @@ class Request {
 
   Future<Map<String, dynamic>?> checkForUpdate() async {
     try {
+      if (!system.isAndroid && !system.isWindows && !system.isMacOS) {
+        return null;
+      }
+      final platform = system.isAndroid
+          ? 'android'
+          : system.isWindows
+          ? 'windows'
+          : 'macos';
+      final appKey = system.isAndroid
+          ? XboardConfig.androidDistributionAppKey
+          : XboardConfig.desktopDistributionAppKey;
+      final executable = Platform.resolvedExecutable.toLowerCase();
+      final arch = system.isAndroid
+          ? 'arm64'
+          : executable.contains('arm64') ||
+                Platform.version.toLowerCase().contains('arm64')
+          ? 'arm64'
+          : 'x64';
+      final runtimeBaseUrl = await xboardDomainResolver.resolve();
       final response = await dio.get(
-        'https://api.github.com/repos/$repository/releases/latest',
+        '$runtimeBaseUrl${XboardConfig.updatePath}',
+        queryParameters: {
+          'app_key': appKey,
+          'platform': platform,
+          'channel': 'stable',
+          'version': globalState.packageInfo.version,
+          'build': int.tryParse(globalState.packageInfo.buildNumber) ?? 0,
+          'arch': arch,
+        },
         options: Options(responseType: ResponseType.json),
       );
       if (response.statusCode != 200) return null;
-      final data = response.data as Map<String, dynamic>;
-      final remoteVersion = data['tag_name'];
-      final version = globalState.packageInfo.version;
-      final hasUpdate =
-          utils.compareVersions(remoteVersion.replaceAll('v', ''), version) > 0;
-      if (!hasUpdate) return null;
-      return data;
+      final body = response.data;
+      if (body is! Map) return null;
+      final payload = body['data'] is Map ? body['data'] as Map : body;
+      if (payload['has_update'] != true || payload['latest'] is! Map) {
+        return null;
+      }
+      final latest = payload['latest'] as Map;
+      final version = latest['version']?.toString() ?? '';
+      final downloadUrl = latest['download_url']?.toString() ?? '';
+      final uri = XboardConfig.secureUri(downloadUrl, baseUrl: runtimeBaseUrl);
+      if (version.isEmpty || uri == null) {
+        return null;
+      }
+      return {
+        'tag_name': version.startsWith('v') ? version : 'v$version',
+        'body': latest['release_notes']?.toString() ?? '',
+        'download_url': uri.toString(),
+        'force': payload['force'] == true,
+        'sha256': latest['sha256']?.toString(),
+      };
     } catch (e) {
       commonPrint.log('checkForUpdate failed', logLevel: LogLevel.warning);
       return null;

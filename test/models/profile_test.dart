@@ -42,6 +42,8 @@ void main() {
         url: 'https://example.com/profile.yaml',
         autoUpdate: true,
         autoUpdateDuration: defaultUpdateDuration,
+        source: ProfileSource.xboard,
+        ownerAccountId: 'user@example.com',
       );
 
       expect(fileProfile.type, ProfileType.file);
@@ -53,6 +55,8 @@ void main() {
       expect(urlProfile.type, ProfileType.url);
       expect(urlProfile.realAutoUpdate, true);
       expect(urlProfile.realLabel, 'Remote');
+      expect(urlProfile.source, ProfileSource.xboard);
+      expect(urlProfile.ownerAccountId, 'user@example.com');
     });
   });
 

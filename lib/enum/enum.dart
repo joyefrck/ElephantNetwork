@@ -128,6 +128,8 @@ enum AccessSortType { none, name, time }
 
 enum ProfileType { file, url }
 
+enum ProfileSource { user, xboard }
+
 enum ResultType {
   @JsonValue(0)
   success,
@@ -317,6 +319,7 @@ extension GeoResourceExt on GeoResource {
 }
 
 enum PageLabel {
+  account,
   dashboard,
   proxies,
   profiles,

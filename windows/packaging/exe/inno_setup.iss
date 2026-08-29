@@ -25,11 +25,42 @@ var
   i: Integer;
   ResultCode: Integer;
 begin
-  Processes := ['FlClash.exe', 'FlClashCore.exe', 'FlClashHelperService.exe'];
+  Processes := ['ElephantNetwork.exe', 'ElephantNetworkService.exe', 'sing-box-windows-amd64.exe', 'FlClash.exe', 'FlClashCore.exe', 'FlClashHelperService.exe'];
 
   for i := 0 to GetArrayLength(Processes)-1 do
   begin
     Exec('taskkill', '/f /im ' + Processes[i], '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  end;
+end;
+
+procedure RemoveLegacyService;
+var
+  ResultCode: Integer;
+begin
+  Exec(ExpandConstant('{sys}\sc.exe'), 'stop ElephantNetworkService', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(ExpandConstant('{sys}\sc.exe'), 'delete ElephantNetworkService', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+procedure RestoreOwnedLegacyProxy;
+var
+  ProxyServer: String;
+  ProxyEnabled: Cardinal;
+begin
+  if RegQueryDWordValue(HKCU,
+      'Software\Microsoft\Windows\CurrentVersion\Internet Settings',
+      'ProxyEnable', ProxyEnabled) and (ProxyEnabled = 1) and
+     RegQueryStringValue(HKCU,
+      'Software\Microsoft\Windows\CurrentVersion\Internet Settings',
+      'ProxyServer', ProxyServer) and
+     ((CompareText(ProxyServer, '127.0.0.1:2334') = 0) or
+      (CompareText(ProxyServer, 'localhost:2334') = 0)) then
+  begin
+    RegWriteDWordValue(HKCU,
+      'Software\Microsoft\Windows\CurrentVersion\Internet Settings',
+      'ProxyEnable', 0);
+    RegDeleteValue(HKCU,
+      'Software\Microsoft\Windows\CurrentVersion\Internet Settings',
+      'ProxyServer');
   end;
 end;
 
@@ -48,14 +79,18 @@ end;
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   UnregisterHelperService;
+  RemoveLegacyService;
   KillProcesses;
+  RestoreOwnedLegacyProxy;
   Result := '';
 end;
 
 function InitializeUninstall(): Boolean;
 begin
   UnregisterHelperService;
+  RemoveLegacyService;
   KillProcesses;
+  RestoreOwnedLegacyProxy;
   Result := True;
 end;
 

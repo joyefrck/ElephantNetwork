@@ -45,7 +45,10 @@ class ProfilesAction extends _$ProfilesAction {
       try {
         await updateProfile(profile);
       } catch (e) {
-        commonPrint.log(e.toString(), logLevel: LogLevel.warning);
+        final message = profile.source == ProfileSource.xboard
+            ? XboardRedaction.text(e)
+            : e.toString();
+        commonPrint.log(message, logLevel: LogLevel.warning);
       }
     }
   }

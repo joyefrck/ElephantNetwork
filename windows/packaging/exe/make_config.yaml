@@ -1,11 +1,11 @@
 script_template: inno_setup.iss
-app_id: 728B3532-C74B-4870-9068-BE70FE12A3E6
-app_name: FlClash
-publisher: chen08209
-publisher_url: https://github.com/chen08209/FlClash
-display_name: FlClash
-executable_name: FlClash.exe
-output_base_file_name: FlClash.exe
+app_id: "{{5F1D7A6E-2B3C-4A91-9D74-E0C8F6B1A245}"
+app_name: Elephant Network
+publisher: Elephant Network
+publisher_url: https://elephantroute.com
+display_name: Elephant Network
+executable_name: ElephantNetwork.exe
+output_base_file_name: ElephantNetwork-Setup.exe
 setup_icon_file: ..\windows\runner\resources\app_icon.ico
 locales:
   - lang: zh

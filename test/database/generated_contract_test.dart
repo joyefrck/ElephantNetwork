@@ -14,6 +14,8 @@ void main() {
       url: 'https://example.com/profile.yaml',
       lastUpdateDate: date,
       overwriteType: OverwriteType.custom,
+      source: ProfileSource.xboard,
+      ownerAccountId: 'user@example.com',
       scriptId: 2,
       autoUpdateDurationMillis: 3600000,
       subscriptionInfo: const SubscriptionInfo(
@@ -28,8 +30,8 @@ void main() {
       order: 3,
     );
 
-    expect(profile.toColumns(true), hasLength(13));
-    expect(profile.toCompanion(true).toColumns(true), hasLength(13));
+    expect(profile.toColumns(true), hasLength(15));
+    expect(profile.toCompanion(true).toColumns(true), hasLength(15));
     expect(RawProfile.fromJson(profile.toJson()).toJson(), profile.toJson());
     expect(profile.copyWith(label: 'Next').label, 'Next');
     expect(
@@ -53,14 +55,15 @@ void main() {
       label: 'Empty',
       url: '',
       overwriteType: OverwriteType.standard,
+      source: ProfileSource.user,
       autoUpdateDurationMillis: 0,
       autoUpdate: false,
       selectedMap: {},
       unfoldSet: {},
     );
-    expect(emptyProfile.toColumns(true), hasLength(8));
-    expect(emptyProfile.toColumns(false), hasLength(13));
-    expect(emptyProfile.toCompanion(true).toColumns(true), hasLength(8));
+    expect(emptyProfile.toColumns(true), hasLength(9));
+    expect(emptyProfile.toColumns(false), hasLength(15));
+    expect(emptyProfile.toCompanion(true).toColumns(true), hasLength(9));
 
     final insertedProfile = ProfilesCompanion.insert(
       label: 'Inserted',
@@ -81,6 +84,8 @@ void main() {
         url: const Variable('url'),
         lastUpdateDate: Variable(date),
         overwriteType: const Variable('custom'),
+        source: const Variable('xboard'),
+        ownerAccountId: const Variable('user@example.com'),
         scriptId: const Variable(2),
         autoUpdateDurationMillis: const Variable(60),
         subscriptionInfo: const Variable('{}'),
@@ -89,7 +94,7 @@ void main() {
         unfoldSet: const Variable('[]'),
         order: const Variable(1),
       ).toColumns(false),
-      hasLength(13),
+      hasLength(15),
     );
 
     final script = RawScript(id: 2, label: 'Script', lastUpdateTime: date);

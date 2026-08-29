@@ -33,7 +33,7 @@ on Mobile:
 
 ## Features
 
-✈️ Multi-platform: Android, Windows, macOS and Linux
+✈️ First-stage releases: Android, Windows, and macOS
 
 💻 Adaptive multiple screen sizes, Multiple color themes available
 
@@ -45,25 +45,16 @@ on Mobile:
 
 ## Use
 
-### Linux
-
-⚠️ Make sure to install the following dependencies before using them
-
-   ```bash
-    sudo apt-get install libayatana-appindicator3-dev
-    sudo apt-get install libkeybinder-3.0-dev
-   ```
-
 ### Android
 
 Support the following actions
 
    ```bash
-    com.follow.clash.action.START
+    com.elephantroute.action.START
     
-    com.follow.clash.action.STOP
+    com.elephantroute.action.STOP
     
-    com.follow.clash.action.TOGGLE
+    com.elephantroute.action.TOGGLE
    ```
 
 ## Releases
@@ -107,21 +98,6 @@ in-app update source.
            dart setup.dart windows
            ```
 
-    - linux
-
-        1. Requires a Linux client
-
-        2. Dependencies are auto-installed by setup script, or manually:
-           ```bash
-           sudo apt-get install -y libayatana-appindicator3-dev libkeybinder-3.0-dev
-           ```
-
-        3. Run build script
-
-           ```bash
-           dart setup.dart linux
-           ```
-
     - macOS
 
         1. Requires a macOS client
@@ -137,3 +113,5 @@ in-app update source.
 FlClash copyright and license notices are retained. Product-specific changes
 are documented in this repository and do not imply endorsement by the upstream
 authors.
+
+See [release gates](docs/RELEASE_GATES.md) before producing an in-place upgrade.

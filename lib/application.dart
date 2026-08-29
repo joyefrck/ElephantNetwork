@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/features/account/account.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/manager/hotkey_manager.dart';
 import 'package:fl_clash/manager/manager.dart';
@@ -85,6 +86,7 @@ class ApplicationState extends ConsumerState<Application> {
 
   void _autoUpdateProfilesTask() {
     _autoUpdateProfilesTaskTimer = Timer(const Duration(minutes: 20), () async {
+      await ref.read(xboardSessionControllerProvider.notifier).refresh();
       await ref.read(profilesActionProvider.notifier).autoUpdateProfiles();
       _autoUpdateProfilesTask();
     });
@@ -182,7 +184,7 @@ class ApplicationState extends ConsumerState<Application> {
           home: child!,
         );
       },
-      child: const HomePage(),
+      child: const XboardGate(child: HomePage()),
     );
   }
 

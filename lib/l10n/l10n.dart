@@ -69,6 +69,11 @@ class AppLocalizations {
     return Intl.message('Direct', name: 'direct', desc: '', args: []);
   }
 
+  /// `Account`
+  String get account {
+    return Intl.message('Account', name: 'account', desc: '', args: []);
+  }
+
   /// `Dashboard`
   String get dashboard {
     return Intl.message('Dashboard', name: 'dashboard', desc: '', args: []);
@@ -824,9 +829,169 @@ class AppLocalizations {
     return Intl.message('tip', name: 'tip', desc: '', args: []);
   }
 
-  /// `Account`
-  String get account {
-    return Intl.message('Account', name: 'account', desc: '', args: []);
+  /// `Email address`
+  String get emailAddress {
+    return Intl.message(
+      'Email address',
+      name: 'emailAddress',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign in`
+  String get signIn {
+    return Intl.message('Sign in', name: 'signIn', desc: '', args: []);
+  }
+
+  /// `Sign out`
+  String get signOut {
+    return Intl.message('Sign out', name: 'signOut', desc: '', args: []);
+  }
+
+  /// `Sign in to Elephant Network to continue`
+  String get signInToContinue {
+    return Intl.message(
+      'Sign in to Elephant Network to continue',
+      name: 'signInToContinue',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Elephant Network is temporarily unavailable`
+  String get serviceUnavailable {
+    return Intl.message(
+      'Elephant Network is temporarily unavailable',
+      name: 'serviceUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Retry`
+  String get retry {
+    return Intl.message('Retry', name: 'retry', desc: '', args: []);
+  }
+
+  /// `Use another account`
+  String get useAnotherAccount {
+    return Intl.message(
+      'Use another account',
+      name: 'useAnotherAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Account overview`
+  String get accountOverview {
+    return Intl.message(
+      'Account overview',
+      name: 'accountOverview',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Balance`
+  String get balance {
+    return Intl.message('Balance', name: 'balance', desc: '', args: []);
+  }
+
+  /// `Expiration`
+  String get expiration {
+    return Intl.message('Expiration', name: 'expiration', desc: '', args: []);
+  }
+
+  /// `Never expires`
+  String get neverExpires {
+    return Intl.message(
+      'Never expires',
+      name: 'neverExpires',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Traffic overview`
+  String get trafficOverview {
+    return Intl.message(
+      'Traffic overview',
+      name: 'trafficOverview',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Plan traffic`
+  String get planTraffic {
+    return Intl.message(
+      'Plan traffic',
+      name: 'planTraffic',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Traffic package`
+  String get trafficPackage {
+    return Intl.message(
+      'Traffic package',
+      name: 'trafficPackage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Remaining`
+  String get remaining {
+    return Intl.message('Remaining', name: 'remaining', desc: '', args: []);
+  }
+
+  /// `Used`
+  String get used {
+    return Intl.message('Used', name: 'used', desc: '', args: []);
+  }
+
+  /// `Plans`
+  String get plans {
+    return Intl.message('Plans', name: 'plans', desc: '', args: []);
+  }
+
+  /// `Orders`
+  String get orders {
+    return Intl.message('Orders', name: 'orders', desc: '', args: []);
+  }
+
+  /// `Support tickets`
+  String get supportTickets {
+    return Intl.message(
+      'Support tickets',
+      name: 'supportTickets',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Embedded browser is unavailable. Opened in your system browser.`
+  String get webviewUnavailable {
+    return Intl.message(
+      'Embedded browser is unavailable. Opened in your system browser.',
+      name: 'webviewUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unable to open this page`
+  String get unableToOpenPage {
+    return Intl.message(
+      'Unable to open this page',
+      name: 'unableToOpenPage',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `Backup`
@@ -2884,10 +3049,10 @@ class AppLocalizations {
     );
   }
 
-  /// `This app uses Firebase Crashlytics to collect crash information to improve app stability.\nThe collected data includes device information and crash details, but does not contain personal sensitive data.\nYou can disable this feature in settings.`
+  /// `This app does not use third-party crash analytics or behavioral tracking. Diagnostic logs remain on the device and redact account tokens, quick-login links, and subscription links.`
   String get dataCollectionContent {
     return Intl.message(
-      'This app uses Firebase Crashlytics to collect crash information to improve app stability.\nThe collected data includes device information and crash details, but does not contain personal sensitive data.\nYou can disable this feature in settings.',
+      'This app does not use third-party crash analytics or behavioral tracking. Diagnostic logs remain on the device and redact account tokens, quick-login links, and subscription links.',
       name: 'dataCollectionContent',
       desc: '',
       args: [],
@@ -3479,10 +3644,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Helper service unavailable; TUN mode cannot be enabled. Reinstall FlClash to restore it.`
+  /// `Helper service unavailable; TUN mode cannot be enabled. Reinstall Elephant Network to restore it.`
   String get helperCorruptTip {
     return Intl.message(
-      'Helper service unavailable; TUN mode cannot be enabled. Reinstall FlClash to restore it.',
+      'Helper service unavailable; TUN mode cannot be enabled. Reinstall Elephant Network to restore it.',
       name: 'helperCorruptTip',
       desc: '',
       args: [],

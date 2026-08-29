@@ -50,6 +50,7 @@ class GlobalState {
   String? lastConfigMd5;
   VpnState? lastVpnState;
   bool isAttach = false;
+  bool _authenticatedRuntimeStarted = false;
 
   GlobalState._internal();
 
@@ -313,7 +314,6 @@ class GlobalState {
       });
     };
     container.read(systemActionProvider.notifier).updateTray();
-    container.read(profilesActionProvider.notifier).autoUpdateProfiles();
     container.read(commonActionProvider.notifier).autoCheckUpdate();
     autoLaunch?.updateStatus(container.read(appSettingProvider).autoLaunch);
     if (!container.read(appSettingProvider).silentLaunch) {
@@ -324,13 +324,37 @@ class GlobalState {
     await _handleFailedPreference();
     await _handlerDisclaimer();
     await _showCrashRecoveryTip();
-    await _showCrashlyticsTip();
-    await container.read(coreActionProvider.notifier).startCore();
-    if (!_didCrashOnPreviousExecution) {
-      await container.read(setupActionProvider.notifier).initStatus();
+    final authenticated = await container
+        .read(xboardSessionControllerProvider.notifier)
+        .restore();
+    if (authenticated) {
+      try {
+        await startAuthenticatedRuntime();
+      } catch (_) {
+        await container.read(xboardSessionControllerProvider.notifier).logout();
+        showNotifier(currentAppLocalizations.serviceUnavailable);
+      }
     }
-    container.read(initProvider.notifier).value = true;
     permissions.check();
+  }
+
+  Future<void> startAuthenticatedRuntime() async {
+    if (_authenticatedRuntimeStarted) return;
+    _authenticatedRuntimeStarted = true;
+    try {
+      await LegacyUpgradeCleaner.run();
+      await container.read(coreActionProvider.notifier).startCore();
+      if (!_didCrashOnPreviousExecution) {
+        await container.read(setupActionProvider.notifier).initStatus();
+      }
+      await container
+          .read(profilesActionProvider.notifier)
+          .autoUpdateProfiles();
+      container.read(initProvider.notifier).value = true;
+    } catch (_) {
+      _authenticatedRuntimeStarted = false;
+      rethrow;
+    }
   }
 
   Future<void> _showCrashRecoveryTip() async {
@@ -379,23 +403,6 @@ class GlobalState {
           ),
         ) ??
         false;
-  }
-
-  Future<void> _showCrashlyticsTip() async {
-    if (!system.isAndroid) return;
-    if (container.read(
-      appSettingProvider.select((state) => state.crashlyticsTip),
-    )) {
-      return;
-    }
-    await showMessage(
-      title: currentAppLocalizations.dataCollectionTip,
-      cancelable: false,
-      message: TextSpan(text: currentAppLocalizations.dataCollectionContent),
-    );
-    container
-        .read(appSettingProvider.notifier)
-        .update((state) => state.copyWith(crashlyticsTip: true));
   }
 
   Future<void> _handlerDisclaimer() async {

@@ -83,6 +83,7 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     commonPrint.log('$state');
     if (state == AppLifecycleState.resumed) {
+      await ref.read(xboardSessionControllerProvider.notifier).refresh();
       permissions.check();
       render?.resume();
       WidgetsBinding.instance.addPostFrameCallback((_) {

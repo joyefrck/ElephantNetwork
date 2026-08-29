@@ -98,6 +98,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Access Control Settings",
     ),
     "account": MessageLookupByLibrary.simpleMessage("Account"),
+    "accountOverview": MessageLookupByLibrary.simpleMessage("Account overview"),
     "action": MessageLookupByLibrary.simpleMessage("Action"),
     "action_mode": MessageLookupByLibrary.simpleMessage("Switch mode"),
     "action_proxy": MessageLookupByLibrary.simpleMessage("System proxy"),
@@ -192,6 +193,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Sync data via WebDAV or files",
     ),
     "backupSuccess": MessageLookupByLibrary.simpleMessage("Backup success"),
+    "balance": MessageLookupByLibrary.simpleMessage("Balance"),
     "basicConfig": MessageLookupByLibrary.simpleMessage("Basic configuration"),
     "basicConfigDesc": MessageLookupByLibrary.simpleMessage(
       "Modify the basic configuration globally",
@@ -292,7 +294,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Data changes detected, do you want to save?",
     ),
     "dataCollectionContent": MessageLookupByLibrary.simpleMessage(
-      "This app uses Firebase Crashlytics to collect crash information to improve app stability.\nThe collected data includes device information and crash details, but does not contain personal sensitive data.\nYou can disable this feature in settings.",
+      "This app does not use third-party crash analytics or behavioral tracking. Diagnostic logs remain on the device and redact account tokens, quick-login links, and subscription links.",
     ),
     "dataCollectionTip": MessageLookupByLibrary.simpleMessage(
       "Data Collection Notice",
@@ -356,6 +358,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "editProxyGroup": MessageLookupByLibrary.simpleMessage("Edit proxy group"),
     "editRule": MessageLookupByLibrary.simpleMessage("Edit rule"),
     "editSsid": MessageLookupByLibrary.simpleMessage("Edit SSID"),
+    "emailAddress": MessageLookupByLibrary.simpleMessage("Email address"),
     "emptyTip": m4,
     "en": MessageLookupByLibrary.simpleMessage("English"),
     "entries": MessageLookupByLibrary.simpleMessage(" entries"),
@@ -376,6 +379,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "exit": MessageLookupByLibrary.simpleMessage("Exit"),
     "expand": MessageLookupByLibrary.simpleMessage("Standard"),
     "expectedStatus": MessageLookupByLibrary.simpleMessage("Expected status"),
+    "expiration": MessageLookupByLibrary.simpleMessage("Expiration"),
     "exportFile": MessageLookupByLibrary.simpleMessage("Export file"),
     "exportLogs": MessageLookupByLibrary.simpleMessage("Export logs"),
     "exportSuccess": MessageLookupByLibrary.simpleMessage("Export Success"),
@@ -440,7 +444,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Do you want to cache the changes?",
     ),
     "helperCorruptTip": MessageLookupByLibrary.simpleMessage(
-      "Helper service unavailable; TUN mode cannot be enabled. Reinstall FlClash to restore it.",
+      "Helper service unavailable; TUN mode cannot be enabled. Reinstall Elephant Network to restore it.",
     ),
     "hideFromList": MessageLookupByLibrary.simpleMessage("Hide from list"),
     "host": MessageLookupByLibrary.simpleMessage("Host"),
@@ -595,6 +599,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "networkSpeed": MessageLookupByLibrary.simpleMessage("Network speed"),
     "networkType": MessageLookupByLibrary.simpleMessage("Network type"),
     "neutralScheme": MessageLookupByLibrary.simpleMessage("Neutral"),
+    "neverExpires": MessageLookupByLibrary.simpleMessage("Never expires"),
     "noData": MessageLookupByLibrary.simpleMessage("No data"),
     "noHotKey": MessageLookupByLibrary.simpleMessage("No HotKey"),
     "noInfo": MessageLookupByLibrary.simpleMessage("No info"),
@@ -630,6 +635,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "optional": MessageLookupByLibrary.simpleMessage("Optional"),
     "options": MessageLookupByLibrary.simpleMessage("Options"),
+    "orders": MessageLookupByLibrary.simpleMessage("Orders"),
     "other": MessageLookupByLibrary.simpleMessage("Other"),
     "otherContributors": MessageLookupByLibrary.simpleMessage(
       "Other contributors",
@@ -649,6 +655,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "palette": MessageLookupByLibrary.simpleMessage("Palette"),
     "password": MessageLookupByLibrary.simpleMessage("Password"),
     "paste": MessageLookupByLibrary.simpleMessage("Paste"),
+    "planTraffic": MessageLookupByLibrary.simpleMessage("Plan traffic"),
+    "plans": MessageLookupByLibrary.simpleMessage("Plans"),
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage(
       "Please bind WebDAV",
     ),
@@ -746,6 +754,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "rainbowScheme": MessageLookupByLibrary.simpleMessage("Rainbow"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redir Port"),
     "redo": MessageLookupByLibrary.simpleMessage("redo"),
+    "remaining": MessageLookupByLibrary.simpleMessage("Remaining"),
     "remote": MessageLookupByLibrary.simpleMessage("Remote"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage(
       "Backup local data to WebDAV",
@@ -799,6 +808,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Override",
     ),
     "restoreSuccess": MessageLookupByLibrary.simpleMessage("Restore success"),
+    "retry": MessageLookupByLibrary.simpleMessage("Retry"),
     "routeAddress": MessageLookupByLibrary.simpleMessage("Route address"),
     "routeAddressDesc": MessageLookupByLibrary.simpleMessage(
       "Config listen route address",
@@ -939,9 +949,17 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "selected": MessageLookupByLibrary.simpleMessage("Selected"),
     "selectedCountTitle": m23,
+    "serviceUnavailable": MessageLookupByLibrary.simpleMessage(
+      "Elephant Network is temporarily unavailable",
+    ),
     "settings": MessageLookupByLibrary.simpleMessage("Settings"),
     "show": MessageLookupByLibrary.simpleMessage("Show"),
     "shrink": MessageLookupByLibrary.simpleMessage("Shrink"),
+    "signIn": MessageLookupByLibrary.simpleMessage("Sign in"),
+    "signInToContinue": MessageLookupByLibrary.simpleMessage(
+      "Sign in to Elephant Network to continue",
+    ),
+    "signOut": MessageLookupByLibrary.simpleMessage("Sign out"),
     "silentLaunch": MessageLookupByLibrary.simpleMessage("SilentLaunch"),
     "silentLaunchDesc": MessageLookupByLibrary.simpleMessage(
       "Start in the background",
@@ -979,6 +997,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Sub rule cannot be empty",
     ),
     "submit": MessageLookupByLibrary.simpleMessage("Submit"),
+    "supportTickets": MessageLookupByLibrary.simpleMessage("Support tickets"),
     "suspended": MessageLookupByLibrary.simpleMessage("Suspended..."),
     "sync": MessageLookupByLibrary.simpleMessage("Sync"),
     "system": MessageLookupByLibrary.simpleMessage("System"),
@@ -1015,6 +1034,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "tonalSpotScheme": MessageLookupByLibrary.simpleMessage("TonalSpot"),
     "tools": MessageLookupByLibrary.simpleMessage("Tools"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Tproxy Port"),
+    "trafficOverview": MessageLookupByLibrary.simpleMessage("Traffic overview"),
+    "trafficPackage": MessageLookupByLibrary.simpleMessage("Traffic package"),
     "trafficUsage": MessageLookupByLibrary.simpleMessage("Traffic usage"),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
     "tunDesc": MessageLookupByLibrary.simpleMessage(
@@ -1022,6 +1043,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "turnOff": MessageLookupByLibrary.simpleMessage("Turn Off"),
     "turnOn": MessageLookupByLibrary.simpleMessage("Turn On"),
+    "unableToOpenPage": MessageLookupByLibrary.simpleMessage(
+      "Unable to open this page",
+    ),
     "undo": MessageLookupByLibrary.simpleMessage("undo"),
     "unifiedDelay": MessageLookupByLibrary.simpleMessage("Unified delay"),
     "unifiedDelayDesc": MessageLookupByLibrary.simpleMessage(
@@ -1039,8 +1063,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Obtain profile through URL",
     ),
     "urlTip": m24,
+    "useAnotherAccount": MessageLookupByLibrary.simpleMessage(
+      "Use another account",
+    ),
     "useHosts": MessageLookupByLibrary.simpleMessage("Use hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("Use system hosts"),
+    "used": MessageLookupByLibrary.simpleMessage("Used"),
     "userAgent": MessageLookupByLibrary.simpleMessage("User-Agent"),
     "value": MessageLookupByLibrary.simpleMessage("Value"),
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("Vibrant"),
@@ -1056,6 +1084,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage(
       "WebDAV configuration",
+    ),
+    "webviewUnavailable": MessageLookupByLibrary.simpleMessage(
+      "Embedded browser is unavailable. Opened in your system browser.",
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
     "yearsAgo": m25,

@@ -68,6 +68,27 @@ class $ProfilesTable extends Profiles
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   ).withConverter<OverwriteType>($ProfilesTable.$converteroverwriteType);
+  @override
+  late final GeneratedColumnWithTypeConverter<ProfileSource, String> source =
+      GeneratedColumn<String>(
+        'source',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('user'),
+      ).withConverter<ProfileSource>($ProfilesTable.$convertersource);
+  static const VerificationMeta _ownerAccountIdMeta = const VerificationMeta(
+    'ownerAccountId',
+  );
+  @override
+  late final GeneratedColumn<String> ownerAccountId = GeneratedColumn<String>(
+    'owner_account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _scriptIdMeta = const VerificationMeta(
     'scriptId',
   );
@@ -148,6 +169,8 @@ class $ProfilesTable extends Profiles
     url,
     lastUpdateDate,
     overwriteType,
+    source,
+    ownerAccountId,
     scriptId,
     autoUpdateDurationMillis,
     subscriptionInfo,
@@ -202,6 +225,15 @@ class $ProfilesTable extends Profiles
         lastUpdateDate.isAcceptableOrUnknown(
           data['last_update_date']!,
           _lastUpdateDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('owner_account_id')) {
+      context.handle(
+        _ownerAccountIdMeta,
+        ownerAccountId.isAcceptableOrUnknown(
+          data['owner_account_id']!,
+          _ownerAccountIdMeta,
         ),
       );
     }
@@ -271,6 +303,16 @@ class $ProfilesTable extends Profiles
           data['${effectivePrefix}overwrite_type'],
         )!,
       ),
+      source: $ProfilesTable.$convertersource.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}source'],
+        )!,
+      ),
+      ownerAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_account_id'],
+      ),
       scriptId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}script_id'],
@@ -317,6 +359,8 @@ class $ProfilesTable extends Profiles
   $converteroverwriteType = const EnumNameConverter<OverwriteType>(
     OverwriteType.values,
   );
+  static JsonTypeConverter2<ProfileSource, String, String> $convertersource =
+      const EnumNameConverter<ProfileSource>(ProfileSource.values);
   static TypeConverter<SubscriptionInfo?, String?> $convertersubscriptionInfo =
       const SubscriptionInfoConverter();
   static TypeConverter<Map<String, String>, String> $converterselectedMap =
@@ -332,6 +376,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
   final String url;
   final DateTime? lastUpdateDate;
   final OverwriteType overwriteType;
+  final ProfileSource source;
+  final String? ownerAccountId;
   final int? scriptId;
   final int autoUpdateDurationMillis;
   final SubscriptionInfo? subscriptionInfo;
@@ -346,6 +392,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     required this.url,
     this.lastUpdateDate,
     required this.overwriteType,
+    required this.source,
+    this.ownerAccountId,
     this.scriptId,
     required this.autoUpdateDurationMillis,
     this.subscriptionInfo,
@@ -370,6 +418,14 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       map['overwrite_type'] = Variable<String>(
         $ProfilesTable.$converteroverwriteType.toSql(overwriteType),
       );
+    }
+    {
+      map['source'] = Variable<String>(
+        $ProfilesTable.$convertersource.toSql(source),
+      );
+    }
+    if (!nullToAbsent || ownerAccountId != null) {
+      map['owner_account_id'] = Variable<String>(ownerAccountId);
     }
     if (!nullToAbsent || scriptId != null) {
       map['script_id'] = Variable<int>(scriptId);
@@ -411,6 +467,10 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           ? const Value.absent()
           : Value(lastUpdateDate),
       overwriteType: Value(overwriteType),
+      source: Value(source),
+      ownerAccountId: ownerAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ownerAccountId),
       scriptId: scriptId == null && nullToAbsent
           ? const Value.absent()
           : Value(scriptId),
@@ -441,6 +501,10 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       overwriteType: $ProfilesTable.$converteroverwriteType.fromJson(
         serializer.fromJson<String>(json['overwriteType']),
       ),
+      source: $ProfilesTable.$convertersource.fromJson(
+        serializer.fromJson<String>(json['source']),
+      ),
+      ownerAccountId: serializer.fromJson<String?>(json['ownerAccountId']),
       scriptId: serializer.fromJson<int?>(json['scriptId']),
       autoUpdateDurationMillis: serializer.fromJson<int>(
         json['autoUpdateDurationMillis'],
@@ -468,6 +532,10 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       'overwriteType': serializer.toJson<String>(
         $ProfilesTable.$converteroverwriteType.toJson(overwriteType),
       ),
+      'source': serializer.toJson<String>(
+        $ProfilesTable.$convertersource.toJson(source),
+      ),
+      'ownerAccountId': serializer.toJson<String?>(ownerAccountId),
       'scriptId': serializer.toJson<int?>(scriptId),
       'autoUpdateDurationMillis': serializer.toJson<int>(
         autoUpdateDurationMillis,
@@ -489,6 +557,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     String? url,
     Value<DateTime?> lastUpdateDate = const Value.absent(),
     OverwriteType? overwriteType,
+    ProfileSource? source,
+    Value<String?> ownerAccountId = const Value.absent(),
     Value<int?> scriptId = const Value.absent(),
     int? autoUpdateDurationMillis,
     Value<SubscriptionInfo?> subscriptionInfo = const Value.absent(),
@@ -507,6 +577,10 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
         ? lastUpdateDate.value
         : this.lastUpdateDate,
     overwriteType: overwriteType ?? this.overwriteType,
+    source: source ?? this.source,
+    ownerAccountId: ownerAccountId.present
+        ? ownerAccountId.value
+        : this.ownerAccountId,
     scriptId: scriptId.present ? scriptId.value : this.scriptId,
     autoUpdateDurationMillis:
         autoUpdateDurationMillis ?? this.autoUpdateDurationMillis,
@@ -532,6 +606,10 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       overwriteType: data.overwriteType.present
           ? data.overwriteType.value
           : this.overwriteType,
+      source: data.source.present ? data.source.value : this.source,
+      ownerAccountId: data.ownerAccountId.present
+          ? data.ownerAccountId.value
+          : this.ownerAccountId,
       scriptId: data.scriptId.present ? data.scriptId.value : this.scriptId,
       autoUpdateDurationMillis: data.autoUpdateDurationMillis.present
           ? data.autoUpdateDurationMillis.value
@@ -559,6 +637,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           ..write('url: $url, ')
           ..write('lastUpdateDate: $lastUpdateDate, ')
           ..write('overwriteType: $overwriteType, ')
+          ..write('source: $source, ')
+          ..write('ownerAccountId: $ownerAccountId, ')
           ..write('scriptId: $scriptId, ')
           ..write('autoUpdateDurationMillis: $autoUpdateDurationMillis, ')
           ..write('subscriptionInfo: $subscriptionInfo, ')
@@ -578,6 +658,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     url,
     lastUpdateDate,
     overwriteType,
+    source,
+    ownerAccountId,
     scriptId,
     autoUpdateDurationMillis,
     subscriptionInfo,
@@ -596,6 +678,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           other.url == this.url &&
           other.lastUpdateDate == this.lastUpdateDate &&
           other.overwriteType == this.overwriteType &&
+          other.source == this.source &&
+          other.ownerAccountId == this.ownerAccountId &&
           other.scriptId == this.scriptId &&
           other.autoUpdateDurationMillis == this.autoUpdateDurationMillis &&
           other.subscriptionInfo == this.subscriptionInfo &&
@@ -612,6 +696,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
   final Value<String> url;
   final Value<DateTime?> lastUpdateDate;
   final Value<OverwriteType> overwriteType;
+  final Value<ProfileSource> source;
+  final Value<String?> ownerAccountId;
   final Value<int?> scriptId;
   final Value<int> autoUpdateDurationMillis;
   final Value<SubscriptionInfo?> subscriptionInfo;
@@ -626,6 +712,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     this.url = const Value.absent(),
     this.lastUpdateDate = const Value.absent(),
     this.overwriteType = const Value.absent(),
+    this.source = const Value.absent(),
+    this.ownerAccountId = const Value.absent(),
     this.scriptId = const Value.absent(),
     this.autoUpdateDurationMillis = const Value.absent(),
     this.subscriptionInfo = const Value.absent(),
@@ -641,6 +729,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     required String url,
     this.lastUpdateDate = const Value.absent(),
     required OverwriteType overwriteType,
+    this.source = const Value.absent(),
+    this.ownerAccountId = const Value.absent(),
     this.scriptId = const Value.absent(),
     required int autoUpdateDurationMillis,
     this.subscriptionInfo = const Value.absent(),
@@ -662,6 +752,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Expression<String>? url,
     Expression<DateTime>? lastUpdateDate,
     Expression<String>? overwriteType,
+    Expression<String>? source,
+    Expression<String>? ownerAccountId,
     Expression<int>? scriptId,
     Expression<int>? autoUpdateDurationMillis,
     Expression<String>? subscriptionInfo,
@@ -677,6 +769,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       if (url != null) 'url': url,
       if (lastUpdateDate != null) 'last_update_date': lastUpdateDate,
       if (overwriteType != null) 'overwrite_type': overwriteType,
+      if (source != null) 'source': source,
+      if (ownerAccountId != null) 'owner_account_id': ownerAccountId,
       if (scriptId != null) 'script_id': scriptId,
       if (autoUpdateDurationMillis != null)
         'auto_update_duration_millis': autoUpdateDurationMillis,
@@ -695,6 +789,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Value<String>? url,
     Value<DateTime?>? lastUpdateDate,
     Value<OverwriteType>? overwriteType,
+    Value<ProfileSource>? source,
+    Value<String?>? ownerAccountId,
     Value<int?>? scriptId,
     Value<int>? autoUpdateDurationMillis,
     Value<SubscriptionInfo?>? subscriptionInfo,
@@ -710,6 +806,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       url: url ?? this.url,
       lastUpdateDate: lastUpdateDate ?? this.lastUpdateDate,
       overwriteType: overwriteType ?? this.overwriteType,
+      source: source ?? this.source,
+      ownerAccountId: ownerAccountId ?? this.ownerAccountId,
       scriptId: scriptId ?? this.scriptId,
       autoUpdateDurationMillis:
           autoUpdateDurationMillis ?? this.autoUpdateDurationMillis,
@@ -743,6 +841,14 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       map['overwrite_type'] = Variable<String>(
         $ProfilesTable.$converteroverwriteType.toSql(overwriteType.value),
       );
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(
+        $ProfilesTable.$convertersource.toSql(source.value),
+      );
+    }
+    if (ownerAccountId.present) {
+      map['owner_account_id'] = Variable<String>(ownerAccountId.value);
     }
     if (scriptId.present) {
       map['script_id'] = Variable<int>(scriptId.value);
@@ -785,6 +891,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
           ..write('url: $url, ')
           ..write('lastUpdateDate: $lastUpdateDate, ')
           ..write('overwriteType: $overwriteType, ')
+          ..write('source: $source, ')
+          ..write('ownerAccountId: $ownerAccountId, ')
           ..write('scriptId: $scriptId, ')
           ..write('autoUpdateDurationMillis: $autoUpdateDurationMillis, ')
           ..write('subscriptionInfo: $subscriptionInfo, ')
@@ -3473,6 +3581,8 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       required String url,
       Value<DateTime?> lastUpdateDate,
       required OverwriteType overwriteType,
+      Value<ProfileSource> source,
+      Value<String?> ownerAccountId,
       Value<int?> scriptId,
       required int autoUpdateDurationMillis,
       Value<SubscriptionInfo?> subscriptionInfo,
@@ -3489,6 +3599,8 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<String> url,
       Value<DateTime?> lastUpdateDate,
       Value<OverwriteType> overwriteType,
+      Value<ProfileSource> source,
+      Value<String?> ownerAccountId,
       Value<int?> scriptId,
       Value<int> autoUpdateDurationMillis,
       Value<SubscriptionInfo?> subscriptionInfo,
@@ -3579,6 +3691,17 @@ class $$ProfilesTableFilterComposer
   get overwriteType => $composableBuilder(
     column: $table.overwriteType,
     builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<ProfileSource, ProfileSource, String>
+  get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get ownerAccountId => $composableBuilder(
+    column: $table.ownerAccountId,
+    builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<int> get scriptId => $composableBuilder(
@@ -3713,6 +3836,16 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ownerAccountId => $composableBuilder(
+    column: $table.ownerAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get scriptId => $composableBuilder(
     column: $table.scriptId,
     builder: (column) => ColumnOrderings(column),
@@ -3782,6 +3915,14 @@ class $$ProfilesTableAnnotationComposer
         column: $table.overwriteType,
         builder: (column) => column,
       );
+
+  GeneratedColumnWithTypeConverter<ProfileSource, String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerAccountId => $composableBuilder(
+    column: $table.ownerAccountId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get scriptId =>
       $composableBuilder(column: $table.scriptId, builder: (column) => column);
@@ -3902,6 +4043,8 @@ class $$ProfilesTableTableManager
                 Value<String> url = const Value.absent(),
                 Value<DateTime?> lastUpdateDate = const Value.absent(),
                 Value<OverwriteType> overwriteType = const Value.absent(),
+                Value<ProfileSource> source = const Value.absent(),
+                Value<String?> ownerAccountId = const Value.absent(),
                 Value<int?> scriptId = const Value.absent(),
                 Value<int> autoUpdateDurationMillis = const Value.absent(),
                 Value<SubscriptionInfo?> subscriptionInfo =
@@ -3917,6 +4060,8 @@ class $$ProfilesTableTableManager
                 url: url,
                 lastUpdateDate: lastUpdateDate,
                 overwriteType: overwriteType,
+                source: source,
+                ownerAccountId: ownerAccountId,
                 scriptId: scriptId,
                 autoUpdateDurationMillis: autoUpdateDurationMillis,
                 subscriptionInfo: subscriptionInfo,
@@ -3933,6 +4078,8 @@ class $$ProfilesTableTableManager
                 required String url,
                 Value<DateTime?> lastUpdateDate = const Value.absent(),
                 required OverwriteType overwriteType,
+                Value<ProfileSource> source = const Value.absent(),
+                Value<String?> ownerAccountId = const Value.absent(),
                 Value<int?> scriptId = const Value.absent(),
                 required int autoUpdateDurationMillis,
                 Value<SubscriptionInfo?> subscriptionInfo =
@@ -3948,6 +4095,8 @@ class $$ProfilesTableTableManager
                 url: url,
                 lastUpdateDate: lastUpdateDate,
                 overwriteType: overwriteType,
+                source: source,
+                ownerAccountId: ownerAccountId,
                 scriptId: scriptId,
                 autoUpdateDurationMillis: autoUpdateDurationMillis,
                 subscriptionInfo: subscriptionInfo,

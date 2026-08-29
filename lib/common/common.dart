@@ -17,6 +17,7 @@ export 'iterable.dart';
 export 'javascript.dart';
 export 'keyboard.dart';
 export 'launch.dart';
+export 'legacy_upgrade.dart';
 export 'link.dart';
 export 'lock.dart';
 export 'measure.dart';

@@ -57,6 +57,7 @@ class CommonAction extends _$CommonAction {
     if (data != null) {
       final tagName = data['tag_name'];
       final body = data['body'];
+      final force = data['force'] == true;
       final submits = utils.parseReleaseBody(body);
       final context = globalState.navigatorKey.currentContext!;
       final textTheme = context.textTheme;
@@ -72,10 +73,19 @@ class CommonAction extends _$CommonAction {
           ],
         ),
         confirmText: currentAppLocalizations.goDownload,
-        cancelText: isUser ? null : currentAppLocalizations.noLongerRemind,
+        cancelText: isUser || force
+            ? null
+            : currentAppLocalizations.noLongerRemind,
+        cancelable: !force,
+        dismissible: !force,
       );
       if (res == true) {
-        launchUrl(Uri.parse('https://github.com/$repository/releases/latest'));
+        final downloadUri = Uri.tryParse(
+          data['download_url']?.toString() ?? '',
+        );
+        if (downloadUri != null && downloadUri.scheme == 'https') {
+          launchUrl(downloadUri, mode: LaunchMode.externalApplication);
+        }
       } else if (!isUser && res == false) {
         ref
             .read(appSettingProvider.notifier)

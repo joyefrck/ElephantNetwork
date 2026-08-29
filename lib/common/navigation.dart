@@ -1,4 +1,5 @@
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/account/account.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/views/views.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,12 @@ class Navigation {
     bool hasProxies = false,
   }) {
     return [
+      NavigationItem(
+        icon: const Icon(Icons.account_circle),
+        label: PageLabel.account,
+        builder: (_) =>
+            const ElephantAccountView(key: GlobalObjectKey(PageLabel.account)),
+      ),
       NavigationItem(
         keep: false,
         icon: const Icon(Icons.space_dashboard),
