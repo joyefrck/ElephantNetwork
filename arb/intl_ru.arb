@@ -113,6 +113,8 @@
   "signOut": "Выйти",
   "signInToContinue": "Войдите в Elephant Network, чтобы продолжить",
   "serviceUnavailable": "Elephant Network временно недоступен",
+  "invalidCredentials": "Неверный адрес электронной почты или пароль",
+  "managedSubscriptionUnavailable": "Вход выполнен, но не удалось загрузить управляемую подписку. Повторите попытку позже.",
   "retry": "Повторить",
   "useAnotherAccount": "Использовать другой аккаунт",
   "accountOverview": "Обзор аккаунта",

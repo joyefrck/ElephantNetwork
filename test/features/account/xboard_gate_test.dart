@@ -1,0 +1,113 @@
+import 'package:fl_clash/features/account/account.dart';
+import 'package:fl_clash/l10n/l10n.dart';
+import 'package:fl_clash/providers/providers.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  final entryStates = <String, XboardSessionState>{
+    'loading': const XboardSessionState.loading(),
+    'unauthenticated': const XboardSessionState.unauthenticated(),
+    'authenticating': const XboardSessionState.authenticating(),
+    'unavailable': XboardSessionState.unavailable(
+      StateError('secure_storage_unavailable'),
+    ),
+  };
+
+  for (final entry in entryStates.entries) {
+    testWidgets('${entry.key} uses the light login entry', (tester) async {
+      await _pumpGate(tester, entry.value);
+
+      expect(find.byType(TextFormField), findsNWidgets(2));
+      if (const {
+        XboardSessionStatus.loading,
+        XboardSessionStatus.authenticating,
+      }.contains(entry.value.status)) {
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      } else {
+        expect(find.text('Sign in'), findsOneWidget);
+      }
+      final fieldContext = tester.element(find.byType(TextFormField).first);
+      expect(Theme.of(fieldContext).brightness, Brightness.light);
+      expect(
+        Theme.of(fieldContext).scaffoldBackgroundColor,
+        const Color(0xFFF6F8F5),
+      );
+    });
+  }
+
+  testWidgets('authenticated child keeps the parent dark theme', (
+    tester,
+  ) async {
+    await _pumpGate(
+      tester,
+      XboardSessionState.authenticated(
+        XboardSession(token: 'token', account: _account()),
+      ),
+    );
+
+    final childContext = tester.element(find.byKey(const Key('child')));
+    expect(Theme.of(childContext).brightness, Brightness.dark);
+    expect(find.byType(TextFormField), findsNothing);
+  });
+
+  testWidgets('rejected login shows a credential-specific error', (
+    tester,
+  ) async {
+    await _pumpGate(
+      tester,
+      const XboardSessionState.unauthenticated(
+        XboardApiException(statusCode: 400),
+      ),
+    );
+
+    expect(find.text('Invalid email or password'), findsOneWidget);
+    expect(
+      find.text('Elephant Network is temporarily unavailable'),
+      findsNothing,
+    );
+  });
+}
+
+Future<void> _pumpGate(WidgetTester tester, XboardSessionState state) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [xboardSessionControllerProvider.overrideWithValue(state)],
+      child: MaterialApp(
+        theme: ThemeData.dark(),
+        locale: const Locale('en'),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.delegate.supportedLocales,
+        home: const XboardGate(child: Builder(builder: _authenticatedChild)),
+      ),
+    ),
+  );
+  await tester.pump();
+}
+
+Widget _authenticatedChild(BuildContext context) {
+  return const Text('authenticated', key: Key('child'));
+}
+
+XboardAccount _account() {
+  return const XboardAccount(
+    email: 'owner@example.com',
+    balance: 0,
+    upload: 0,
+    download: 0,
+    planTransferEnable: 0,
+    planUsedTraffic: 0,
+    planRemainingTraffic: 0,
+    trafficPackageTotal: 0,
+    trafficPackageRemaining: 0,
+    effectiveTransferEnable: 0,
+    effectiveRemainingTraffic: 0,
+  );
+}

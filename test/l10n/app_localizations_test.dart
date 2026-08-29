@@ -138,6 +138,8 @@ List<String> _allMessages(AppLocalizations appLocalizations) {
     appLocalizations.compatible,
     appLocalizations.notSelectedTip,
     appLocalizations.tip,
+    appLocalizations.invalidCredentials,
+    appLocalizations.managedSubscriptionUnavailable,
     appLocalizations.account,
     appLocalizations.backup,
     appLocalizations.backupSuccess,

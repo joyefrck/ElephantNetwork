@@ -5,6 +5,8 @@ import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'xboard_entry_shell.dart';
+
 class XboardGate extends ConsumerWidget {
   const XboardGate({super.key, required this.child});
 
@@ -16,9 +18,9 @@ class XboardGate extends ConsumerWidget {
     return switch (state.status) {
       XboardSessionStatus.authenticated => child,
       XboardSessionStatus.unauthenticated ||
-      XboardSessionStatus.authenticating => const XboardLoginView(),
-      XboardSessionStatus.unavailable => const _UnavailableView(),
-      XboardSessionStatus.loading => const _GateLoadingView(),
+      XboardSessionStatus.authenticating ||
+      XboardSessionStatus.unavailable ||
+      XboardSessionStatus.loading => const XboardLoginView(),
     };
   }
 }
@@ -64,91 +66,125 @@ class _XboardLoginViewState extends ConsumerState<XboardLoginView> {
     final l10n = context.appLocalizations;
     final state = ref.watch(xboardSessionControllerProvider);
     final busy = state.status == XboardSessionStatus.authenticating;
-    return Scaffold(
-      body: SafeArea(
+    final restoring = state.status == XboardSessionStatus.loading;
+    final errorText = _errorText(context, state.error);
+    return XboardEntryShell(
+      child: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                child: AutofillGroup(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Align(
-                        child: Image.asset(
-                          'assets/images/icon.png',
-                          width: 76,
-                          height: 76,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(32, 30, 32, 32),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.96),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFFE1E9E4)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x17203F30),
+                      blurRadius: 42,
+                      offset: Offset(0, 18),
+                    ),
+                  ],
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: AutofillGroup(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Align(
+                          child: Image.asset(
+                            'assets/images/icon.png',
+                            width: 84,
+                            height: 84,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        appName,
-                        textAlign: TextAlign.center,
-                        style: context.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.signInToContinue,
-                        textAlign: TextAlign.center,
-                        style: context.textTheme.bodyMedium?.copyWith(
-                          color: context.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      TextFormField(
-                        controller: _emailController,
-                        enabled: !busy,
-                        keyboardType: TextInputType.emailAddress,
-                        autofillHints: const [AutofillHints.username],
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l10n.emailAddress,
-                          prefixIcon: const Icon(Icons.alternate_email),
-                          border: const OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          final email = value?.trim() ?? '';
-                          return email.contains('@') ? null : l10n.emailAddress;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _passwordController,
-                        enabled: !busy,
-                        obscureText: true,
-                        autofillHints: const [AutofillHints.password],
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _submit(),
-                        decoration: InputDecoration(
-                          labelText: l10n.password,
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          border: const OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          return (value?.isNotEmpty ?? false)
-                              ? null
-                              : l10n.password;
-                        },
-                      ),
-                      if (state.error != null) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 18),
                         Text(
-                          l10n.serviceUnavailable,
-                          style: TextStyle(color: context.colorScheme.error),
+                          appName,
+                          textAlign: TextAlign.center,
+                          style: context.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
                         ),
-                      ],
-                      const SizedBox(height: 24),
-                      FilledButton(
-                        onPressed: busy ? null : _submit,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: busy
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.signInToContinue,
+                          textAlign: TextAlign.center,
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        TextFormField(
+                          controller: _emailController,
+                          enabled: !busy && !restoring,
+                          keyboardType: TextInputType.emailAddress,
+                          autofillHints: const [AutofillHints.username],
+                          textInputAction: TextInputAction.next,
+                          style: const TextStyle(fontSize: 14),
+                          decoration: InputDecoration(
+                            labelText: l10n.emailAddress,
+                            prefixIcon: const Icon(Icons.alternate_email),
+                          ),
+                          validator: (value) {
+                            final email = value?.trim() ?? '';
+                            return email.contains('@')
+                                ? null
+                                : l10n.emailAddress;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _passwordController,
+                          enabled: !busy && !restoring,
+                          obscureText: true,
+                          autofillHints: const [AutofillHints.password],
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _submit(),
+                          style: const TextStyle(fontSize: 14),
+                          decoration: InputDecoration(
+                            labelText: l10n.password,
+                            prefixIcon: const Icon(Icons.lock_outline),
+                          ),
+                          validator: (value) {
+                            return (value?.isNotEmpty ?? false)
+                                ? null
+                                : l10n.password;
+                          },
+                        ),
+                        if (errorText != null) ...[
+                          const SizedBox(height: 14),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                size: 18,
+                                color: context.colorScheme.error,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  errorText,
+                                  style: TextStyle(
+                                    color: context.colorScheme.error,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 24),
+                        FilledButton(
+                          onPressed: busy || restoring ? null : _submit,
+                          child: busy || restoring
                               ? const SizedBox.square(
                                   dimension: 20,
                                   child: CircularProgressIndicator(
@@ -157,8 +193,8 @@ class _XboardLoginViewState extends ConsumerState<XboardLoginView> {
                                 )
                               : Text(l10n.signIn),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -168,73 +204,14 @@ class _XboardLoginViewState extends ConsumerState<XboardLoginView> {
       ),
     );
   }
-}
 
-class _GateLoadingView extends StatelessWidget {
-  const _GateLoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
-  }
-}
-
-class _UnavailableView extends ConsumerWidget {
-  const _UnavailableView();
-
-  Future<void> _retry(WidgetRef ref) async {
-    final authenticated = await ref
-        .read(xboardSessionControllerProvider.notifier)
-        .restore();
-    if (authenticated) {
-      try {
-        await globalState.startAuthenticatedRuntime();
-      } catch (_) {
-        await ref.read(xboardSessionControllerProvider.notifier).logout();
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  String? _errorText(BuildContext context, Object? error) {
+    if (error == null) return null;
     final l10n = context.appLocalizations;
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.cloud_off_outlined,
-                  size: 56,
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  l10n.serviceUnavailable,
-                  textAlign: TextAlign.center,
-                  style: context.textTheme.titleLarge,
-                ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: () => _retry(ref),
-                  icon: const Icon(Icons.refresh),
-                  label: Text(l10n.retry),
-                ),
-                TextButton(
-                  onPressed: () => ref
-                      .read(xboardSessionControllerProvider.notifier)
-                      .logout(),
-                  child: Text(l10n.useAnotherAccount),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    if (error is XboardApiException &&
+        const {400, 401, 403}.contains(error.statusCode)) {
+      return l10n.invalidCredentials;
+    }
+    return l10n.serviceUnavailable;
   }
 }

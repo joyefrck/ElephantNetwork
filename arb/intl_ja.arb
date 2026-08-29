@@ -113,6 +113,8 @@
   "signOut": "ログアウト",
   "signInToContinue": "Elephant Network にログインして続行",
   "serviceUnavailable": "Elephant Network に接続できません",
+  "invalidCredentials": "メールアドレスまたはパスワードが正しくありません",
+  "managedSubscriptionUnavailable": "ログインしましたが、管理対象サブスクリプションを読み込めませんでした。しばらくしてから再試行してください。",
   "retry": "再試行",
   "useAnotherAccount": "別のアカウントを使用",
   "accountOverview": "アカウント概要",

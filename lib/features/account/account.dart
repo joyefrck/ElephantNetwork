@@ -7,4 +7,5 @@ export 'xboard_session_coordinator.dart';
 export 'xboard_session_store.dart';
 export 'views/elephant_account_view.dart';
 export 'views/elephant_webview.dart';
+export 'views/xboard_entry_shell.dart';
 export 'views/xboard_gate.dart';

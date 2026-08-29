@@ -113,6 +113,8 @@
   "signOut": "Sign out",
   "signInToContinue": "Sign in to Elephant Network to continue",
   "serviceUnavailable": "Elephant Network is temporarily unavailable",
+  "invalidCredentials": "Invalid email or password",
+  "managedSubscriptionUnavailable": "Signed in, but the managed subscription could not be loaded. Please retry later.",
   "retry": "Retry",
   "useAnotherAccount": "Use another account",
   "accountOverview": "Account overview",

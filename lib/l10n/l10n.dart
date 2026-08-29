@@ -869,6 +869,26 @@ class AppLocalizations {
     );
   }
 
+  /// `Invalid email or password`
+  String get invalidCredentials {
+    return Intl.message(
+      'Invalid email or password',
+      name: 'invalidCredentials',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Signed in, but the managed subscription could not be loaded. Please retry later.`
+  String get managedSubscriptionUnavailable {
+    return Intl.message(
+      'Signed in, but the managed subscription could not be loaded. Please retry later.',
+      name: 'managedSubscriptionUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Retry`
   String get retry {
     return Intl.message('Retry', name: 'retry', desc: '', args: []);

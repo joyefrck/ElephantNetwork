@@ -355,7 +355,7 @@ class GlobalState {
           .autoUpdateProfiles();
       container.read(initProvider.notifier).value = true;
       if (!profileReady) {
-        showNotifier(currentAppLocalizations.serviceUnavailable);
+        showNotifier(currentAppLocalizations.managedSubscriptionUnavailable);
       }
     } catch (_) {
       _authenticatedRuntimeStarted = false;

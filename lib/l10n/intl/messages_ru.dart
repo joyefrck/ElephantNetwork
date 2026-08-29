@@ -521,6 +521,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidBackupFile": MessageLookupByLibrary.simpleMessage(
       "Неверный файл резервной копии",
     ),
+    "invalidCredentials": MessageLookupByLibrary.simpleMessage(
+      "Неверный адрес электронной почты или пароль",
+    ),
     "invalidPolicy": m12,
     "invalidProxy": m13,
     "invalidProxyProvider": m14,
@@ -578,6 +581,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Используется для разблокировки Loopback UWP",
     ),
     "loose": MessageLookupByLibrary.simpleMessage("Свободный"),
+    "managedSubscriptionUnavailable": MessageLookupByLibrary.simpleMessage(
+      "Вход выполнен, но не удалось загрузить управляемую подписку. Повторите попытку позже.",
+    ),
     "matchSourceIp": MessageLookupByLibrary.simpleMessage(
       "Сопоставить исходный IP",
     ),
