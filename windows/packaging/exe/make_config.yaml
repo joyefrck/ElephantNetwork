@@ -6,9 +6,9 @@ publisher_url: https://elephantroute.com
 display_name: Elephant Network
 executable_name: ElephantNetwork.exe
 output_base_file_name: ElephantNetwork-Setup.exe
-setup_icon_file: ..\windows\runner\resources\app_icon.ico
+setup_icon_file: windows\runner\resources\app_icon.ico
 locales:
   - lang: zh
-    file: ..\windows\packaging\exe\ChineseSimplified.isl
+    file: windows\packaging\exe\ChineseSimplified.isl
   - lang: en
 privileges_required: admin
