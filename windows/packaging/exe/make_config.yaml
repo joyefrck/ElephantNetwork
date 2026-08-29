@@ -9,6 +9,7 @@ output_base_file_name: ElephantNetwork-Setup.exe
 setup_icon_file: windows\runner\resources\app_icon.ico
 locales:
   - lang: zh
-    file: windows\packaging\exe\ChineseSimplified.isl
+    # Locale paths are emitted verbatim into the generated script under dist/.
+    file: ..\windows\packaging\exe\ChineseSimplified.isl
   - lang: en
 privileges_required: admin

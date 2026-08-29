@@ -46,9 +46,8 @@ void main() {
       );
       expect(
         windows,
-        contains(r'file: windows\packaging\exe\ChineseSimplified.isl'),
+        contains(r'file: ..\windows\packaging\exe\ChineseSimplified.isl'),
       );
-      expect(windows, isNot(contains(r'..\windows\')));
       expect(
         File('windows/runner/resources/app_icon.ico').existsSync(),
         isTrue,
