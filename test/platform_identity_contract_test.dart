@@ -18,6 +18,12 @@ void main() {
       final macosProject = File(
         'macos/Runner.xcodeproj/project.pbxproj',
       ).readAsStringSync();
+      final macosReleaseEntitlements = File(
+        'macos/Runner/Release.entitlements',
+      ).readAsStringSync();
+      final macosDebugEntitlements = File(
+        'macos/Runner/DebugProfile.entitlements',
+      ).readAsStringSync();
       final windows = File(
         'windows/packaging/exe/make_config.yaml',
       ).readAsStringSync();
@@ -35,7 +41,19 @@ void main() {
         ),
       );
       expect(macosProject, contains('CODE_SIGN_IDENTITY = "-";'));
+      expect(
+        macosProject,
+        contains('CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;'),
+      );
       expect(macosProject, contains('CODE_SIGN_STYLE = Manual;'));
+      expect(
+        macosReleaseEntitlements,
+        isNot(contains('<key>keychain-access-groups</key>')),
+      );
+      expect(
+        macosDebugEntitlements,
+        isNot(contains('<key>keychain-access-groups</key>')),
+      );
       expect(
         windows,
         contains('app_id: "{{5F1D7A6E-2B3C-4A91-9D74-E0C8F6B1A245}"'),
