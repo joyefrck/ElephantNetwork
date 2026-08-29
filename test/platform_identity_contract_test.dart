@@ -24,11 +24,15 @@ void main() {
       final macosDebugEntitlements = File(
         'macos/Runner/DebugProfile.entitlements',
       ).readAsStringSync();
+      final sessionStore = File(
+        'lib/features/account/xboard_session_store.dart',
+      ).readAsStringSync();
       final windows = File(
         'windows/packaging/exe/make_config.yaml',
       ).readAsStringSync();
 
       expect(pubspec, contains('version: 2.0.0+20000'));
+      expect(pubspec, contains('flutter_secure_storage: 10.0.0'));
       expect(constants, contains("const packageName = 'com.elephantroute';"));
       expect(android, contains('applicationId = "com.elephantroute"'));
       expect(components, contains('PACKAGE_NAME = "com.elephantroute"'));
@@ -53,6 +57,14 @@ void main() {
       expect(
         macosDebugEntitlements,
         isNot(contains('<key>keychain-access-groups</key>')),
+      );
+      expect(
+        sessionStore,
+        contains('usesDataProtectionKeychain: false'),
+      );
+      expect(
+        sessionStore,
+        contains("'useDataProtectionKeyChain': 'false'"),
       );
       expect(
         windows,

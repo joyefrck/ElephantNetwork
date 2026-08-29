@@ -24,9 +24,7 @@ class PlatformSecureKeyValueStore implements SecureKeyValueStore {
               sharedPreferencesName: 'elephant_network_secure_storage',
               preferencesKeyPrefix: 'elephant_network',
             ),
-            mOptions: MacOsOptions(
-              accessibility: KeychainAccessibility.first_unlock,
-            ),
+            mOptions: _UnsignedMacOsOptions(),
           );
 
   final FlutterSecureStorage _storage;
@@ -41,6 +39,25 @@ class PlatformSecureKeyValueStore implements SecureKeyValueStore {
   Future<void> write(String key, String value) {
     return _storage.write(key: key, value: value);
   }
+}
+
+class _UnsignedMacOsOptions extends MacOsOptions {
+  const _UnsignedMacOsOptions()
+    : super(
+        accessibility: KeychainAccessibility.first_unlock,
+        // Unsigned desktop builds cannot use the data-protection keychain
+        // without a provisioned keychain access group. The classic macOS
+        // Keychain still encrypts the token at rest and supports ad-hoc builds.
+        usesDataProtectionKeychain: false,
+      );
+
+  @override
+  Map<String, String> toMap() => {
+    ...super.toMap(),
+    // flutter_secure_storage_darwin 0.2.x reads this legacy spelling while
+    // newer releases read `usesDataProtectionKeychain` from super.toMap().
+    'useDataProtectionKeyChain': 'false',
+  };
 }
 
 class SharedPreferencesLegacyTokenStore implements LegacyTokenStore {
