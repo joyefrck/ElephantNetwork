@@ -4,34 +4,16 @@ import 'package:fl_clash/common/tray.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('Tray.getTryIcon', () {
+  group('Tray.trayIconPath', () {
     final tray = Tray();
     final suffix = tray.trayIconSuffix;
 
-    test('returns idle icon when core is not started', () {
+    test('returns the application logo', () {
       expect(
-        tray.getTryIcon(isStart: false, tunEnable: false),
+        tray.trayIconPath,
         Platform.isMacOS
             ? 'assets/images/tray_macos.png'
-            : 'assets/images/icon/status_1.$suffix',
-      );
-    });
-
-    test('returns normal mode icon when core is started without TUN', () {
-      expect(
-        tray.getTryIcon(isStart: true, tunEnable: false),
-        Platform.isMacOS
-            ? 'assets/images/tray_macos.png'
-            : 'assets/images/icon/status_2.$suffix',
-      );
-    });
-
-    test('returns enhanced mode icon when core is started with TUN', () {
-      expect(
-        tray.getTryIcon(isStart: true, tunEnable: true),
-        Platform.isMacOS
-            ? 'assets/images/tray_macos.png'
-            : 'assets/images/icon/status_3.$suffix',
+            : 'assets/images/icon.$suffix',
       );
     });
   });

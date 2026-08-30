@@ -29,6 +29,12 @@ void main() {
     expect(source, contains('delete ElephantNetworkService'));
     expect(source, contains('sing-box-windows-amd64.exe'));
     expect(source, contains("CompareText(ProxyServer, '127.0.0.1:2334')"));
+    expect(source, contains('AppVerName={{DISPLAY_NAME}}'));
+    expect(source, contains('UninstallDisplayName={{DISPLAY_NAME}}'));
+    expect(
+      source,
+      contains(r'UninstallDisplayIcon={app}\\{{EXECUTABLE_NAME}}'),
+    );
   });
 
   test('macOS cleanup targets only the legacy privileged components', () {
