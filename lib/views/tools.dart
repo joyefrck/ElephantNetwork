@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/features/account/account.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -72,6 +73,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
         const _LocaleItem(),
         const _ThemeItem(),
         const _BackupItem(),
+        const _SubscriptionUpdateItem(),
         if (system.isDesktop) const _HotkeyItem(),
         if (system.isWindows) const _LoopbackItem(),
         if (system.isAndroid) const _AccessItem(),
@@ -175,6 +177,20 @@ class _BackupItem extends StatelessWidget {
       title: Text(context.appLocalizations.backupAndRestore),
       subtitle: Text(context.appLocalizations.backupAndRestoreDesc),
       widget: const BackupAndRestore(),
+    );
+  }
+}
+
+class _SubscriptionUpdateItem extends StatelessWidget {
+  const _SubscriptionUpdateItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListItem.open(
+      leading: const Icon(Icons.sync),
+      title: Text(context.appLocalizations.subscriptionUpdate),
+      subtitle: Text(context.appLocalizations.subscriptionUpdateDesc),
+      widget: const ManagedSubscriptionUpdateView(),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/account/account.dart';
+import 'package:fl_clash/features/account/xboard_managed_profile.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -61,15 +62,11 @@ class RiverpodXboardManagedProfileGateway
         .where((profile) => profile.source == ProfileSource.xboard)
         .toList();
     final existing = managedProfiles.firstOrNull;
-    final candidate =
-        (existing ?? Profile.normal(label: XboardConfig.managedProfileLabel))
-            .copyWith(
-              label: XboardConfig.managedProfileLabel,
-              url: subscription.toString(),
-              source: ProfileSource.xboard,
-              ownerAccountId: account.accountId,
-              autoUpdate: true,
-            );
+    final candidate = buildXboardManagedProfile(
+      existing: existing,
+      subscription: subscription,
+      account: account,
+    );
     final updated = await candidate.update();
     ref.read(profilesActionProvider.notifier).putProfile(updated);
     for (final stale in managedProfiles.skip(1)) {

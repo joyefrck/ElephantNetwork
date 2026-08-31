@@ -92,7 +92,9 @@ class Window {
   Future<void> hide() async {
     render?.pause();
     await windowManager.hide();
-    await windowManager.setSkipTaskbar(true);
+    if (!system.isMacOS) {
+      await windowManager.setSkipTaskbar(true);
+    }
   }
 }
 

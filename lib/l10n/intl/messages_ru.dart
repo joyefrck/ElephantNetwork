@@ -737,6 +737,10 @@ class MessageLookup extends MessageLookupByLibrary {
         MessageLookupByLibrary.simpleMessage(
           "Пожалуйста, введите интервал времени для автообновления",
         ),
+    "profileAutoUpdateIntervalPositiveValidationDesc":
+        MessageLookupByLibrary.simpleMessage(
+          "Интервал автообновления должен быть больше 0",
+        ),
     "profileHasUpdate": MessageLookupByLibrary.simpleMessage(
       "Профиль был изменен. Хотите отключить автообновление?",
     ),
@@ -1058,6 +1062,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Подправило не может быть пустым",
     ),
     "submit": MessageLookupByLibrary.simpleMessage("Отправить"),
+    "subscriptionUpdate": MessageLookupByLibrary.simpleMessage(
+      "Обновление подписки",
+    ),
+    "subscriptionUpdateDesc": MessageLookupByLibrary.simpleMessage(
+      "Настройка обновления управляемой подписки",
+    ),
     "supportTickets": MessageLookupByLibrary.simpleMessage(
       "Обращения в поддержку",
     ),
@@ -1132,6 +1142,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unnamed": MessageLookupByLibrary.simpleMessage("Без имени"),
     "update": MessageLookupByLibrary.simpleMessage("Обновить"),
+    "updateNow": MessageLookupByLibrary.simpleMessage("Обновить сейчас"),
     "upload": MessageLookupByLibrary.simpleMessage("Загрузка"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage(

@@ -1,6 +1,7 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/theme.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/account/account.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/app.dart';
@@ -59,6 +60,7 @@ void main() {
     'backup and restore': const BackupAndRestore(),
     'hotkeys': const HotKeyView(),
     'access control': const AccessView(),
+    'subscription updates': const ManagedSubscriptionUpdateView(),
   };
 
   for (final entry in cases.entries) {
@@ -102,6 +104,7 @@ void main() {
   final toolDestinations = <String, Type>{
     'Theme': ThemeView,
     'Backup and Restore': BackupAndRestore,
+    'Subscription updates': ManagedSubscriptionUpdateView,
     'Basic configuration': ConfigView,
     'Advanced configuration': AdvancedConfigView,
     'Application': ApplicationSettingView,

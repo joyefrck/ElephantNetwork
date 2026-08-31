@@ -702,6 +702,10 @@ class MessageLookup extends MessageLookupByLibrary {
         MessageLookupByLibrary.simpleMessage(
           "Please enter the auto update interval time",
         ),
+    "profileAutoUpdateIntervalPositiveValidationDesc":
+        MessageLookupByLibrary.simpleMessage(
+          "Auto update interval must be greater than 0",
+        ),
     "profileHasUpdate": MessageLookupByLibrary.simpleMessage(
       "The profile has been modified. Do you want to disable auto update?",
     ),
@@ -1007,6 +1011,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Sub rule cannot be empty",
     ),
     "submit": MessageLookupByLibrary.simpleMessage("Submit"),
+    "subscriptionUpdate": MessageLookupByLibrary.simpleMessage(
+      "Subscription updates",
+    ),
+    "subscriptionUpdateDesc": MessageLookupByLibrary.simpleMessage(
+      "Manage managed subscription update settings",
+    ),
     "supportTickets": MessageLookupByLibrary.simpleMessage("Support tickets"),
     "suspended": MessageLookupByLibrary.simpleMessage("Suspended..."),
     "sync": MessageLookupByLibrary.simpleMessage("Sync"),
@@ -1067,6 +1077,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unnamed": MessageLookupByLibrary.simpleMessage("Unnamed"),
     "update": MessageLookupByLibrary.simpleMessage("Update"),
+    "updateNow": MessageLookupByLibrary.simpleMessage("Update now"),
     "upload": MessageLookupByLibrary.simpleMessage("Upload"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage(

@@ -449,6 +449,11 @@ class AppLocalizations {
     return Intl.message('Update', name: 'update', desc: '', args: []);
   }
 
+  /// `Update now`
+  String get updateNow {
+    return Intl.message('Update now', name: 'updateNow', desc: '', args: []);
+  }
+
   /// `Add`
   String get add {
     return Intl.message('Add', name: 'add', desc: '', args: []);
@@ -579,6 +584,16 @@ class AppLocalizations {
     return Intl.message(
       'Please input a valid interval time format',
       name: 'profileAutoUpdateIntervalInvalidValidationDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto update interval must be greater than 0`
+  String get profileAutoUpdateIntervalPositiveValidationDesc {
+    return Intl.message(
+      'Auto update interval must be greater than 0',
+      name: 'profileAutoUpdateIntervalPositiveValidationDesc',
       desc: '',
       args: [],
     );
@@ -894,6 +909,26 @@ class AppLocalizations {
     return Intl.message(
       'Signed in, but the managed subscription could not be loaded. Please retry later.',
       name: 'managedSubscriptionUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Subscription updates`
+  String get subscriptionUpdate {
+    return Intl.message(
+      'Subscription updates',
+      name: 'subscriptionUpdate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Manage managed subscription update settings`
+  String get subscriptionUpdateDesc {
+    return Intl.message(
+      'Manage managed subscription update settings',
+      name: 'subscriptionUpdateDesc',
       desc: '',
       args: [],
     );

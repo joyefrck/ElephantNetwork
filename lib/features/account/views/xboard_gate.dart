@@ -233,6 +233,17 @@ class _XboardLoginViewState extends ConsumerState<XboardLoginView> {
                                 )
                               : Text(l10n.signIn),
                         ),
+                        const SizedBox(height: 14),
+                        Text(
+                          'v${globalState.packageInfo.version}',
+                          key: const Key('xboard-login-version'),
+                          textAlign: TextAlign.center,
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                            fontSize: 12,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
                       ],
                     ),
                   ),
