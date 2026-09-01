@@ -3,8 +3,8 @@ name: build
 on:
   workflow_dispatch:
     inputs:
-      signed_android_only:
-        description: Build only the production-signed Android package
+      build_signed_android:
+        description: Build the production-signed Android package
         required: false
         type: boolean
         default: false
@@ -114,7 +114,7 @@ jobs:
 
   unsigned-desktop-build:
     name: Unsigned ${{ matrix.platform }} ${{ matrix.arch }}
-    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.signed_android_only }}
+    if: github.event_name == 'workflow_dispatch'
     needs: [ test, windows-helper-test ]
     runs-on: ${{ matrix.os }}
     strategy:
@@ -174,7 +174,7 @@ jobs:
 
   signed-android-build:
     name: Signed Android
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.signed_android_only }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_signed_android }}
     needs: [ test, windows-helper-test ]
     runs-on: ubuntu-latest
     steps:
