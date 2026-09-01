@@ -292,6 +292,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("Cut"),
     "dark": MessageLookupByLibrary.simpleMessage("Dark"),
     "dashboard": MessageLookupByLibrary.simpleMessage("Dashboard"),
+    "dashboardAccelerationGuide": MessageLookupByLibrary.simpleMessage(
+      "Click \"Enable acceleration\" in the bottom right to get started.",
+    ),
     "dataChangedSave": MessageLookupByLibrary.simpleMessage(
       "Data changes detected, do you want to save?",
     ),
@@ -363,6 +366,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "emailAddress": MessageLookupByLibrary.simpleMessage("Email address"),
     "emptyTip": m4,
     "en": MessageLookupByLibrary.simpleMessage("English"),
+    "enableAcceleration": MessageLookupByLibrary.simpleMessage(
+      "Enable acceleration",
+    ),
     "entries": MessageLookupByLibrary.simpleMessage(" entries"),
     "entriesCount": m5,
     "exclude": MessageLookupByLibrary.simpleMessage("Hidden from recent tasks"),

@@ -224,6 +224,8 @@
   "loose": "疎",
   "profilesSort": "プロファイルの並び替え",
   "start": "開始",
+  "enableAcceleration": "アクセラレーションを有効化",
+  "dashboardAccelerationGuide": "右下の「アクセラレーションを有効化」をクリックして開始します。",
   "stop": "停止",
   "dnsDesc": "DNS関連設定の更新",
   "key": "キー",

@@ -434,10 +434,13 @@ class _DelayTestButtonState extends State<DelayTestButton>
           child: ScaleTransition(scale: _animation, child: child),
         );
       },
-      child: CommonFloatingActionButton(
-        onPressed: _healthcheck,
-        label: appLocalizations.delayTest,
-        icon: const Icon(Icons.network_ping),
+      child: CommonScaffoldFabExtendedProvider(
+        isExtended: true,
+        child: CommonFloatingActionButton(
+          onPressed: _healthcheck,
+          label: appLocalizations.delayTest,
+          icon: const Icon(Icons.network_ping),
+        ),
       ),
     );
   }

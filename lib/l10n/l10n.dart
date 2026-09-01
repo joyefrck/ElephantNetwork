@@ -1714,6 +1714,26 @@ class AppLocalizations {
     return Intl.message('Start', name: 'start', desc: '', args: []);
   }
 
+  /// `Enable acceleration`
+  String get enableAcceleration {
+    return Intl.message(
+      'Enable acceleration',
+      name: 'enableAcceleration',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Click "Enable acceleration" in the bottom right to get started.`
+  String get dashboardAccelerationGuide {
+    return Intl.message(
+      'Click "Enable acceleration" in the bottom right to get started.',
+      name: 'dashboardAccelerationGuide',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Stop`
   String get stop {
     return Intl.message('Stop', name: 'stop', desc: '', args: []);

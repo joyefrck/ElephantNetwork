@@ -10,12 +10,6 @@ class Navigation {
   List<NavigationItem> getItems({bool openLogs = false}) {
     return [
       NavigationItem(
-        icon: const Icon(Icons.account_circle),
-        label: PageLabel.account,
-        builder: (_) =>
-            const ElephantAccountView(key: GlobalObjectKey(PageLabel.account)),
-      ),
-      NavigationItem(
         keep: false,
         icon: const Icon(Icons.space_dashboard),
         label: PageLabel.dashboard,
@@ -28,6 +22,12 @@ class Navigation {
         builder: (_) =>
             const ProxiesView(key: GlobalObjectKey(PageLabel.proxies)),
         modes: [NavigationItemMode.mobile, NavigationItemMode.desktop],
+      ),
+      NavigationItem(
+        icon: const Icon(Icons.account_circle),
+        label: PageLabel.account,
+        builder: (_) =>
+            const ElephantAccountView(key: GlobalObjectKey(PageLabel.account)),
       ),
       NavigationItem(
         icon: const Icon(Icons.folder),

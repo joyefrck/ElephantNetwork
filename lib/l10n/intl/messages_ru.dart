@@ -299,6 +299,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("Вырезать"),
     "dark": MessageLookupByLibrary.simpleMessage("Темный"),
     "dashboard": MessageLookupByLibrary.simpleMessage("Панель управления"),
+    "dashboardAccelerationGuide": MessageLookupByLibrary.simpleMessage(
+      "Нажмите «Включить ускорение» в правом нижнем углу, чтобы начать.",
+    ),
     "dataChangedSave": MessageLookupByLibrary.simpleMessage(
       "Обнаружены изменения данных, хотите сохранить?",
     ),
@@ -372,6 +375,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "emailAddress": MessageLookupByLibrary.simpleMessage("Электронная почта"),
     "emptyTip": m4,
     "en": MessageLookupByLibrary.simpleMessage("Английский"),
+    "enableAcceleration": MessageLookupByLibrary.simpleMessage(
+      "Включить ускорение",
+    ),
     "entries": MessageLookupByLibrary.simpleMessage(" записей"),
     "entriesCount": m5,
     "exclude": MessageLookupByLibrary.simpleMessage(

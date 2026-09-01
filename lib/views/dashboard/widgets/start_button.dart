@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
@@ -63,7 +65,9 @@ class RunTimeText extends StatelessWidget {
 }
 
 class StartButton extends ConsumerStatefulWidget {
-  const StartButton({super.key});
+  final VoidCallback? onToggleRequested;
+
+  const StartButton({super.key, this.onToggleRequested});
 
   @override
   ConsumerState<StartButton> createState() => _StartButtonState();
@@ -76,6 +80,7 @@ class _StartButtonState extends ConsumerState<StartButton>
   double? _twoDigitTextWidth;
   double? _threeDigitTextWidth;
   double? _suspendedTextWidth;
+  double? _enableAccelerationTextWidth;
   int? _displayRunTime;
 
   @override
@@ -106,6 +111,7 @@ class _StartButtonState extends ConsumerState<StartButton>
     _twoDigitTextWidth = null;
     _threeDigitTextWidth = null;
     _suspendedTextWidth = null;
+    _enableAccelerationTextWidth = null;
   }
 
   @override
@@ -117,6 +123,7 @@ class _StartButtonState extends ConsumerState<StartButton>
 
   void handleSwitchStart() {
     ref.read(commonActionProvider.notifier).toggleRunning();
+    widget.onToggleRequested?.call();
   }
 
   void _updateDisplayRunTime(int? runTime) {
@@ -177,6 +184,22 @@ class _StartButtonState extends ConsumerState<StartButton>
         24;
   }
 
+  double _getEnableAccelerationTextWidth(
+    BuildContext context,
+    String enableAccelerationText,
+  ) {
+    return _enableAccelerationTextWidth ??=
+        globalState.measure
+            .computeTextSize(
+              Text(
+                enableAccelerationText,
+                style: context.textTheme.titleMedium,
+              ),
+            )
+            .width +
+        16;
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasProfile = ref.watch(
@@ -190,6 +213,11 @@ class _StartButtonState extends ConsumerState<StartButton>
         (_displayRunTime ?? 0) >= _threeDigitHourThreshold;
     final theme = Theme.of(context);
     final appLocalizations = context.appLocalizations;
+    final enableAccelerationText = appLocalizations.enableAcceleration;
+    final enableAccelerationTextWidth = _getEnableAccelerationTextWidth(
+      context,
+      enableAccelerationText,
+    );
     final textWidth = suspend
         ? _getSuspendedTextWidth(context, appLocalizations.suspended)
         : _getRunTimeTextWidth(context, hasThreeDigitHours: hasThreeDigitHours);
@@ -199,10 +227,9 @@ class _StartButtonState extends ConsumerState<StartButton>
           floatingActionButtonTheme: theme.floatingActionButtonTheme.copyWith(
             sizeConstraints: const BoxConstraints(
               minWidth: 56,
-              maxWidth: 220,
               minHeight: _buttonHeight,
               maxHeight: _buttonHeight,
-            ),
+            ).copyWith(maxWidth: max(220, enableAccelerationTextWidth + 56)),
           ),
         ),
         child: FloatingActionButton(
@@ -233,26 +260,54 @@ class _StartButtonState extends ConsumerState<StartButton>
                   progress: _animation,
                 ),
               ),
-              SizeTransition(
-                axis: Axis.horizontal,
-                alignment: Alignment.centerLeft,
-                sizeFactor: _animation,
-                child: AnimatedContainer(
-                  width: textWidth,
-                  duration: _widthAnimationDuration,
-                  curve: Curves.easeOut,
-                  child: suspend
-                      ? Text(
-                          appLocalizations.suspended,
-                          maxLines: 1,
-                          overflow: TextOverflow.visible,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: context.colorScheme.onPrimaryContainer,
-                              ),
-                        )
-                      : RunTimeText(timeStamp: _displayRunTime),
-                ),
+              AnimatedBuilder(
+                animation: _animation,
+                builder: (_, _) {
+                  final progress = _animation.value.clamp(0.0, 1.0);
+                  final width =
+                      enableAccelerationTextWidth +
+                      (textWidth - enableAccelerationTextWidth) * progress;
+                  return AnimatedContainer(
+                    width: width,
+                    duration: _animation.isCompleted
+                        ? _widthAnimationDuration
+                        : Duration.zero,
+                    curve: Curves.easeOut,
+                    child: Stack(
+                      alignment: Alignment.centerLeft,
+                      children: [
+                        Opacity(
+                          opacity: 1 - progress,
+                          child: Text(
+                            enableAccelerationText,
+                            maxLines: 1,
+                            overflow: TextOverflow.visible,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: context.colorScheme.onPrimaryContainer,
+                                ),
+                          ),
+                        ),
+                        Opacity(
+                          opacity: progress,
+                          child: suspend
+                              ? Text(
+                                  appLocalizations.suspended,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.visible,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        color: context
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                      ),
+                                )
+                              : RunTimeText(timeStamp: _displayRunTime),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ],
           ),

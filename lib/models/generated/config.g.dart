@@ -22,6 +22,8 @@ _AppSettingProps _$AppSettingPropsFromJson(Map<String, dynamic> json) =>
       isAnimateToPage: json['isAnimateToPage'] as bool? ?? true,
       autoCheckUpdate: json['autoCheckUpdate'] as bool? ?? true,
       showLabel: json['showLabel'] as bool? ?? false,
+      dashboardAccelerationGuideCompleted:
+          json['dashboardAccelerationGuideCompleted'] as bool? ?? false,
       disclaimerAccepted: json['disclaimerAccepted'] as bool? ?? false,
       crashlyticsTip: json['crashlyticsTip'] as bool? ?? false,
       crashlytics: json['crashlytics'] as bool? ?? false,
@@ -54,6 +56,8 @@ Map<String, dynamic> _$AppSettingPropsToJson(_AppSettingProps instance) =>
       'isAnimateToPage': instance.isAnimateToPage,
       'autoCheckUpdate': instance.autoCheckUpdate,
       'showLabel': instance.showLabel,
+      'dashboardAccelerationGuideCompleted':
+          instance.dashboardAccelerationGuideCompleted,
       'disclaimerAccepted': instance.disclaimerAccepted,
       'crashlyticsTip': instance.crashlyticsTip,
       'crashlytics': instance.crashlytics,

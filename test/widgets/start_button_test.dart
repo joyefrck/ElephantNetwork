@@ -103,6 +103,44 @@ void main() {
     expect(tester.getSize(button).width, greaterThan(animatedWidth));
   });
 
+  testWidgets('StartButton labels the acceleration action when stopped', (
+    tester,
+  ) async {
+    final container = ProviderContainer(
+      overrides: [
+        profilesProvider.overrideWithValue([
+          const Profile(id: 1, autoUpdateDuration: Duration.zero),
+        ]),
+        suspendProvider.overrideWithValue(false),
+      ],
+    );
+    addTearDown(container.dispose);
+    globalState.container = container;
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const _TestApp(child: StartButton()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final button = find.byType(FloatingActionButton);
+    expect(find.text('开启加速'), findsOneWidget);
+    expect(
+      tester
+          .widget<Opacity>(
+            find.ancestor(
+              of: find.text('开启加速'),
+              matching: find.byType(Opacity),
+            ),
+          )
+          .opacity,
+      1,
+    );
+    expect(tester.getSize(button).width, greaterThan(56));
+  });
+
   testWidgets('StartButton resets its text after the close animation', (
     tester,
   ) async {
@@ -141,10 +179,6 @@ void main() {
       return text.data ?? text.textSpan!.toPlainText();
     }
 
-    final expandedTextWidth = tester
-        .widget<AnimatedContainer>(find.byType(AnimatedContainer))
-        .constraints
-        ?.maxWidth;
     final expandedButtonWidth = tester.getSize(button).width;
     expect(runTimeText(), '100:02:03');
 
@@ -153,24 +187,30 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(tester.getSize(button).width, greaterThan(expandedButtonWidth));
-    expect(
-      tester
-          .widget<AnimatedContainer>(find.byType(AnimatedContainer))
-          .constraints
-          ?.maxWidth,
-      expandedTextWidth,
-    );
+    expect(tester.getSize(button).width, lessThan(expandedButtonWidth));
     expect(runTimeText(), '100:02:03');
 
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(tester.getSize(button).width, 56);
+    expect(tester.getSize(button).width, greaterThan(56));
+    expect(find.text('开启加速'), findsOneWidget);
+    expect(
+      tester
+          .widget<Opacity>(
+            find.ancestor(
+              of: find.text('开启加速'),
+              matching: find.byType(Opacity),
+            ),
+          )
+          .opacity,
+      1,
+    );
     expect(runTimeText(), '100:02:03');
 
     await tester.pumpAndSettle();
 
-    expect(tester.getSize(button).width, 56);
+    expect(tester.getSize(button).width, greaterThan(56));
+    expect(find.text('开启加速'), findsOneWidget);
     expect(runTimeText(), '00:00:00');
   });
 
@@ -209,6 +249,36 @@ void main() {
     expect(action.requests, [false, true]);
     expect(container.read(isStartProvider), isTrue);
   });
+
+  testWidgets('notifies after dispatching a running-state toggle', (
+    tester,
+  ) async {
+    final events = <String>[];
+    final container = ProviderContainer(
+      overrides: [
+        initProvider.overrideWithBuild((_, _) => true),
+        profilesProvider.overrideWithValue([
+          const Profile(id: 1, autoUpdateDuration: Duration.zero),
+        ]),
+        setupActionProvider.overrideWith(() => _OrderedSetupAction(events)),
+      ],
+    );
+    addTearDown(container.dispose);
+    globalState.container = container;
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: _TestApp(
+          child: StartButton(onToggleRequested: () => events.add('notified')),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(FloatingActionButton));
+
+    expect(events, ['dispatched', 'notified']);
+  });
 }
 
 class _RecordingSetupAction extends SetupAction {
@@ -222,6 +292,19 @@ class _RecordingSetupAction extends SetupAction {
   }
 }
 
+class _OrderedSetupAction extends SetupAction {
+  _OrderedSetupAction(this.events);
+
+  final List<String> events;
+
+  @override
+  Future<void> setRunning(bool running, {bool initialize = false}) {
+    events.add('dispatched');
+    ref.read(runTimeProvider.notifier).value = running ? 1 : null;
+    return Future.value();
+  }
+}
+
 class _TestApp extends StatelessWidget {
   final Widget child;
 
@@ -230,6 +313,7 @@ class _TestApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      locale: const Locale('zh', 'CN'),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

@@ -232,6 +232,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("切り取り"),
     "dark": MessageLookupByLibrary.simpleMessage("ダーク"),
     "dashboard": MessageLookupByLibrary.simpleMessage("ダッシュボード"),
+    "dashboardAccelerationGuide": MessageLookupByLibrary.simpleMessage(
+      "右下の「アクセラレーションを有効化」をクリックして開始します。",
+    ),
     "dataChangedSave": MessageLookupByLibrary.simpleMessage(
       "データの変更が検出されました。保存しますか？",
     ),
@@ -285,6 +288,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "emailAddress": MessageLookupByLibrary.simpleMessage("メールアドレス"),
     "emptyTip": m4,
     "en": MessageLookupByLibrary.simpleMessage("英語"),
+    "enableAcceleration": MessageLookupByLibrary.simpleMessage("アクセラレーションを有効化"),
     "entries": MessageLookupByLibrary.simpleMessage(" エントリ"),
     "entriesCount": m5,
     "exclude": MessageLookupByLibrary.simpleMessage("最近のタスクから非表示"),

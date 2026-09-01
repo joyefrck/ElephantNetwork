@@ -210,6 +210,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("剪切"),
     "dark": MessageLookupByLibrary.simpleMessage("深色"),
     "dashboard": MessageLookupByLibrary.simpleMessage("仪表盘"),
+    "dashboardAccelerationGuide": MessageLookupByLibrary.simpleMessage(
+      "点击右下角“开启加速”，开始使用",
+    ),
     "dataChangedSave": MessageLookupByLibrary.simpleMessage("检测到数据有更改，是否保存"),
     "dataCollectionContent": MessageLookupByLibrary.simpleMessage(
       "本应用不接入第三方崩溃分析或行为统计。诊断日志仅保存在本机，并会过滤账号令牌、快速登录链接和订阅链接。",
@@ -257,6 +260,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "emailAddress": MessageLookupByLibrary.simpleMessage("邮箱地址"),
     "emptyTip": m4,
     "en": MessageLookupByLibrary.simpleMessage("英语"),
+    "enableAcceleration": MessageLookupByLibrary.simpleMessage("开启加速"),
     "entries": MessageLookupByLibrary.simpleMessage("个条目"),
     "entriesCount": m5,
     "exclude": MessageLookupByLibrary.simpleMessage("从最近任务中隐藏"),

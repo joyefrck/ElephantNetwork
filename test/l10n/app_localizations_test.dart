@@ -35,6 +35,8 @@ List<String> _allMessages(AppLocalizations appLocalizations) {
     appLocalizations.global,
     appLocalizations.direct,
     appLocalizations.dashboard,
+    appLocalizations.enableAcceleration,
+    appLocalizations.dashboardAccelerationGuide,
     appLocalizations.proxies,
     appLocalizations.profile,
     appLocalizations.profiles,

@@ -5,6 +5,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'action.dart';
+import 'app.dart';
 import 'config.dart';
 import 'database.dart';
 
@@ -38,8 +39,12 @@ class XboardSessionController extends _$XboardSessionController {
 
   Future<bool> restore() => _coordinator.restore();
 
-  Future<bool> login(String email, String password) {
-    return _coordinator.login(email, password);
+  Future<bool> login(String email, String password) async {
+    final authenticated = await _coordinator.login(email, password);
+    if (authenticated) {
+      ref.read(currentPageLabelProvider.notifier).toPage(PageLabel.dashboard);
+    }
+    return authenticated;
   }
 
   Future<bool> refresh() => _coordinator.refresh();
@@ -51,9 +56,13 @@ class XboardSessionController extends _$XboardSessionController {
 
 class RiverpodXboardManagedProfileGateway
     implements XboardManagedProfileGateway {
-  RiverpodXboardManagedProfileGateway(this.ref);
+  RiverpodXboardManagedProfileGateway(
+    this.ref, {
+    Future<Profile> Function(Profile profile)? updateProfile,
+  }) : _updateProfile = updateProfile ?? ((profile) => profile.update());
 
   final Ref ref;
+  final Future<Profile> Function(Profile profile) _updateProfile;
 
   @override
   Future<void> reconcile(Uri subscription, XboardAccount account) async {
@@ -67,7 +76,7 @@ class RiverpodXboardManagedProfileGateway
       subscription: subscription,
       account: account,
     );
-    final updated = await candidate.update();
+    final updated = await _updateProfile(candidate);
     ref.read(profilesActionProvider.notifier).putProfile(updated);
     for (final stale in managedProfiles.skip(1)) {
       await ref.read(profilesActionProvider.notifier).deleteProfile(stale.id);
@@ -76,6 +85,7 @@ class RiverpodXboardManagedProfileGateway
     final current = profiles.getProfile(currentId);
     if (current == null || current.source == ProfileSource.xboard) {
       ref.read(currentProfileIdProvider.notifier).value = updated.id;
+      await ref.read(setupActionProvider.notifier).applyProfile(silence: true);
     }
   }
 

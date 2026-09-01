@@ -106,6 +106,7 @@ void main() {
       expect(restored.isAnimateToPage, true);
       expect(restored.autoCheckUpdate, true);
       expect(restored.showLabel, false);
+      expect(restored.dashboardAccelerationGuideCompleted, false);
       expect(restored.minimizeOnExit, true);
       expect(restored.restoreStrategy, RestoreStrategy.compatible);
       expect(restored.customUserAgent, '');
@@ -118,6 +119,7 @@ void main() {
         onlyStatisticsProxy: true,
         autoLaunch: true,
         closeConnections: false,
+        dashboardAccelerationGuideCompleted: true,
         testUrl: 'https://custom.test',
         customUserAgent: 'CustomUA/1.0',
       );
@@ -129,6 +131,7 @@ void main() {
       expect(restored.onlyStatisticsProxy, true);
       expect(restored.autoLaunch, true);
       expect(restored.closeConnections, false);
+      expect(restored.dashboardAccelerationGuideCompleted, true);
       expect(restored.testUrl, 'https://custom.test');
       expect(restored.customUserAgent, 'CustomUA/1.0');
     });
@@ -142,6 +145,12 @@ void main() {
     test('safeFromJson returns default on invalid JSON', () {
       final result = AppSettingProps.safeFromJson({'invalid': 'data'});
       expect(result, isA<AppSettingProps>());
+    });
+
+    test('missing acceleration guide state defaults to incomplete', () {
+      final result = AppSettingProps.fromJson(const {});
+
+      expect(result.dashboardAccelerationGuideCompleted, false);
     });
   });
 

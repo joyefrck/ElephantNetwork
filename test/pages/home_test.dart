@@ -10,6 +10,7 @@ import 'package:fl_clash/pages/home.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/views/application_setting.dart';
+import 'package:fl_clash/views/profiles/profiles.dart';
 import 'package:fl_clash/views/tools.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -254,6 +255,32 @@ void main() {
       final profile = Profile.normal();
       final container = ProviderContainer(
         overrides: [
+          navigationItemsStateProvider.overrideWithValue(
+            NavigationItemsState(
+              value: [
+                NavigationItem(
+                  icon: const Icon(Icons.folder),
+                  label: PageLabel.profiles,
+                  builder: (_) => const ProfilesView(
+                    key: GlobalObjectKey(PageLabel.profiles),
+                  ),
+                  modes: const [
+                    NavigationItemMode.mobile,
+                    NavigationItemMode.desktop,
+                  ],
+                ),
+                NavigationItem(
+                  icon: const Icon(Icons.construction),
+                  label: PageLabel.tools,
+                  builder: (_) => const SizedBox.shrink(),
+                  modes: const [
+                    NavigationItemMode.mobile,
+                    NavigationItemMode.desktop,
+                  ],
+                ),
+              ],
+            ),
+          ),
           profilesProvider.overrideWith(() => _HomeTestProfiles([profile])),
           currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
           versionProvider.overrideWithBuild((_, _) => 15),

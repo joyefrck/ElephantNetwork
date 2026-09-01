@@ -224,6 +224,8 @@
   "loose": "Loose",
   "profilesSort": "Profiles sort",
   "start": "Start",
+  "enableAcceleration": "Enable acceleration",
+  "dashboardAccelerationGuide": "Click \"Enable acceleration\" in the bottom right to get started.",
   "stop": "Stop",
   "dnsDesc": "Update DNS related settings",
   "key": "Key",
