@@ -77,6 +77,7 @@ void main() {
 
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
+    expect(find.byType(AppIcon), findsNothing);
     expect(
       tester.widget<NavigationRail>(find.byType(NavigationRail)).labelType,
       NavigationRailLabelType.all,
