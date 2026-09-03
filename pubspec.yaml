@@ -1,7 +1,7 @@
 name: fl_clash
 description: The GPLv3 multi-platform client for Elephant Network, based on FlClash and ClashMeta.
 publish_to: 'none'
-version: 2.0.3+20003
+version: 2.0.4+20004
 environment:
   sdk: '>=3.8.0 <4.0.0'
 

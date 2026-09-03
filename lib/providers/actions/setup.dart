@@ -205,14 +205,67 @@ class SetupAction extends _$SetupAction {
   }
 
   void changeMode(Mode mode) {
-    ref
-        .read(patchClashConfigProvider.notifier)
-        .update((state) => state.copyWith(mode: mode));
+    String? initialGlobalProxyName;
     if (mode == Mode.global) {
+      initialGlobalProxyName = _getInitialGlobalProxyName();
+      if (initialGlobalProxyName != null) {
+        ref
+            .read(profilesActionProvider.notifier)
+            .updateCurrentSelectedMap(
+              GroupName.GLOBAL.name,
+              initialGlobalProxyName,
+            );
+      }
       ref
           .read(proxiesActionProvider.notifier)
           .updateCurrentGroupName(GroupName.GLOBAL.name);
     }
+    ref
+        .read(patchClashConfigProvider.notifier)
+        .update((state) => state.copyWith(mode: mode));
+    if (initialGlobalProxyName != null) {
+      unawaited(_applyInitialGlobalProxySelection(initialGlobalProxyName));
+    }
+  }
+
+  Future<void> _applyInitialGlobalProxySelection(String proxyName) async {
+    await globalState.safeRun(
+      () => applyProxySelection(GroupName.GLOBAL.name, proxyName),
+    );
+  }
+
+  String? _getInitialGlobalProxyName() {
+    final profile = ref.read(currentProfileProvider);
+    if (profile == null ||
+        profile.selectedMap[GroupName.GLOBAL.name]?.isNotEmpty == true) {
+      return null;
+    }
+    final groups = ref.read(groupsProvider);
+    final globalGroup = groups.getGroup(GroupName.GLOBAL.name);
+    final currentGroupName = profile.currentGroupName;
+    if (currentGroupName != null &&
+        currentGroupName != GroupName.GLOBAL.name &&
+        (globalGroup == null ||
+            globalGroup.all.any((proxy) => proxy.name == currentGroupName))) {
+      return currentGroupName;
+    }
+    for (final group in groups) {
+      if (group.name == GroupName.GLOBAL.name || group.hidden == true) {
+        continue;
+      }
+      if (globalGroup == null ||
+          globalGroup.all.any((proxy) => proxy.name == group.name)) {
+        return group.name;
+      }
+    }
+    return null;
+  }
+
+  @protected
+  Future<void> applyProxySelection(String groupName, String proxyName) {
+    return ref
+        .read(proxiesActionProvider.notifier)
+        .changeProxy(groupName: groupName, proxyName: proxyName);
   }
 
   void autoApplyProfile() {

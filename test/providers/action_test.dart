@@ -295,6 +295,92 @@ void main() {
   });
 
   group('SetupAction', () {
+    test('initializes global mode from the current proxy group', () {
+      final profile = Profile.normal(label: 'Current').copyWith(
+        currentGroupName: 'Proxy Group',
+        selectedMap: const {'Proxy Group': 'Proxy A'},
+      );
+      final container = ProviderContainer(
+        overrides: [
+          currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
+          profilesProvider.overrideWith(() => _TestProfiles([profile])),
+          setupActionProvider.overrideWith(_GlobalModeSetupAction.new),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final action =
+          container.read(setupActionProvider.notifier)
+              as _GlobalModeSetupAction;
+      action.changeMode(Mode.global);
+
+      final updatedProfile = container.read(currentProfileProvider)!;
+      expect(updatedProfile.selectedMap[GroupName.GLOBAL.name], 'Proxy Group');
+      expect(updatedProfile.currentGroupName, GroupName.GLOBAL.name);
+      expect(container.read(patchClashConfigProvider).mode, Mode.global);
+      expect(action.proxySelections, [(GroupName.GLOBAL.name, 'Proxy Group')]);
+    });
+
+    test('preserves an existing global proxy selection', () {
+      final profile = Profile.normal(label: 'Current').copyWith(
+        currentGroupName: 'Proxy Group',
+        selectedMap: const {'Proxy Group': 'Proxy A', 'GLOBAL': 'Proxy B'},
+      );
+      final container = ProviderContainer(
+        overrides: [
+          currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
+          profilesProvider.overrideWith(() => _TestProfiles([profile])),
+          setupActionProvider.overrideWith(_GlobalModeSetupAction.new),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final action =
+          container.read(setupActionProvider.notifier)
+              as _GlobalModeSetupAction;
+      action.changeMode(Mode.global);
+
+      final updatedProfile = container.read(currentProfileProvider)!;
+      expect(updatedProfile.selectedMap[GroupName.GLOBAL.name], 'Proxy B');
+      expect(action.proxySelections, isEmpty);
+    });
+
+    test('recovers a missing global selection from available groups', () {
+      final profile = Profile.normal(label: 'Current').copyWith(
+        currentGroupName: GroupName.GLOBAL.name,
+        selectedMap: const {'Proxy Group': 'Proxy A'},
+      );
+      final container = ProviderContainer(
+        overrides: [
+          currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
+          profilesProvider.overrideWith(() => _TestProfiles([profile])),
+          setupActionProvider.overrideWith(_GlobalModeSetupAction.new),
+        ],
+      );
+      addTearDown(container.dispose);
+      container
+          .read(groupsProvider.notifier)
+          .update(
+            (_) => const [
+              Group(
+                name: 'GLOBAL',
+                type: GroupType.Selector,
+                all: [Proxy(name: 'Proxy Group', type: 'Selector')],
+              ),
+              Group(name: 'Proxy Group', type: GroupType.Selector),
+            ],
+          );
+
+      final action =
+          container.read(setupActionProvider.notifier)
+              as _GlobalModeSetupAction;
+      action.changeMode(Mode.global);
+
+      final updatedProfile = container.read(currentProfileProvider)!;
+      expect(updatedProfile.selectedMap[GroupName.GLOBAL.name], 'Proxy Group');
+      expect(action.proxySelections, [(GroupName.GLOBAL.name, 'Proxy Group')]);
+    });
+
     group('rapid status changes', () {
       test('updates runtime and traffic while core start is pending', () async {
         final startCompleter = Completer<bool>();
@@ -663,6 +749,15 @@ class _TestSetupAction extends SetupAction {
       firstApplyStarted?.complete();
       await firstApplyCompleter?.future;
     }
+  }
+}
+
+class _GlobalModeSetupAction extends SetupAction {
+  final proxySelections = <(String, String)>[];
+
+  @override
+  Future<void> applyProxySelection(String groupName, String proxyName) async {
+    proxySelections.add((groupName, proxyName));
   }
 }
 
