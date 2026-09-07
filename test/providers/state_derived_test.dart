@@ -276,7 +276,7 @@ void main() {
         .setDelay(
           const Delay(
             name: 'Leaf',
-            url: 'https://www.gstatic.com/generate_204',
+            url: defaultTestUrl,
             value: 42,
           ),
         );

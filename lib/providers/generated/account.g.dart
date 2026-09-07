@@ -180,7 +180,7 @@ final class XboardSessionControllerProvider
 }
 
 String _$xboardSessionControllerHash() =>
-    r'3b1eef2aac389f28421586e1837592cc10b50ee4';
+    r'1e40b21c754ba4ff5f68fc30dac3801096f833a0';
 
 abstract class _$XboardSessionController extends $Notifier<XboardSessionState> {
   XboardSessionState build();

@@ -136,6 +136,14 @@ void main() {
       expect(restored.customUserAgent, 'CustomUA/1.0');
     });
 
+    test('legacy default test URL migrates to the current default', () {
+      final restored = AppSettingProps.fromJson({
+        'testUrl': legacyDefaultTestUrl,
+      });
+
+      expect(restored.testUrl, defaultTestUrl);
+    });
+
     test('safeFromJson returns default on null', () {
       final result = AppSettingProps.safeFromJson(null);
       expect(result, isA<AppSettingProps>());
