@@ -49,7 +49,9 @@ class XboardSessionController extends _$XboardSessionController {
 
   Future<bool> refresh() => _coordinator.refresh();
 
-  Future<bool> syncManagedProfile() => _coordinator.syncManagedProfile();
+  Future<bool> syncManagedProfile({int maxRetries = 0}) {
+    return _coordinator.syncManagedProfile(maxRetries: maxRetries);
+  }
 
   Future<void> logout() => _coordinator.logout();
 }
@@ -59,10 +61,13 @@ class RiverpodXboardManagedProfileGateway
   RiverpodXboardManagedProfileGateway(
     this.ref, {
     Future<Profile> Function(Profile profile)? updateProfile,
-  }) : _updateProfile = updateProfile ?? ((profile) => profile.update());
+    bool Function()? hasNodes,
+  }) : _updateProfile = updateProfile ?? ((profile) => profile.update()),
+       _hasNodes = hasNodes ?? (() => ref.read(groupsProvider).isNotEmpty);
 
   final Ref ref;
   final Future<Profile> Function(Profile profile) _updateProfile;
+  final bool Function() _hasNodes;
 
   @override
   Future<void> reconcile(Uri subscription, XboardAccount account) async {
@@ -86,6 +91,7 @@ class RiverpodXboardManagedProfileGateway
     if (current == null || current.source == ProfileSource.xboard) {
       ref.read(currentProfileIdProvider.notifier).value = updated.id;
       await ref.read(setupActionProvider.notifier).applyProfile(silence: true);
+      if (!_hasNodes()) throw StateError('managed_profile_has_no_nodes');
     }
   }
 

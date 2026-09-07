@@ -80,10 +80,13 @@ class XboardDomainResolver {
 
   String get current => _current ?? XboardConfig.baseUrl;
 
-  Future<String> resolve({bool force = false}) async {
+  Future<String> resolve({
+    bool force = false,
+    Set<String> excludedBaseUrls = const {},
+  }) async {
     if (!force && _current != null) return _current!;
     if (!force && _activeResolve != null) return _activeResolve!;
-    final future = _resolve();
+    final future = _resolve(excludedBaseUrls);
     _activeResolve = future;
     try {
       return await future;
@@ -92,10 +95,13 @@ class XboardDomainResolver {
     }
   }
 
-  Future<String> _resolve() async {
+  Future<String> _resolve(Set<String> excludedBaseUrls) async {
     final cached = _normalize(await _store.read());
     final fallback = cached ?? _normalize(XboardConfig.baseUrl)!;
-    final candidates = await _candidates(fallback);
+    final excluded = excludedBaseUrls.map(_normalize).nonNulls.toSet();
+    final candidates = (await _candidates(
+      fallback,
+    )).where((candidate) => !excluded.contains(candidate.url)).toList();
     final probes = await Future.wait(
       candidates.map((candidate) async {
         final stopwatch = Stopwatch()..start();

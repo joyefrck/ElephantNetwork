@@ -62,6 +62,7 @@ void main() {
         ref,
         updateProfile: (candidate) async =>
             candidate.copyWith(lastUpdateDate: DateTime(2026)),
+        hasNodes: () => true,
       );
     });
     final setupAction =
@@ -118,6 +119,41 @@ void main() {
       expect(setupAction.applyProfileCount, 0);
     },
   );
+
+  test('managed subscription sync rejects an empty applied profile', () async {
+    final profile = Profile.normal(label: 'Managed').copyWith(
+      source: ProfileSource.xboard,
+      ownerAccountId: _account.accountId,
+    );
+    final container = ProviderContainer(
+      overrides: [
+        currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
+        profilesProvider.overrideWith(() => _TestProfiles([profile])),
+        setupActionProvider.overrideWith(() => _ImmediateSetupAction()),
+      ],
+    );
+    addTearDown(container.dispose);
+    final gatewayProvider = Provider<XboardManagedProfileGateway>((ref) {
+      return RiverpodXboardManagedProfileGateway(
+        ref,
+        updateProfile: (candidate) async => candidate,
+        hasNodes: () => false,
+      );
+    });
+
+    await expectLater(
+      container
+          .read(gatewayProvider)
+          .reconcile(Uri.parse('https://example.com/new'), _account),
+      throwsA(
+        isA<StateError>().having(
+          (error) => error.message,
+          'message',
+          'managed_profile_has_no_nodes',
+        ),
+      ),
+    );
+  });
 }
 
 const _account = XboardAccount(
@@ -169,6 +205,15 @@ class _RecordingSetupAction extends SetupAction {
     started.complete();
     await release.future;
   }
+}
+
+class _ImmediateSetupAction extends SetupAction {
+  @override
+  Future<void> applyProfile({
+    bool silence = false,
+    bool force = false,
+    Future<void> Function()? preloadInvoke,
+  }) async {}
 }
 
 class _LoginTransport implements XboardTransport {

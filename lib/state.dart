@@ -346,7 +346,7 @@ class GlobalState {
       }
       final profileReady = await container
           .read(xboardSessionControllerProvider.notifier)
-          .syncManagedProfile();
+          .syncManagedProfile(maxRetries: 3);
       await container
           .read(profilesActionProvider.notifier)
           .autoUpdateProfiles();

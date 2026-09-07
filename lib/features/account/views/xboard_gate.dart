@@ -263,6 +263,13 @@ class _XboardLoginViewState extends ConsumerState<XboardLoginView> {
         const {400, 401, 403}.contains(error.statusCode)) {
       return l10n.invalidCredentials;
     }
+    if (error is XboardApiException &&
+        const {
+          'connection_timeout',
+          'network_unavailable',
+        }.contains(error.message)) {
+      return l10n.networkException;
+    }
     return l10n.serviceUnavailable;
   }
 }

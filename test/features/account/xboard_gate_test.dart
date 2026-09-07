@@ -119,6 +119,28 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('connection failure shows a network-specific error', (
+    tester,
+  ) async {
+    await _pumpGate(
+      tester,
+      const XboardSessionState.unauthenticated(
+        XboardApiException(message: 'network_unavailable'),
+      ),
+    );
+
+    expect(
+      find.text(
+        'Network exception, please check your connection and try again',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Elephant Network is temporarily unavailable'),
+      findsNothing,
+    );
+  });
 }
 
 Future<void> _pumpGate(WidgetTester tester, XboardSessionState state) async {

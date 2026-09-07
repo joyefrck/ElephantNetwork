@@ -47,12 +47,21 @@ class DioXboardTransport implements XboardTransport {
     try {
       response = await _send(method, path, token: token, data: data);
     } on DioException catch (error) {
-      if (!_isSafeRetry(method) || error.response != null) rethrow;
+      if (!_canRetry(method, path, error)) {
+        throw _apiException(error);
+      }
       final previous = _dio.options.baseUrl;
-      final next = await _domainResolver.resolve(force: true);
-      if (next == previous) rethrow;
+      final next = await _domainResolver.resolve(
+        force: true,
+        excludedBaseUrls: {previous},
+      );
+      if (next == previous) throw _apiException(error);
       _dio.options.baseUrl = next;
-      response = await _send(method, path, token: token, data: data);
+      try {
+        response = await _send(method, path, token: token, data: data);
+      } on DioException catch (retryError) {
+        throw _apiException(retryError);
+      }
     }
     final statusCode = response.statusCode ?? 0;
     if (statusCode < 200 || statusCode >= 300) {
@@ -82,6 +91,38 @@ class DioXboardTransport implements XboardTransport {
 
   bool _isSafeRetry(String method) {
     return const {'GET', 'HEAD', 'OPTIONS'}.contains(method.toUpperCase());
+  }
+
+  bool _canRetry(String method, String path, DioException error) {
+    if (error.response != null) return false;
+    if (_isSafeRetry(method)) return true;
+    if (method.toUpperCase() != 'POST' || path != XboardConfig.loginPath) {
+      return false;
+    }
+    return const {
+      DioExceptionType.connectionTimeout,
+      DioExceptionType.connectionError,
+      DioExceptionType.badCertificate,
+    }.contains(error.type);
+  }
+
+  XboardApiException _apiException(DioException error) {
+    final statusCode = error.response?.statusCode;
+    if (statusCode != null) {
+      return XboardApiException(
+        statusCode: statusCode,
+        message: statusCode >= 500 ? 'server_unavailable' : 'request_failed',
+      );
+    }
+    final message = switch (error.type) {
+      DioExceptionType.connectionTimeout ||
+      DioExceptionType.sendTimeout ||
+      DioExceptionType.receiveTimeout => 'connection_timeout',
+      DioExceptionType.connectionError ||
+      DioExceptionType.badCertificate => 'network_unavailable',
+      _ => 'request_failed',
+    };
+    return XboardApiException(message: message);
   }
 }
 

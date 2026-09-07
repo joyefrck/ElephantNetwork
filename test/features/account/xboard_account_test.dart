@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:fl_clash/features/account/account.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -119,6 +122,99 @@ void main() {
       expect(launchedMode, LaunchMode.externalApplication);
       expect(transport.requests.single.token, 'session-token');
       expect(transport.requests.single.data, {'redirect': 'dashboard'});
+    });
+
+    test(
+      'login retries a pre-response connection failure on another domain',
+      () async {
+        final domainTransport = _FakeDomainTransport(
+          config: {
+            'domains': [
+              {
+                'url': 'https://primary.example.com',
+                'weight': 10,
+                'enabled': true,
+              },
+              {
+                'url': 'https://backup.example.com',
+                'weight': 5,
+                'enabled': true,
+              },
+            ],
+          },
+          healthyHosts: {'primary.example.com', 'backup.example.com'},
+        );
+        final resolver = XboardDomainResolver(
+          transport: domainTransport,
+          store: _MemoryDomainStore(),
+        );
+        final requestedHosts = <String>[];
+        final dio = Dio()
+          ..httpClientAdapter = _ResponseAdapter((options) {
+            requestedHosts.add(options.uri.host);
+            if (options.uri.host == 'primary.example.com') {
+              throw DioException(
+                requestOptions: options,
+                type: DioExceptionType.connectionError,
+              );
+            }
+            return _jsonResponse({
+              'status': 'success',
+              'data': {'auth_data': 'token'},
+            });
+          });
+        final api = XboardApi(
+          transport: DioXboardTransport(dio: dio, domainResolver: resolver),
+        );
+
+        expect(await api.login('owner@example.com', 'password'), 'token');
+        expect(requestedHosts, ['primary.example.com', 'backup.example.com']);
+      },
+    );
+
+    test('login does not retry after an uncertain receive timeout', () async {
+      final resolver = XboardDomainResolver(
+        transport: _FakeDomainTransport(
+          config: {
+            'domains': [
+              {
+                'url': 'https://primary.example.com',
+                'weight': 10,
+                'enabled': true,
+              },
+              {
+                'url': 'https://backup.example.com',
+                'weight': 5,
+                'enabled': true,
+              },
+            ],
+          },
+          healthyHosts: {'primary.example.com', 'backup.example.com'},
+        ),
+        store: _MemoryDomainStore(),
+      );
+      final adapter = _ResponseAdapter(
+        (options) => throw DioException(
+          requestOptions: options,
+          type: DioExceptionType.receiveTimeout,
+        ),
+      );
+      final dio = Dio()..httpClientAdapter = adapter;
+      final api = XboardApi(
+        transport: DioXboardTransport(dio: dio, domainResolver: resolver),
+      );
+
+      await expectLater(
+        api.login('owner@example.com', 'password'),
+        throwsA(
+          isA<XboardApiException>().having(
+            (error) => error.message,
+            'message',
+            'connection_timeout',
+          ),
+        ),
+      );
+      expect(adapter.requestCount, 1);
     });
   });
 
@@ -253,6 +349,57 @@ void main() {
       expect(gateway.subscription?.queryParameters['flag'], 'flclash');
     });
 
+    test('startup managed profile sync retries three times', () async {
+      final gateway = _FlakyManagedProfileGateway(failuresBeforeSuccess: 3);
+      final retryDelays = <Duration>[];
+      final coordinator = _authenticatedCoordinator(
+        gateway,
+        retryDelay: (delay) async => retryDelays.add(delay),
+      );
+
+      expect(await coordinator.login('owner@example.com', 'password'), isTrue);
+      expect(await coordinator.syncManagedProfile(maxRetries: 3), isTrue);
+      expect(gateway.attempts, 4);
+      expect(retryDelays, const [
+        Duration(seconds: 1),
+        Duration(seconds: 2),
+        Duration(seconds: 4),
+      ]);
+      expect(coordinator.state.isAuthenticated, isTrue);
+      expect(coordinator.state.error, isNull);
+    });
+
+    test('startup managed profile sync stops after three retries', () async {
+      final gateway = _FlakyManagedProfileGateway(failuresBeforeSuccess: 4);
+      final coordinator = _authenticatedCoordinator(
+        gateway,
+        retryDelay: (_) async {},
+      );
+
+      expect(await coordinator.login('owner@example.com', 'password'), isTrue);
+      expect(await coordinator.syncManagedProfile(maxRetries: 3), isFalse);
+      expect(gateway.attempts, 4);
+      expect(coordinator.state.isAuthenticated, isTrue);
+      expect(coordinator.state.error, isA<StateError>());
+    });
+
+    test('managed profile authorization failure is not retried', () async {
+      final gateway = _FlakyManagedProfileGateway(
+        failuresBeforeSuccess: 1,
+        error: const XboardApiException(statusCode: 401),
+      );
+      final retryDelays = <Duration>[];
+      final coordinator = _authenticatedCoordinator(
+        gateway,
+        retryDelay: (delay) async => retryDelays.add(delay),
+      );
+
+      expect(await coordinator.login('owner@example.com', 'password'), isTrue);
+      expect(await coordinator.syncManagedProfile(maxRetries: 3), isFalse);
+      expect(gateway.attempts, 1);
+      expect(retryDelays, isEmpty);
+    });
+
     test(
       'managed profile failure preserves the authenticated session',
       () async {
@@ -305,7 +452,7 @@ void main() {
       expect(gateway.subscription?.queryParameters['flag'], 'flclash');
     });
 
-    test('secure storage failure keeps the login gate unavailable', () async {
+    test('secure storage failure opens a clean login entry', () async {
       final coordinator = XboardSessionCoordinator(
         api: XboardApi(transport: _FakeTransport(const {})),
         store: XboardSessionStore(
@@ -316,7 +463,32 @@ void main() {
       );
 
       expect(await coordinator.restore(), isFalse);
-      expect(coordinator.state.status, XboardSessionStatus.unavailable);
+      expect(coordinator.state.status, XboardSessionStatus.unauthenticated);
+      expect(coordinator.state.error, isNull);
+    });
+
+    test('session restore network failure opens a clean login entry', () async {
+      final secure = _MemorySecureStore();
+      final store = XboardSessionStore(
+        secureStore: secure,
+        legacyStore: _MemoryLegacyStore(null),
+      );
+      await store.saveToken('stored-token');
+      final coordinator = XboardSessionCoordinator(
+        api: XboardApi(
+          transport: _FakeTransport({
+            XboardConfig.userInfoPath: const XboardApiException(
+              message: 'network_unavailable',
+            ),
+          }),
+        ),
+        store: store,
+        managedProfile: _FakeManagedProfileGateway(),
+      );
+
+      expect(await coordinator.restore(), isFalse);
+      expect(coordinator.state.status, XboardSessionStatus.unauthenticated);
+      expect(coordinator.state.error, isNull);
     });
 
     test('unauthorized refresh clears session and managed profile', () async {
@@ -429,6 +601,39 @@ void main() {
 
       expect(await resolver.resolve(), 'https://cached.example.com');
     });
+
+    test('forced resolution excludes the failed domain', () async {
+      final store = _MemoryDomainStore('https://primary.example.com');
+      final resolver = XboardDomainResolver(
+        transport: _FakeDomainTransport(
+          config: {
+            'domains': [
+              {
+                'url': 'https://primary.example.com',
+                'weight': 10,
+                'enabled': true,
+              },
+              {
+                'url': 'https://backup.example.com',
+                'weight': 5,
+                'enabled': true,
+              },
+            ],
+          },
+          healthyHosts: {'primary.example.com', 'backup.example.com'},
+        ),
+        store: store,
+      );
+
+      expect(
+        await resolver.resolve(
+          force: true,
+          excludedBaseUrls: {'https://primary.example.com'},
+        ),
+        'https://backup.example.com',
+      );
+      expect(store.value, 'https://backup.example.com');
+    });
   });
 }
 
@@ -522,8 +727,9 @@ class _FakeManagedProfileGateway implements XboardManagedProfileGateway {
 }
 
 XboardSessionCoordinator _authenticatedCoordinator(
-  XboardManagedProfileGateway gateway,
-) {
+  XboardManagedProfileGateway gateway, {
+  Future<void> Function(Duration delay)? retryDelay,
+}) {
   return XboardSessionCoordinator(
     api: XboardApi(
       transport: _FakeTransport({
@@ -547,6 +753,7 @@ XboardSessionCoordinator _authenticatedCoordinator(
       legacyStore: _MemoryLegacyStore(null),
     ),
     managedProfile: gateway,
+    retryDelay: retryDelay,
   );
 }
 
@@ -554,6 +761,24 @@ class _ThrowingManagedProfileGateway extends _FakeManagedProfileGateway {
   @override
   Future<void> reconcile(Uri subscription, XboardAccount account) {
     throw StateError('managed_profile_sync_failed');
+  }
+}
+
+class _FlakyManagedProfileGateway extends _FakeManagedProfileGateway {
+  _FlakyManagedProfileGateway({
+    required this.failuresBeforeSuccess,
+    Object? error,
+  }) : error = error ?? StateError('managed_profile_sync_failed');
+
+  final int failuresBeforeSuccess;
+  final Object error;
+  int attempts = 0;
+
+  @override
+  Future<void> reconcile(Uri subscription, XboardAccount account) async {
+    attempts++;
+    if (attempts <= failuresBeforeSuccess) throw error;
+    await super.reconcile(subscription, account);
   }
 }
 
@@ -598,4 +823,34 @@ class _FakeDomainTransport implements XboardDomainTransport {
     probed.add(uri);
     return healthyHosts.contains(uri.host);
   }
+}
+
+ResponseBody _jsonResponse(Map<String, Object?> body) {
+  return ResponseBody.fromString(
+    jsonEncode(body),
+    200,
+    headers: {
+      Headers.contentTypeHeader: ['application/json'],
+    },
+  );
+}
+
+final class _ResponseAdapter implements HttpClientAdapter {
+  _ResponseAdapter(this.response);
+
+  final ResponseBody Function(RequestOptions options) response;
+  int requestCount = 0;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    requestCount++;
+    return response(options);
+  }
+
+  @override
+  void close({bool force = false}) {}
 }
