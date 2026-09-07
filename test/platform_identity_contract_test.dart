@@ -31,7 +31,7 @@ void main() {
         'windows/packaging/exe/make_config.yaml',
       ).readAsStringSync();
 
-      expect(pubspec, contains('version: 3.0.5+30005'));
+      expect(pubspec, contains('version: 2.0.5+20005'));
       expect(pubspec, contains('flutter_secure_storage: 10.0.0'));
       expect(constants, contains("const packageName = 'com.elephantroute';"));
       expect(android, contains('applicationId = "com.elephantroute"'));
