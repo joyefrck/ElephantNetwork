@@ -80,14 +80,12 @@ Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
 }
 
 Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
-  final batches = proxies.batch(maxConcurrentDelayTests);
-  for (final batch in batches) {
-    await Future.wait(
-      batch.map((proxy) async {
-        await proxyDelayTest(proxy, testUrl);
-      }),
-    );
-  }
+  await runStaggeredBatches(
+    items: proxies,
+    maxConcurrent: maxConcurrentDelayTests,
+    staggerInterval: delayTestStaggerInterval,
+    task: (proxy) => proxyDelayTest(proxy, testUrl),
+  );
   globalState.container.read(sortNumProvider.notifier).add();
 }
 

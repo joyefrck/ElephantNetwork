@@ -3,6 +3,26 @@ import 'dart:ui';
 
 import 'package:fl_clash/common/common.dart';
 
+Future<void> runStaggeredBatches<T>({
+  required List<T> items,
+  required int maxConcurrent,
+  required Duration staggerInterval,
+  required Future<void> Function(T item) task,
+  Future<void> Function(Duration duration) wait = Future<void>.delayed,
+}) async {
+  for (final batch in items.batch(maxConcurrent)) {
+    await Future.wait(
+      batch.indexed.map((entry) async {
+        final (index, item) = entry;
+        if (index > 0) {
+          await wait(staggerInterval * index);
+        }
+        await task(item);
+      }),
+    );
+  }
+}
+
 extension FutureExt<T> on Future<T> {
   Future<T> withTimeout({
     Duration? timeout,
