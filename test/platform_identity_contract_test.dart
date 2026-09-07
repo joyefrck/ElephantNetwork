@@ -30,11 +30,18 @@ void main() {
       final windows = File(
         'windows/packaging/exe/make_config.yaml',
       ).readAsStringSync();
+      final workflow = File(
+        '.github/workflows/build.yaml',
+      ).readAsStringSync();
 
       expect(pubspec, contains('version: 2.0.6+20006'));
       expect(pubspec, contains('flutter_secure_storage: 10.0.0'));
       expect(constants, contains("const packageName = 'com.elephantroute';"));
       expect(android, contains('applicationId = "com.elephantroute"'));
+      expect(
+        workflow,
+        contains('dart setup.dart android --arch arm64 --env stable -v'),
+      );
       expect(components, contains('PACKAGE_NAME = "com.elephantroute"'));
       expect(components, contains('CLASS_PACKAGE_NAME = "com.follow.clash"'));
       expect(macos, contains('PRODUCT_NAME = ElephantRoute'));
