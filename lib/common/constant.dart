@@ -53,6 +53,8 @@ const httpTimeoutDuration = Duration(milliseconds: 5000);
 /// core/common.go). Surplus requests queue inside the Core behind a full wave
 /// of 5s timeouts, which no RPC timeout can cover.
 const maxConcurrentDelayTests = 10;
+const maxConcurrentAnyTlsDelayTests = 2;
+const anyTlsDelayTestAttempts = 3;
 const delayTestStaggerInterval = Duration(milliseconds: 20);
 const moreDuration = Duration(milliseconds: 100);
 const animateDuration = Duration(milliseconds: 100);

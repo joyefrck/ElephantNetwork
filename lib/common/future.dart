@@ -3,6 +3,36 @@ import 'dart:ui';
 
 import 'package:fl_clash/common/common.dart';
 
+Future<int> runMedianIntAttempts({
+  required int attempts,
+  required Future<int> Function() task,
+  void Function(Object error, StackTrace stackTrace)? onError,
+}) async {
+  if (attempts <= 0) {
+    throw ArgumentError.value(attempts, 'attempts');
+  }
+  final values = <int>[];
+  for (var attempt = 0; attempt < attempts; attempt++) {
+    try {
+      final value = await task();
+      if (value > 0) {
+        values.add(value);
+      }
+    } catch (error, stackTrace) {
+      onError?.call(error, stackTrace);
+    }
+  }
+  if (values.isEmpty) {
+    return -1;
+  }
+  values.sort();
+  final middle = values.length ~/ 2;
+  if (values.length.isOdd) {
+    return values[middle];
+  }
+  return ((values[middle - 1] + values[middle]) / 2).round();
+}
+
 Future<void> runStaggeredBatches<T>({
   required List<T> items,
   required int maxConcurrent,

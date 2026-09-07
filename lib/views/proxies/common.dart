@@ -62,26 +62,47 @@ Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
   ref
       .read(proxiesActionProvider.notifier)
       .setDelay(Delay(url: currentTestUrl, name: state.proxyName, value: 0));
-  try {
-    final delay = await coreController.getDelay(
-      currentTestUrl,
-      state.proxyName,
-    );
-    ref.read(proxiesActionProvider.notifier).setDelay(delay);
-  } catch (error) {
-    commonPrint.log(
-      'Delay test failed for ${state.proxyName}: $error',
-      logLevel: coreFailureLogLevel(error),
-    );
-    ref
-        .read(proxiesActionProvider.notifier)
-        .setDelay(Delay(url: currentTestUrl, name: state.proxyName, value: -1));
-  }
+  final attempts = proxy.type.toLowerCase() == 'anytls'
+      ? anyTlsDelayTestAttempts
+      : 1;
+  final value = await runMedianIntAttempts(
+    attempts: attempts,
+    task: () async {
+      final delay = await coreController.getDelay(
+        currentTestUrl,
+        state.proxyName,
+      );
+      return delay.value ?? -1;
+    },
+    onError: (error, _) {
+      commonPrint.log(
+        'Delay test failed for ${state.proxyName}: $error',
+        logLevel: coreFailureLogLevel(error),
+      );
+    },
+  );
+  ref
+      .read(proxiesActionProvider.notifier)
+      .setDelay(
+        Delay(url: currentTestUrl, name: state.proxyName, value: value),
+      );
 }
 
 Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
+  final anyTlsProxies = proxies
+      .where((proxy) => proxy.type.toLowerCase() == 'anytls')
+      .toList();
+  final otherProxies = proxies
+      .where((proxy) => proxy.type.toLowerCase() != 'anytls')
+      .toList();
   await runStaggeredBatches(
-    items: proxies,
+    items: anyTlsProxies,
+    maxConcurrent: maxConcurrentAnyTlsDelayTests,
+    staggerInterval: delayTestStaggerInterval,
+    task: (proxy) => proxyDelayTest(proxy, testUrl),
+  );
+  await runStaggeredBatches(
+    items: otherProxies,
     maxConcurrent: maxConcurrentDelayTests,
     staggerInterval: delayTestStaggerInterval,
     task: (proxy) => proxyDelayTest(proxy, testUrl),

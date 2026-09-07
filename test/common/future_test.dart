@@ -4,6 +4,55 @@ import 'package:fl_clash/common/future.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group('runMedianIntAttempts', () {
+    test('returns the median successful value', () async {
+      final values = [701, 216, 370];
+
+      final result = await runMedianIntAttempts(
+        attempts: 3,
+        task: () async => values.removeAt(0),
+      );
+
+      expect(result, 370);
+    });
+
+    test('ignores failed and non-positive attempts', () async {
+      var attempt = 0;
+      final errors = <Object>[];
+
+      final result = await runMedianIntAttempts(
+        attempts: 3,
+        task: () async {
+          attempt++;
+          if (attempt == 1) {
+            throw StateError('failed');
+          }
+          return attempt == 2 ? -1 : 216;
+        },
+        onError: (error, _) => errors.add(error),
+      );
+
+      expect(result, 216);
+      expect(errors, hasLength(1));
+    });
+
+    test('returns -1 when every attempt fails', () async {
+      final result = await runMedianIntAttempts(
+        attempts: 3,
+        task: () async => throw StateError('failed'),
+      );
+
+      expect(result, -1);
+    });
+
+    test('rejects a non-positive attempt count', () {
+      expect(
+        () => runMedianIntAttempts(attempts: 0, task: () async => 1),
+        throwsArgumentError,
+      );
+    });
+  });
+
   test('runStaggeredBatches limits concurrent work to each batch', () async {
     final gates = List.generate(3, (_) => Completer<void>());
     final started = <int>[];
