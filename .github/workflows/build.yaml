@@ -164,10 +164,60 @@ jobs:
       - name: Build unsigned package
         run: dart setup.dart ${{ matrix.platform }} --targets ${{ matrix.target }} --env pre -v
 
+      - name: Verify Windows installer and helper
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $versionLine = (Select-String -Path pubspec.yaml -Pattern '^version: (.+)$').Matches[0].Groups[1].Value
+          $versionParts = $versionLine -split '\+'
+          $expectedVersion = [version]$versionParts[0]
+          $expectedBuild = [int]$versionParts[1]
+          $installers = @(Get-ChildItem dist -Recurse -Filter '*-setup.exe')
+          if ($installers.Count -ne 1) { throw 'Expected one Windows installer' }
+          $installDir = Join-Path $env:RUNNER_TEMP 'ElephantNetwork-acceptance'
+          try {
+            $install = Start-Process -FilePath $installers[0].FullName -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', "/DIR=`"$installDir`"") -Wait -PassThru
+            if ($install.ExitCode -ne 0) { throw "Installer failed: $($install.ExitCode)" }
+            $appPath = Join-Path $installDir 'ElephantNetwork.exe'
+            $info = (Get-Item $appPath).VersionInfo
+            if ($info.CompanyName -ne 'com.elephantroute' -or $info.ProductName -ne 'ElephantNetwork') { throw 'Windows storage identity is not isolated' }
+            if ($info.FileMajorPart -ne $expectedVersion.Major -or $info.FileMinorPart -ne $expectedVersion.Minor -or $info.FileBuildPart -ne $expectedVersion.Build -or $info.FilePrivatePart -ne $expectedBuild) { throw "Unexpected executable version: $($info.FileVersion)" }
+            $helperPath = Join-Path $installDir 'ElephantNetworkHelperService.exe'
+            if (!(Test-Path $helperPath)) { throw 'Isolated Windows helper is missing' }
+            $manifest = Get-Content (Join-Path $installDir 'manifest.json') -Raw | ConvertFrom-Json
+            $coreHash = (Get-FileHash (Join-Path $installDir 'FlClashCore.exe') -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($coreHash -ne $manifest.coreSha256) { throw 'Bundled core hash differs from manifest' }
+            $helper = Start-Process -FilePath $helperPath -ArgumentList 'install' -Wait -PassThru
+            if ($helper.ExitCode -ne 0) { throw "Helper installation failed: $($helper.ExitCode)" }
+            $service = Get-Service 'ElephantNetworkHelperService'
+            if ($service.Status -ne 'Running') { throw 'Isolated helper service is not running' }
+            $service.Dispose()
+            $ping = Invoke-WebRequest -Uri "http://127.0.0.1:47891/ping?coreSha256=$coreHash"
+            if ($ping.Headers['x-elephant-network-helper-protocol'] -ne '6') { throw 'Unexpected helper protocol' }
+            if ($ping.Content.Trim() -ne $helperPath) { throw 'Helper belongs to another installation' }
+            Write-Output "Verified Windows $versionLine, isolated storage identity, helper service and core hash"
+          } finally {
+            $uninstaller = Join-Path $installDir 'unins000.exe'
+            if (Test-Path $uninstaller) {
+              $uninstall = Start-Process -FilePath $uninstaller -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART') -Wait -PassThru
+              if ($uninstall.ExitCode -ne 0) { throw "Uninstaller failed: $($uninstall.ExitCode)" }
+            }
+          }
+          if (Get-Service 'ElephantNetworkHelperService' -ErrorAction SilentlyContinue) { throw 'Uninstall left the helper service registered' }
+
+      - name: Read package version
+        id: package-version
+        shell: bash
+        run: |
+          version=$(sed -nE 's/^version: ([^+]+).*/\1/p' pubspec.yaml)
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
       - name: Upload unsigned package
         uses: actions/upload-artifact@v4
         with:
-          name: ElephantNetwork-2.0.3-${{ matrix.platform }}-${{ matrix.arch }}-unsigned
+          name: ElephantNetwork-${{ steps.package-version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}-unsigned
           path: ./dist
           if-no-files-found: error
           overwrite: true

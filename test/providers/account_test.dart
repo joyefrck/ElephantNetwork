@@ -85,7 +85,7 @@ void main() {
   });
 
   test(
-    'managed subscription sync does not replace an active user profile',
+    'managed subscription sync replaces an active third-party profile',
     () async {
       final userProfile = Profile.normal(label: 'User');
       final managedProfile = Profile.normal(label: 'Managed').copyWith(
@@ -98,7 +98,7 @@ void main() {
           profilesProvider.overrideWith(
             () => _TestProfiles([userProfile, managedProfile]),
           ),
-          setupActionProvider.overrideWith(() => _RecordingSetupAction()),
+          setupActionProvider.overrideWith(() => _ImmediateSetupAction()),
         ],
       );
       addTearDown(container.dispose);
@@ -106,6 +106,7 @@ void main() {
         return RiverpodXboardManagedProfileGateway(
           ref,
           updateProfile: (candidate) async => candidate,
+          hasNodes: () => true,
         );
       });
 
@@ -114,9 +115,9 @@ void main() {
           .reconcile(Uri.parse('https://example.com/new'), _account);
 
       final setupAction =
-          container.read(setupActionProvider.notifier) as _RecordingSetupAction;
-      expect(container.read(currentProfileIdProvider), userProfile.id);
-      expect(setupAction.applyProfileCount, 0);
+          container.read(setupActionProvider.notifier) as _ImmediateSetupAction;
+      expect(container.read(currentProfileIdProvider), managedProfile.id);
+      expect(setupAction.applyProfileCount, 2);
     },
   );
 
@@ -154,6 +155,95 @@ void main() {
       ),
     );
   });
+
+  for (final source in [ProfileSource.user, ProfileSource.xboard]) {
+    test(
+      'failed download cannot leave a foreign $source profile active',
+      () async {
+        final foreign = Profile.normal(
+          label: 'Foreign',
+        ).copyWith(source: source, ownerAccountId: 'other@example.com');
+        final container = ProviderContainer(
+          overrides: [
+            currentProfileIdProvider.overrideWithBuild((_, _) => foreign.id),
+            profilesProvider.overrideWith(() => _TestProfiles([foreign])),
+            setupActionProvider.overrideWith(() => _ImmediateSetupAction()),
+          ],
+        );
+        addTearDown(container.dispose);
+        container.read(groupsProvider.notifier).value = [
+          const Group(name: 'Foreign nodes', type: GroupType.Selector),
+        ];
+        final gatewayProvider = Provider<XboardManagedProfileGateway>((ref) {
+          return RiverpodXboardManagedProfileGateway(
+            ref,
+            updateProfile: (_) async {
+              expect(ref.read(currentProfileIdProvider), isNull);
+              expect(ref.read(groupsProvider), isEmpty);
+              throw StateError('download_failed');
+            },
+          );
+        });
+
+        await expectLater(
+          container
+              .read(gatewayProvider)
+              .reconcile(Uri.parse('https://example.com/new'), _account),
+          throwsA(isA<StateError>()),
+        );
+
+        final setup =
+            container.read(setupActionProvider.notifier)
+                as _ImmediateSetupAction;
+        expect(setup.runningRequests, [false]);
+        expect(setup.appliedProfileIds, [null]);
+        expect(container.read(currentProfileIdProvider), isNull);
+        expect(container.read(groupsProvider), isEmpty);
+        expect(container.read(profilesProvider), [foreign]);
+      },
+    );
+  }
+
+  test(
+    'old displayed groups cannot make a failed apply look successful',
+    () async {
+      final profile = Profile.normal(label: 'Managed').copyWith(
+        source: ProfileSource.xboard,
+        ownerAccountId: _account.accountId,
+      );
+      final container = ProviderContainer(
+        overrides: [
+          currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
+          profilesProvider.overrideWith(() => _TestProfiles([profile])),
+          setupActionProvider.overrideWith(() => _ImmediateSetupAction()),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(groupsProvider.notifier).value = [
+        const Group(name: 'Stale nodes', type: GroupType.Selector),
+      ];
+      final gatewayProvider = Provider<XboardManagedProfileGateway>((ref) {
+        return RiverpodXboardManagedProfileGateway(
+          ref,
+          updateProfile: (candidate) async => candidate,
+        );
+      });
+
+      await expectLater(
+        container
+            .read(gatewayProvider)
+            .reconcile(Uri.parse('https://example.com/new'), _account),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            'managed_profile_has_no_nodes',
+          ),
+        ),
+      );
+      expect(container.read(groupsProvider), isEmpty);
+    },
+  );
 }
 
 const _account = XboardAccount(
@@ -208,12 +298,24 @@ class _RecordingSetupAction extends SetupAction {
 }
 
 class _ImmediateSetupAction extends SetupAction {
+  int applyProfileCount = 0;
+  final runningRequests = <bool>[];
+  final appliedProfileIds = <int?>[];
+
+  @override
+  Future<void> setRunning(bool running, {bool initialize = false}) async {
+    runningRequests.add(running);
+  }
+
   @override
   Future<void> applyProfile({
     bool silence = false,
     bool force = false,
     Future<void> Function()? preloadInvoke,
-  }) async {}
+  }) async {
+    applyProfileCount++;
+    appliedProfileIds.add(ref.read(currentProfileIdProvider));
+  }
 }
 
 class _LoginTransport implements XboardTransport {
@@ -263,6 +365,9 @@ class _MemoryLegacyStore implements LegacyTokenStore {
 }
 
 class _NoopManagedProfileGateway implements XboardManagedProfileGateway {
+  @override
+  Future<void> prepare(XboardAccount account) async {}
+
   @override
   Future<void> reconcile(Uri subscription, XboardAccount account) async {}
 

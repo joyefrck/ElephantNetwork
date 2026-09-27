@@ -2,6 +2,12 @@
 
 ## Core Integration
 
+Windows stores application data under `%APPDATA%\com.elephantroute\ElephantNetwork`, derived from the executable's
+`CompanyName` and `ProductName`. Keep these identifiers distinct from upstream FlClash. Do not import or delete the old
+shared `%APPDATA%\com.follow\clash` directory during upgrade. Users may need to sign in again; managed subscriptions are
+downloaded from the authenticated account. Clear a foreign selected profile before subscription lookup, and activate the
+current account's managed profile before restoring the running state. A failed refresh must not reactivate a foreign profile.
+
 The Go proxy core in `core/` operates in two modes.
 
 Android lib mode:
@@ -282,7 +288,7 @@ Platform outputs remain explicit:
 
 - Android builds the Go core as `c-shared`, then copies `libclash.so` and generated headers into the `:core` Android module.
 - macOS and Linux build a standalone `FlClashCore` process used by the desktop socket integration.
-- Windows builds `FlClashCore.exe`, the Rust `FlClashHelperService.exe` privileged helper, and a
+- Windows builds `FlClashCore.exe`, the Rust `ElephantNetworkHelperService.exe` privileged helper, and a
   `manifest.json` containing only `coreSha256`.
 
 The hooks follow rust_api/Cargokit's phony-output scheduling pattern, but setup uses its own cache because it builds both a
@@ -324,7 +330,7 @@ Windows helper integrity/version check:
   launch path did not already have. `manifestMissing` is the one readiness that is surfaced to the user, because it
   means the installation itself is incomplete.
 - Flutter creates a 128-bit lowercase-hex session ID and uses it as the random named-pipe suffix. `/start` receives only
-  that address and session ID, validates the fixed `FlClashCore_<session>` namespace, starts the fixed Core beside the
+  that address and session ID, validates the fixed `ElephantNetworkCore_<session>` namespace, starts the fixed Core beside the
   Helper, and returns the same session ID plus the spawned PID. Flutter verifies both the session and named-pipe peer PID.
 - `/stop` requires the same session ID. A missing process returns `notRunning`; a different owner returns
   `sessionMismatch` without terminating that process. Session IDs are ownership tokens for lifecycle safety, not a claim
@@ -357,9 +363,9 @@ the SHA256 of the Core produced for the active Flutter configuration.
 
 The helper owns its Windows Service Control Manager lifecycle through two elevated commands:
 
-- `FlClashHelperService.exe install` stops and removes any stale registration, creates the auto-start service for the
+- `ElephantNetworkHelperService.exe install` stops and removes any stale registration, creates the auto-start service for the
   current executable path, starts it, and waits for the running state.
-- `FlClashHelperService.exe uninstall` stops the service, waits for shutdown, removes its registration, and is also used
+- `ElephantNetworkHelperService.exe uninstall` stops the service, waits for shutdown, removes its registration, and is also used
   by the Windows package uninstaller.
 
 The Dart layer only launches the helper's `install` command through `ShellExecuteW`; it does not compose `sc.exe`,
@@ -370,7 +376,7 @@ validates it against the SHA256 embedded only in the Helper, and keeps that hand
 `/ping` only compares the requested `coreSha256` with the Helper's embedded value and checks the fixed Core path exists;
 it never hashes the Core. Protocol version 6 uses 32-character lowercase-hex session ownership:
 
-- `GET /ping?coreSha256=...` returns the current Helper executable path with `x-flclash-helper-protocol` when the
+- `GET /ping?coreSha256=...` returns the current Helper executable path with `x-elephant-network-helper-protocol` when the
   requested SHA matches.
 - `POST /start` rejects unknown JSON fields, validates `{address, sessionId}`, then releases any previously managed Core
   before verifying the Core — so every outcome, including a rejected one, leaves the Helper owning no Core — and returns
@@ -378,6 +384,6 @@ it never hashes the Core. Protocol version 6 uses 32-character lowercase-hex ses
 - `POST /stop` validates `{sessionId}` and only stops the matching managed Core. A session mismatch is HTTP 409.
 - `GET /logs` exposes the bounded recent Helper/Core stderr buffer with `no-store` caching.
 
-All endpoints bind only to `127.0.0.1:47890` and do not use request-token authentication. Lifecycle safety comes from the
+All endpoints bind only to `127.0.0.1:47891` and do not use request-token authentication. Lifecycle safety comes from the
 fixed executable/hash, strict pipe namespace, session-scoped stop contract, and Dart-side peer-PID verification. When the
 Helper service itself shuts down, it unconditionally stops the Core process it owns.

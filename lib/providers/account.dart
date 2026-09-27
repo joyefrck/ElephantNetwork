@@ -70,12 +70,39 @@ class RiverpodXboardManagedProfileGateway
   final bool Function() _hasNodes;
 
   @override
+  Future<void> prepare(XboardAccount account) async {
+    final currentId = ref.read(currentProfileIdProvider);
+    final current = ref.read(profilesProvider).getProfile(currentId);
+    if (isXboardProfileForAccount(current, account.accountId)) {
+      return;
+    }
+    ref.read(currentProfileIdProvider.notifier).value = null;
+    _clearNodes();
+    final setup = ref.read(setupActionProvider.notifier);
+    try {
+      await setup.setRunning(false);
+      await setup.applyProfile(silence: true, force: true);
+    } finally {
+      _clearNodes();
+    }
+  }
+
+  void _clearNodes() {
+    ref.read(groupsProvider.notifier).value = [];
+    ref.read(providersProvider.notifier).value = [];
+    ref.read(delayDataSourceProvider.notifier).value = {};
+  }
+
+  @override
   Future<void> reconcile(Uri subscription, XboardAccount account) async {
+    await prepare(account);
     final profiles = ref.read(profilesProvider);
     final managedProfiles = profiles
         .where((profile) => profile.source == ProfileSource.xboard)
         .toList();
-    final existing = managedProfiles.firstOrNull;
+    final existing = managedProfiles
+        .where((profile) => profile.ownerAccountId == account.accountId)
+        .firstOrNull;
     final candidate = buildXboardManagedProfile(
       existing: existing,
       subscription: subscription,
@@ -83,16 +110,17 @@ class RiverpodXboardManagedProfileGateway
     );
     final updated = await _updateProfile(candidate);
     ref.read(profilesActionProvider.notifier).putProfile(updated);
-    for (final stale in managedProfiles.skip(1)) {
+    ref.read(currentProfileIdProvider.notifier).value = updated.id;
+    for (final stale in managedProfiles.where(
+      (profile) => profile.id != updated.id,
+    )) {
       await ref.read(profilesActionProvider.notifier).deleteProfile(stale.id);
     }
-    final currentId = ref.read(currentProfileIdProvider);
-    final current = profiles.getProfile(currentId);
-    if (current == null || current.source == ProfileSource.xboard) {
-      ref.read(currentProfileIdProvider.notifier).value = updated.id;
-      await ref.read(setupActionProvider.notifier).applyProfile(silence: true);
-      if (!_hasNodes()) throw StateError('managed_profile_has_no_nodes');
-    }
+    _clearNodes();
+    await ref
+        .read(setupActionProvider.notifier)
+        .applyProfile(silence: true, force: true);
+    if (!_hasNodes()) throw StateError('managed_profile_has_no_nodes');
   }
 
   @override

@@ -5,6 +5,8 @@ import 'xboard_models.dart';
 import 'xboard_session_store.dart';
 
 abstract interface class XboardManagedProfileGateway {
+  Future<void> prepare(XboardAccount account);
+
   Future<void> reconcile(Uri subscription, XboardAccount account);
 
   Future<void> stopAndRemove();
@@ -93,6 +95,7 @@ class XboardSessionCoordinator {
     Object? lastError;
     for (var attempt = 0; attempt <= maxRetries; attempt++) {
       try {
+        await _managedProfile.prepare(session.account);
         final subscription = await _api.managedSubscription(session.token);
         await _managedProfile
             .reconcile(subscription, session.account)

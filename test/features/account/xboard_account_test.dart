@@ -417,6 +417,40 @@ void main() {
       },
     );
 
+    test(
+      'prepares profile isolation even when subscription lookup fails',
+      () async {
+        final gateway = _FakeManagedProfileGateway();
+        final coordinator = XboardSessionCoordinator(
+          api: XboardApi(
+            transport: _FakeTransport({
+              XboardConfig.loginPath: {
+                'data': {'auth_data': 'token'},
+              },
+              XboardConfig.userInfoPath: {
+                'data': {'email': 'owner@example.com'},
+              },
+              XboardConfig.subscribeInfoPath: {'data': <String, Object?>{}},
+            }),
+          ),
+          store: XboardSessionStore(
+            secureStore: _MemorySecureStore(),
+            legacyStore: _MemoryLegacyStore(null),
+          ),
+          managedProfile: gateway,
+        );
+
+        expect(
+          await coordinator.login('owner@example.com', 'password'),
+          isTrue,
+        );
+        expect(await coordinator.syncManagedProfile(), isFalse);
+        expect(gateway.preparedAccount?.accountId, 'owner@example.com');
+        expect(gateway.subscription, isNull);
+        expect(coordinator.state.isAuthenticated, isTrue);
+      },
+    );
+
     test('restores account before reconciling the managed profile', () async {
       final secure = _MemorySecureStore();
       final store = XboardSessionStore(
@@ -713,6 +747,12 @@ class _FakeManagedProfileGateway implements XboardManagedProfileGateway {
   Uri? subscription;
   XboardAccount? account;
   bool removed = false;
+  XboardAccount? preparedAccount;
+
+  @override
+  Future<void> prepare(XboardAccount account) async {
+    preparedAccount = account;
+  }
 
   @override
   Future<void> reconcile(Uri subscription, XboardAccount account) async {

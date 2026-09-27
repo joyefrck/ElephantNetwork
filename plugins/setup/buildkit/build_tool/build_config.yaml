@@ -5,5 +5,5 @@ core_name: FlClashCore
 lib_name: libclash
 output_dir: libclash
 helper_dir: services/helper
-helper_name: FlClashHelperService
+helper_name: ElephantNetworkHelperService
 dist_dir: dist

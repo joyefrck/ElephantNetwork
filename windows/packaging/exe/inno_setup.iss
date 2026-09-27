@@ -24,16 +24,20 @@ ArchitecturesInstallIn64BitMode={{ARCH}}
 [Code]
 procedure KillProcesses;
 var
-  Processes: TArrayOfString;
-  i: Integer;
+  InstallPath: String;
+  Script: String;
   ResultCode: Integer;
 begin
-  Processes := ['ElephantNetwork.exe', 'ElephantNetworkService.exe', 'sing-box-windows-amd64.exe', 'FlClash.exe', 'FlClashCore.exe', 'FlClashHelperService.exe'];
-
-  for i := 0 to GetArrayLength(Processes)-1 do
-  begin
-    Exec('taskkill', '/f /im ' + Processes[i], '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  end;
+  InstallPath := ExpandConstant('{app}');
+  StringChangeEx(InstallPath, '''', '''''', True);
+  Script := 'Get-CimInstance Win32_Process | Where-Object { ' +
+    '$_.ExecutablePath -and ' +
+    '([IO.Path]::GetDirectoryName($_.ExecutablePath) -eq ''' + InstallPath + ''') -and ' +
+    '(@(''ElephantNetwork.exe'', ''ElephantNetworkService.exe'', ''sing-box-windows-amd64.exe'', ' +
+    '''FlClashCore.exe'', ''FlClashHelperService.exe'', ''ElephantNetworkHelperService.exe'') -contains $_.Name)' +
+    ' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }';
+  Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
+    '-NoProfile -NonInteractive -Command "' + Script + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;
 
 procedure RemoveLegacyService;
@@ -67,16 +71,27 @@ begin
   end;
 end;
 
-procedure UnregisterHelperService;
+procedure UnregisterOwnedHelper(const FileName, ServiceName: String);
 var
   HelperPath: String;
+  ImagePath: String;
   ResultCode: Integer;
 begin
-  HelperPath := ExpandConstant('{app}\\FlClashHelperService.exe');
-  if FileExists(HelperPath) then
+  HelperPath := AddBackslash(ExpandConstant('{app}')) + FileName;
+  if FileExists(HelperPath) and
+     RegQueryStringValue(HKLM,
+       'SYSTEM\CurrentControlSet\Services\' + ServiceName, 'ImagePath', ImagePath) and
+     ((CompareText(Trim(ImagePath), HelperPath) = 0) or
+      (CompareText(Trim(ImagePath), '"' + HelperPath + '"') = 0)) then
   begin
     Exec(HelperPath, 'uninstall', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   end;
+end;
+
+procedure UnregisterHelperService;
+begin
+  UnregisterOwnedHelper('ElephantNetworkHelperService.exe', 'ElephantNetworkHelperService');
+  UnregisterOwnedHelper('FlClashHelperService.exe', 'FlClashHelperService');
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
@@ -132,7 +147,6 @@ Name: "chineseSimplified"; MessagesFile: {% if locale.file %}{{ locale.file }}{%
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: {% if CREATE_DESKTOP_ICON != true %}unchecked{% else %}checkedonce{% endif %}
 [Files]
 Source: "{{SOURCE_DIR}}\\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
 Name: "{autoprograms}\\{{DISPLAY_NAME}}"; Filename: "{app}\\{{EXECUTABLE_NAME}}"

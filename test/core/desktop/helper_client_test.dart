@@ -22,7 +22,7 @@ void main() {
       final adapter = _ResponseAdapter((options) {
         expect(options.path, endsWith('/start'));
         expect(options.data, {
-          'address': r'\\.\pipe\FlClashCore_abc',
+          'address': r'\\.\pipe\ElephantNetworkCore_abc',
           'sessionId': _sessionId,
         });
         return _jsonResponse({'sessionId': _sessionId, 'pid': 6456});
@@ -30,7 +30,7 @@ void main() {
       final client = _client(adapter);
 
       final response = await client.start(
-        address: r'\\.\pipe\FlClashCore_abc',
+        address: r'\\.\pipe\ElephantNetworkCore_abc',
         sessionId: _sessionId,
       );
 
@@ -237,7 +237,7 @@ void main() {
     final adapter = _ResponseAdapter((options) {
       expect(options.queryParameters, {'coreSha256': _coreSha256});
       return ResponseBody.fromString(
-        r'C:\Program Files\FlClash\FlClashHelperService.exe',
+        r'C:\Program Files\FlClash\ElephantNetworkHelperService.exe',
         200,
         headers: {
           helperProtocolVersionHeader: [helperProtocolVersion],
@@ -248,7 +248,7 @@ void main() {
     final client = _client(
       adapter,
       expectedHelperPath: () =>
-          r'C:\Program Files\FlClash\FlClashHelperService.exe',
+          r'C:\Program Files\FlClash\ElephantNetworkHelperService.exe',
     );
 
     expect(await client.readiness(), WindowsHelperReadiness.ready);

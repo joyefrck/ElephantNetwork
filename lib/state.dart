@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:animations/animations.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fl_clash/common/theme.dart';
+import 'package:fl_clash/features/account/xboard_managed_profile.dart';
 import 'package:fl_clash/widgets/dialog.dart';
 import 'package:fl_clash/widgets/list.dart';
 import 'package:flutter/foundation.dart';
@@ -336,17 +337,27 @@ class GlobalState {
   }
 
   Future<void> startAuthenticatedRuntime() async {
-    if (_authenticatedRuntimeStarted) return;
-    _authenticatedRuntimeStarted = true;
     try {
-      await LegacyUpgradeCleaner.run();
-      await container.read(coreActionProvider.notifier).startCore();
-      if (!_didCrashOnPreviousExecution) {
-        await container.read(setupActionProvider.notifier).initStatus();
+      if (!_authenticatedRuntimeStarted) {
+        await LegacyUpgradeCleaner.run();
+        await container.read(coreActionProvider.notifier).startCore();
+        _authenticatedRuntimeStarted = true;
       }
       final profileReady = await container
           .read(xboardSessionControllerProvider.notifier)
           .syncManagedProfile(maxRetries: 3);
+      final accountId = container
+          .read(xboardSessionControllerProvider)
+          .session
+          ?.account
+          .accountId;
+      final hasOwnedProfile = isXboardProfileForAccount(
+        container.read(currentProfileProvider),
+        accountId,
+      );
+      if (hasOwnedProfile && !_didCrashOnPreviousExecution) {
+        await container.read(setupActionProvider.notifier).initStatus();
+      }
       await container
           .read(profilesActionProvider.notifier)
           .autoUpdateProfiles();

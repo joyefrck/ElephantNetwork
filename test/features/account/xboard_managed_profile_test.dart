@@ -20,6 +20,24 @@ void main() {
   );
   final subscription = Uri.parse('https://example.com/subscription');
 
+  test('cached profile is usable only by its authenticated owner', () {
+    final profile = Profile.normal(
+      label: 'Managed',
+    ).copyWith(source: ProfileSource.xboard, ownerAccountId: account.accountId);
+
+    expect(isXboardProfileForAccount(profile, account.accountId), isTrue);
+    expect(isXboardProfileForAccount(profile, 'other@example.com'), isFalse);
+    expect(isXboardProfileForAccount(profile, null), isFalse);
+    expect(isXboardProfileForAccount(null, account.accountId), isFalse);
+    expect(
+      isXboardProfileForAccount(
+        profile.copyWith(source: ProfileSource.user),
+        account.accountId,
+      ),
+      isFalse,
+    );
+  });
+
   test('new managed profile uses automatic daily updates', () {
     final profile = buildXboardManagedProfile(
       existing: null,
