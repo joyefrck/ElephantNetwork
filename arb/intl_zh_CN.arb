@@ -131,6 +131,8 @@
   "expiration": "到期时间",
   "neverExpires": "长期有效",
   "trafficOverview": "流量概览",
+  "currentPlanName": "当前套餐：{name}",
+  "noActivePlan": "暂无有效套餐",
   "planTraffic": "套餐流量",
   "trafficPackage": "独立流量包",
   "remaining": "剩余",

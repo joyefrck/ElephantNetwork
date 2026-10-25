@@ -131,6 +131,8 @@
   "expiration": "Срок действия",
   "neverExpires": "Без срока",
   "trafficOverview": "Обзор трафика",
+  "currentPlanName": "Текущий тариф: {name}",
+  "noActivePlan": "Нет действующего тарифа",
   "planTraffic": "Трафик тарифа",
   "trafficPackage": "Дополнительный трафик",
   "remaining": "Осталось",

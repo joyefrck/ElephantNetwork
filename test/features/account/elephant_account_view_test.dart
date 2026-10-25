@@ -10,44 +10,7 @@ void main() {
   testWidgets('website action is left aligned and shares the title baseline', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          xboardSessionControllerProvider.overrideWithValue(
-            const XboardSessionState.authenticated(
-              XboardSession(
-                token: 'token',
-                account: XboardAccount(
-                  email: 'owner@example.com',
-                  balance: 0,
-                  upload: 0,
-                  download: 0,
-                  planTransferEnable: 0,
-                  planUsedTraffic: 0,
-                  planRemainingTraffic: 0,
-                  trafficPackageTotal: 0,
-                  trafficPackageRemaining: 0,
-                  effectiveTransferEnable: 0,
-                  effectiveRemainingTraffic: 0,
-                ),
-              ),
-            ),
-          ),
-        ],
-        child: MaterialApp(
-          locale: const Locale('zh', 'CN'),
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.delegate.supportedLocales,
-          home: const ElephantAccountView(),
-        ),
-      ),
-    );
-    await tester.pump();
+    await _pumpAccount(tester);
 
     final title = find.text('个人概览');
     final button = find.byKey(const Key('open-website-button'));
@@ -77,4 +40,74 @@ void main() {
     expect(label.style?.fontSize, labelTheme.labelLarge?.fontSize);
     expect(label.style?.decoration, TextDecoration.underline);
   });
+  testWidgets('shows the current effective product below the account email', (
+    tester,
+  ) async {
+    for (final type in ['plan', 'traffic_package']) {
+      await _pumpAccount(tester, {
+        'has_active_plan': type == 'plan',
+        'active_product_type': type,
+        'active_product_name': '有效套餐 600G',
+      });
+      final email = find.text('owner@example.com');
+      final plan = find.text('当前套餐：有效套餐 600G');
+      expect(plan, findsOneWidget);
+      expect(
+        tester.getTopLeft(plan).dy,
+        greaterThan(tester.getBottomLeft(email).dy),
+      );
+      expect(find.text('余额'), findsOneWidget);
+      expect(find.text('套餐流量'), findsOneWidget);
+    }
+  });
+
+  testWidgets('shows an explicit empty state without an effective product', (
+    tester,
+  ) async {
+    await _pumpAccount(tester, {
+      'has_active_plan': false,
+      'active_product_type': 'none',
+      'active_product_name': null,
+      'plan_id': 10,
+      'expired_at': 1,
+    });
+    expect(find.text('当前套餐：暂无有效套餐'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+}
+
+Future<void> _pumpAccount(
+  WidgetTester tester, [
+  Map<String, Object?> fields = const {},
+]) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      key: UniqueKey(),
+      overrides: [
+        xboardSessionControllerProvider.overrideWithValue(
+          XboardSessionState.authenticated(
+            XboardSession(
+              token: 'token',
+              account: XboardAccount.fromJson({
+                'email': 'owner@example.com',
+                ...fields,
+              }),
+            ),
+          ),
+        ),
+      ],
+      child: MaterialApp(
+        locale: const Locale('zh', 'CN'),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.delegate.supportedLocales,
+        home: const ElephantAccountView(),
+      ),
+    ),
+  );
+  await tester.pump();
 }

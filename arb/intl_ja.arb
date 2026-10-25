@@ -131,6 +131,8 @@
   "expiration": "有効期限",
   "neverExpires": "無期限",
   "trafficOverview": "通信量の概要",
+  "currentPlanName": "現在のプラン：{name}",
+  "noActivePlan": "有効なプランはありません",
   "planTraffic": "プラン通信量",
   "trafficPackage": "追加通信量",
   "remaining": "残り",

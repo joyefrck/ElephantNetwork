@@ -145,6 +145,15 @@ class ElephantAccountView extends ConsumerWidget {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.currentPlanName(
+                            account.activeProductName ?? l10n.noActivePlan,
+                          ),
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                         const SizedBox(height: 20),
                         Wrap(
                           spacing: 32,

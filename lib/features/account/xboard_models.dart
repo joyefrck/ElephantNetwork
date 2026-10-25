@@ -12,11 +12,13 @@ class XboardAccount {
     required this.effectiveTransferEnable,
     required this.effectiveRemainingTraffic,
     this.planId,
+    this.activeProductName,
     this.expiredAt,
     this.nextResetAt,
   });
 
   factory XboardAccount.fromJson(Map<String, Object?> json) {
+    final activeProductName = json['active_product_name'];
     final upload = _int(json['u']);
     final download = _int(json['d']);
     final transferEnable = _int(json['transfer_enable']);
@@ -53,6 +55,10 @@ class XboardAccount {
       upload: upload,
       download: download,
       planId: _nullableInt(json['plan_id']),
+      activeProductName:
+          activeProductName is String && activeProductName.trim().isNotEmpty
+          ? activeProductName.trim()
+          : null,
       expiredAt: _nullableInt(json['expired_at']),
       nextResetAt: _nullableInt(json['next_reset_at']),
       planTransferEnable: planTransferEnable,
@@ -70,6 +76,7 @@ class XboardAccount {
   final int upload;
   final int download;
   final int? planId;
+  final String? activeProductName;
   final int? expiredAt;
   final int? nextResetAt;
   final int planTransferEnable;

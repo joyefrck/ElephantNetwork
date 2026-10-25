@@ -1029,6 +1029,26 @@ class AppLocalizations {
     );
   }
 
+  /// `Current plan: {name}`
+  String currentPlanName(String name) {
+    return Intl.message(
+      'Current plan: $name',
+      name: 'currentPlanName',
+      desc: '',
+      args: [name],
+    );
+  }
+
+  /// `No active plan`
+  String get noActivePlan {
+    return Intl.message(
+      'No active plan',
+      name: 'noActivePlan',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Plan traffic`
   String get planTraffic {
     return Intl.message(

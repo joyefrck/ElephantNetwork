@@ -20,6 +20,9 @@ void main() {
           'data': {
             'email': 'user@example.com',
             'balance': 1234,
+            'active_product_name': '标准月付套餐',
+            'active_product_type': 'plan',
+            'has_active_plan': true,
             'u': 100,
             'd': 200,
             'transfer_enable': 1000,
@@ -36,6 +39,7 @@ void main() {
 
       expect(token, 'secret-token');
       expect(account.accountId, 'user@example.com');
+      expect(account.activeProductName, '标准月付套餐');
       expect(account.planUsedTraffic, 300);
       expect(account.planRemainingTraffic, 500);
       expect(account.effectiveRemainingTraffic, 600);
@@ -45,6 +49,30 @@ void main() {
       });
       expect(transport.requests[1].token, 'secret-token');
     });
+
+    test(
+      'uses the effective product name without falling back to an old plan',
+      () {
+        final package = XboardAccount.fromJson({
+          'has_active_plan': false,
+          'active_product_type': 'traffic_package',
+          'active_product_name': '  独立流量包 180G  ',
+          'plan_id': 10,
+          'expired_at': 1,
+        });
+        expect(package.activeProductName, '独立流量包 180G');
+        for (final name in [null, '', '   ']) {
+          final expired = XboardAccount.fromJson({
+            'has_active_plan': false,
+            'active_product_type': 'none',
+            'active_product_name': name,
+            'plan_id': 10,
+            'expired_at': 1,
+          });
+          expect(expired.activeProductName, isNull);
+        }
+      },
+    );
 
     test('managed subscription always requests the FlClash renderer', () async {
       final api = XboardApi(
