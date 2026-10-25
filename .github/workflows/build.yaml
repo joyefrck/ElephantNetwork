@@ -11,6 +11,16 @@ on:
         options:
           - pre
           - stable
+      build_windows_only:
+        description: Build only the Windows installer
+        required: false
+        type: boolean
+        default: false
+      windows_package_version:
+        description: Optional Windows version override including build number
+        required: false
+        type: string
+        default: ''
       build_additional_desktops:
         description: Build Mac Apple Silicon, Mac Intel and Linux deb packages
         required: false
@@ -137,15 +147,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          - platform: windows
-            os: windows-2022
-            arch: amd64
-            target: exe
-          - platform: macos
-            os: macos-latest
-            arch: arm64
-            target: dmg
+        include: ${{ fromJSON(inputs.build_windows_only && '[{"platform":"windows","os":"windows-2022","arch":"amd64","target":"exe"}]' || '[{"platform":"windows","os":"windows-2022","arch":"amd64","target":"exe"},{"platform":"macos","os":"macos-latest","arch":"arm64","target":"dmg"}]') }}
 
     steps:
       - name: Checkout
@@ -173,6 +175,29 @@ jobs:
       - name: Show Xcode version
         if: matrix.platform == 'macos'
         run: xcodebuild -version
+
+      - name: Set Windows package version
+        if: matrix.platform == 'windows' && inputs.windows_package_version != ''
+        shell: bash
+        env:
+          WINDOWS_PACKAGE_VERSION: ${{ inputs.windows_package_version }}
+        run: |
+          python - <<'PYCODE'
+          import os
+          import pathlib
+          import re
+
+          version = os.environ['WINDOWS_PACKAGE_VERSION']
+          if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+\+[0-9]+', version):
+              raise ValueError('Invalid Windows package version')
+          path = pathlib.Path('pubspec.yaml')
+          source = path.read_text(encoding='utf-8')
+          updated, count = re.subn(r'^version: .+$', 'version: ' + version, source, count=1, flags=re.MULTILINE)
+          if count != 1:
+              raise ValueError('Expected one package version')
+          path.write_text(updated, encoding='utf-8')
+          print('Windows package version: ' + version)
+          PYCODE
 
       - name: Install dependencies
         run: |
