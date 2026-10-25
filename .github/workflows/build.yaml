@@ -11,6 +11,11 @@ on:
         options:
           - pre
           - stable
+      build_additional_desktops:
+        description: Build Mac Apple Silicon, Mac Intel and Linux deb packages
+        required: false
+        type: boolean
+        default: false
       build_signed_android:
         description: Build the production-signed Android package
         required: false
@@ -122,7 +127,7 @@ jobs:
 
   unsigned-desktop-build:
     name: Unsigned ${{ matrix.platform }} ${{ matrix.arch }}
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && !inputs.build_additional_desktops
     needs: [ test, windows-helper-test ]
     runs-on: ${{ matrix.os }}
     strategy:
@@ -226,6 +231,97 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ElephantNetwork-${{ steps.package-version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}-unsigned
+          path: ./dist
+          if-no-files-found: error
+          overwrite: true
+
+  additional-desktop-build:
+    name: Package ${{ matrix.platform }} ${{ matrix.arch }}
+    if: github.event_name == 'workflow_dispatch' && inputs.build_additional_desktops
+    needs: [ test, windows-helper-test ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos
+            os: macos-latest
+            arch: arm64
+            target: dmg
+          - platform: macos
+            os: macos-15-intel
+            arch: amd64
+            target: dmg
+          - platform: linux
+            os: ubuntu-22.04
+            arch: amd64
+            target: deb
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.4'
+          cache-dependency-path: core/go.sum
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libayatana-appindicator3-dev libkeybinder-3.0-dev libsecret-1-dev libblkid-dev liblzma-dev xvfb dbus-x11 desktop-file-utils
+
+      - name: Configure Mac architecture
+        if: matrix.platform == 'macos'
+        env:
+          PACKAGE_ARCH: ${{ matrix.arch }}
+        run: |
+          xcodebuild -version
+          arch=arm64
+          excluded=x86_64
+          if [ "$PACKAGE_ARCH" = amd64 ]; then arch=x86_64; excluded=arm64; fi
+          config="$RUNNER_TEMP/ElephantNetwork.xcconfig"
+          printf 'ARCHS = %s\nONLY_ACTIVE_ARCH = YES\nEXCLUDED_ARCHS = %s\nMACOSX_DEPLOYMENT_TARGET = 12.0\n' "$arch" "$excluded" > "$config"
+          echo "XCODE_XCCONFIG_FILE=$config" >> "$GITHUB_ENV"
+
+      - name: Install dependencies and packaging tool
+        run: |
+          flutter pub get
+          dart pub global activate -s git https://github.com/chen08209/flutter_distributor.git --git-ref FlClash --git-path packages/flutter_distributor
+          if [ "${{ matrix.platform }}" = macos ]; then npm install -g appdmg; fi
+
+      - name: Build package
+        env:
+          APP_ENV: ${{ inputs.build_environment || 'pre' }}
+        run: flutter_distributor package --platform ${{ matrix.platform }} --targets ${{ matrix.target }} --skip-clean --build-dart-define APP_ENV=${{ inputs.build_environment || 'pre' }} --description ${{ matrix.arch }}
+
+      - name: Verify installed package and Core
+        env:
+          PACKAGE_PLATFORM: ${{ matrix.platform }}
+          PACKAGE_ARCH: ${{ matrix.arch }}
+        run: bash .github/scripts/verify_posix_package.sh
+
+      - name: Read package version
+        id: package-version
+        run: |
+          version=$(sed -nE 's/^version: ([^+]+).*/\1/p' pubspec.yaml)
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ElephantNetwork-${{ steps.package-version.outputs.version }}-${{ matrix.platform }}-${{ matrix.arch }}-verified
           path: ./dist
           if-no-files-found: error
           overwrite: true

@@ -1,8 +1,8 @@
-display_name: FlClash
-package_name: FlClash
+display_name: Elephant Network
+package_name: elephant-network
 maintainer:
-  name: chen08209
-  email: chen08209@gmail.com
+  name: Elephant Network
+  email: 172146669+joyefrck@users.noreply.github.com
 
 priority: optional
 section: x11
@@ -16,12 +16,13 @@ dependencies:
   - libsecret-1-0
 
 keywords:
+  - ElephantNetwork
   - FlClash
   - Clash
   - ClashMeta
   - Proxy
 
-generic_name: FlClash
+generic_name: Elephant Network
 
 categories:
   - Network
