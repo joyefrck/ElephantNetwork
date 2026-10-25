@@ -1023,6 +1023,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "subscriptionUpdateDesc": MessageLookupByLibrary.simpleMessage(
       "Manage managed subscription update settings",
     ),
+    "subscriptionUpdateFailed": MessageLookupByLibrary.simpleMessage(
+      "Unable to update the subscription. Please try again.",
+    ),
+    "subscriptionUpdated": MessageLookupByLibrary.simpleMessage(
+      "Subscription updated",
+    ),
     "supportTickets": MessageLookupByLibrary.simpleMessage("Support tickets"),
     "suspended": MessageLookupByLibrary.simpleMessage("Suspended..."),
     "sync": MessageLookupByLibrary.simpleMessage("Sync"),
@@ -1084,6 +1090,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "unnamed": MessageLookupByLibrary.simpleMessage("Unnamed"),
     "update": MessageLookupByLibrary.simpleMessage("Update"),
     "updateNow": MessageLookupByLibrary.simpleMessage("Update now"),
+    "updateSubscription": MessageLookupByLibrary.simpleMessage(
+      "Update subscription",
+    ),
     "upload": MessageLookupByLibrary.simpleMessage("Upload"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage(

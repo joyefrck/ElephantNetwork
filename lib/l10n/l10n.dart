@@ -934,6 +934,36 @@ class AppLocalizations {
     );
   }
 
+  /// `Update subscription`
+  String get updateSubscription {
+    return Intl.message(
+      'Update subscription',
+      name: 'updateSubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Subscription updated`
+  String get subscriptionUpdated {
+    return Intl.message(
+      'Subscription updated',
+      name: 'subscriptionUpdated',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unable to update the subscription. Please try again.`
+  String get subscriptionUpdateFailed {
+    return Intl.message(
+      'Unable to update the subscription. Please try again.',
+      name: 'subscriptionUpdateFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Retry`
   String get retry {
     return Intl.message('Retry', name: 'retry', desc: '', args: []);

@@ -1074,6 +1074,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "subscriptionUpdateDesc": MessageLookupByLibrary.simpleMessage(
       "Настройка обновления управляемой подписки",
     ),
+    "subscriptionUpdateFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось обновить подписку. Повторите попытку.",
+    ),
+    "subscriptionUpdated": MessageLookupByLibrary.simpleMessage(
+      "Подписка обновлена",
+    ),
     "supportTickets": MessageLookupByLibrary.simpleMessage(
       "Обращения в поддержку",
     ),
@@ -1149,6 +1155,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "unnamed": MessageLookupByLibrary.simpleMessage("Без имени"),
     "update": MessageLookupByLibrary.simpleMessage("Обновить"),
     "updateNow": MessageLookupByLibrary.simpleMessage("Обновить сейчас"),
+    "updateSubscription": MessageLookupByLibrary.simpleMessage(
+      "Обновить подписку",
+    ),
     "upload": MessageLookupByLibrary.simpleMessage("Загрузка"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage(

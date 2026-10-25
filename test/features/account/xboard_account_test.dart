@@ -349,6 +349,60 @@ void main() {
       expect(gateway.subscription?.queryParameters['flag'], 'flclash');
     });
 
+    test(
+      'manual sync fetches a new URL after initial subscription failure',
+      () async {
+        final gateway = _FakeManagedProfileGateway();
+        final transport = _FakeTransport({
+          XboardConfig.loginPath: {
+            'status': 'success',
+            'data': {'auth_data': 'token'},
+          },
+          XboardConfig.userInfoPath: {
+            'data': {'email': 'owner@example.com'},
+          },
+          XboardConfig.subscribeInfoPath: const XboardApiException(
+            statusCode: 503,
+          ),
+        });
+        final coordinator = XboardSessionCoordinator(
+          api: XboardApi(transport: transport),
+          store: XboardSessionStore(
+            secureStore: _MemorySecureStore(),
+            legacyStore: _MemoryLegacyStore(null),
+          ),
+          managedProfile: gateway,
+        );
+        expect(
+          await coordinator.login('owner@example.com', 'password'),
+          isTrue,
+        );
+        expect(await coordinator.syncManagedProfile(), isFalse);
+        expect(gateway.subscription, isNull);
+        expect(coordinator.state.isAuthenticated, isTrue);
+        expect(coordinator.state.error, isA<XboardApiException>());
+
+        transport.responses[XboardConfig.subscribeInfoPath] = {
+          'data': {
+            'subscribe_url': 'https://example.com/subscribe?token=fresh-token',
+          },
+        };
+        expect(await coordinator.syncManagedProfile(), isTrue);
+        expect(gateway.subscription?.queryParameters, {
+          'token': 'fresh-token',
+          'flag': 'flclash',
+        });
+        expect(gateway.account?.accountId, 'owner@example.com');
+        expect(coordinator.state.error, isNull);
+        expect(
+          transport.requests.where(
+            (request) => request.path == XboardConfig.subscribeInfoPath,
+          ),
+          hasLength(2),
+        );
+      },
+    );
+
     test('startup managed profile sync retries three times', () async {
       final gateway = _FlakyManagedProfileGateway(failuresBeforeSuccess: 3);
       final retryDelays = <Duration>[];

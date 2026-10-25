@@ -833,6 +833,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "subscriptionUpdateDesc": MessageLookupByLibrary.simpleMessage(
       "管理対象サブスクリプションの更新設定を管理",
     ),
+    "subscriptionUpdateFailed": MessageLookupByLibrary.simpleMessage(
+      "サブスクリプションを更新できませんでした。もう一度お試しください。",
+    ),
+    "subscriptionUpdated": MessageLookupByLibrary.simpleMessage(
+      "サブスクリプションを更新しました",
+    ),
     "supportTickets": MessageLookupByLibrary.simpleMessage("サポートチケット"),
     "suspended": MessageLookupByLibrary.simpleMessage("一時停止中..."),
     "sync": MessageLookupByLibrary.simpleMessage("同期"),
@@ -882,6 +888,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "unnamed": MessageLookupByLibrary.simpleMessage("無題"),
     "update": MessageLookupByLibrary.simpleMessage("更新"),
     "updateNow": MessageLookupByLibrary.simpleMessage("今すぐ更新"),
+    "updateSubscription": MessageLookupByLibrary.simpleMessage("サブスクリプションを更新"),
     "upload": MessageLookupByLibrary.simpleMessage("アップロード"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("URL経由でプロファイルを取得"),

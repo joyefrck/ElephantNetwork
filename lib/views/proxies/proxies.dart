@@ -1,7 +1,6 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/common.dart';
-import 'package:fl_clash/models/state.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/views/proxies/list.dart';
 import 'package:fl_clash/views/proxies/providers.dart';
@@ -13,7 +12,9 @@ import 'setting.dart';
 import 'tab.dart';
 
 class ProxiesView extends ConsumerStatefulWidget {
-  const ProxiesView({super.key});
+  const ProxiesView({super.key, this.syncSubscription});
+
+  final Future<bool> Function()? syncSubscription;
 
   @override
   ConsumerState<ProxiesView> createState() => _ProxiesViewState();
@@ -23,17 +24,46 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
   final GlobalKey<ProxiesTabViewState> _proxiesTabKey = GlobalKey();
   bool _hasProviders = false;
   bool _isTab = false;
+  bool _isUpdatingSubscription = false;
+
+  Future<void> _updateSubscription() async {
+    if (_isUpdatingSubscription) return;
+    setState(() => _isUpdatingSubscription = true);
+    var succeeded = false;
+    try {
+      succeeded =
+          await (widget.syncSubscription?.call() ??
+              ref
+                  .read(xboardSessionControllerProvider.notifier)
+                  .syncManagedProfile());
+    } catch (_) {
+      succeeded = false;
+    } finally {
+      if (mounted) setState(() => _isUpdatingSubscription = false);
+    }
+    if (mounted) {
+      context.showNotifier(
+        succeeded
+            ? context.appLocalizations.subscriptionUpdated
+            : context.appLocalizations.subscriptionUpdateFailed,
+      );
+    }
+  }
 
   List<Widget> _buildActions(BuildContext context) {
     final appLocalizations = context.appLocalizations;
     return [
-      if (_isTab)
-        IconButton(
-          onPressed: () {
-            _proxiesTabKey.currentState?.scrollToGroupSelected();
-          },
-          icon: const Icon(Icons.adjust, weight: 1),
-        ),
+      TextButton.icon(
+        key: const Key('proxies-update-subscription'),
+        onPressed: _isUpdatingSubscription ? null : _updateSubscription,
+        icon: _isUpdatingSubscription
+            ? const SizedBox.square(
+                dimension: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.sync, size: 20),
+        label: Text(appLocalizations.updateSubscription),
+      ),
       CommonPopupBox(
         targetBuilder: (open) {
           return IconButton(
@@ -91,10 +121,6 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
         : null;
   }
 
-  void _onSearch(String value) {
-    ref.read(queryProvider(QueryTag.proxies).notifier).value = value;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -135,7 +161,6 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
       floatingActionButton: _buildFAB(),
       actions: _buildActions(context),
       title: context.appLocalizations.proxies,
-      searchState: AppBarSearchState(onSearch: _onSearch),
       body: switch (proxiesType) {
         ProxiesType.tab => ProxiesTabView(key: _proxiesTabKey),
         ProxiesType.list => const ProxiesListView(),
