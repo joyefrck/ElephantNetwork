@@ -3,6 +3,14 @@ name: build
 on:
   workflow_dispatch:
     inputs:
+      build_environment:
+        description: Application build environment
+        required: false
+        type: choice
+        default: pre
+        options:
+          - pre
+          - stable
       build_signed_android:
         description: Build the production-signed Android package
         required: false
@@ -162,7 +170,7 @@ jobs:
           flutter pub get
 
       - name: Build unsigned package
-        run: dart setup.dart ${{ matrix.platform }} --targets ${{ matrix.target }} --env pre -v
+        run: dart setup.dart ${{ matrix.platform }} --targets ${{ matrix.target }} --env ${{ inputs.build_environment || 'pre' }} -v
 
       - name: Verify Windows installer and helper
         if: matrix.platform == 'windows'
