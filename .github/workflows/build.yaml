@@ -16,6 +16,11 @@ on:
         required: false
         type: boolean
         default: false
+      build_intel_only:
+        description: Build only the Intel Mac package
+        required: false
+        type: boolean
+        default: false
       build_signed_android:
         description: Build the production-signed Android package
         required: false
@@ -243,19 +248,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - platform: macos
-            os: macos-latest
-            arch: arm64
-            target: dmg
-          - platform: macos
-            os: macos-15-intel
-            arch: amd64
-            target: dmg
-          - platform: linux
-            os: ubuntu-22.04
-            arch: amd64
-            target: deb
+        include: ${{ fromJSON(inputs.build_intel_only && '[{"platform":"macos","os":"macos-15-intel","arch":"amd64","target":"dmg"}]' || '[{"platform":"macos","os":"macos-latest","arch":"arm64","target":"dmg"},{"platform":"macos","os":"macos-15-intel","arch":"amd64","target":"dmg"},{"platform":"linux","os":"ubuntu-22.04","arch":"amd64","target":"deb"}]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -286,6 +279,9 @@ jobs:
         env:
           PACKAGE_ARCH: ${{ matrix.arch }}
         run: |
+          if [ "$PACKAGE_ARCH" = amd64 ]; then
+            sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+          fi
           xcodebuild -version
           arch=arm64
           excluded=x86_64
