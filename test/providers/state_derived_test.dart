@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:fl_clash/common/constant.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
@@ -21,6 +24,93 @@ void main() {
   tearDown(() {
     container.dispose();
   });
+
+  test('startup without a profile does not load profile storage for DNS', () {
+    final fresh = ProviderContainer(
+      overrides: [
+        profilesProvider.overrideWith(
+          () => throw StateError('unexpected profile storage access'),
+        ),
+      ],
+    );
+    addTearDown(fresh.dispose);
+    expect(fresh.read(currentProfileProvider), isNull);
+    expect(fresh.read(updateParamsProvider).tun.dnsHijack, ['any:53']);
+    expect(fresh.read(vpnStateProvider).vpnProps.dnsHijacking, false);
+  });
+
+  test(
+    'managed profile source reaches setup even when old DNS override is off',
+    () async {
+      final profile = Profile.normal().copyWith(
+        overwriteType: OverwriteType.script,
+      );
+      _profiles(container).replace([profile]);
+      final subscription = container.listen(
+        setupStateProvider(profile.id),
+        (_, _) {},
+      );
+      addTearDown(subscription.close);
+      final before = await container.read(
+        setupStateProvider(profile.id).future,
+      );
+      expect(before.profileSource, ProfileSource.user);
+      expect(before.overrideDns, false);
+
+      _profiles(container).replace([
+        profile.copyWith(
+          source: ProfileSource.xboard,
+          ownerAccountId: 'account-1',
+        ),
+      ]);
+      final after = await container.read(setupStateProvider(profile.id).future);
+      expect(after.profileSource, ProfileSource.xboard);
+      expect(after.overrideDns, false);
+      expect(after, isNot(before));
+    },
+  );
+
+  test(
+    'managed DNS interception reaches desktop updates and Android shared state',
+    () async {
+      await AppLocalizations.load(const Locale('en'));
+      final profile = Profile.normal();
+      _profiles(container).replace([profile]);
+      container
+          .read(currentProfileIdProvider.notifier)
+          .update((_) => profile.id);
+      container
+          .read(patchClashConfigProvider.notifier)
+          .update((state) => state.copyWith.tun(dnsHijack: const []));
+      container
+          .read(vpnSettingProvider.notifier)
+          .update((state) => state.copyWith(dnsHijacking: false));
+      expect(container.read(updateParamsProvider).tun.dnsHijack, isEmpty);
+      expect(
+        container.read(sharedStateProvider).vpnOptions!.dnsHijacking,
+        false,
+      );
+
+      _profiles(
+        container,
+      ).replace([profile.copyWith(source: ProfileSource.xboard)]);
+      expect(container.read(updateParamsProvider).tun.dnsHijack, ['any:53']);
+      expect(container.read(vpnStateProvider).vpnProps.dnsHijacking, true);
+      final restoredShared = SharedState.fromJson(
+        jsonDecode(jsonEncode(container.read(sharedStateProvider)))
+            as Map<String, dynamic>,
+      );
+      expect(restoredShared.vpnOptions!.dnsHijacking, true);
+      expect(container.read(vpnSettingProvider).dnsHijacking, false);
+
+      _profiles(container).replace([profile]);
+      expect(container.read(updateParamsProvider).tun.dnsHijack, isEmpty);
+      expect(
+        container.read(sharedStateProvider).vpnOptions!.dnsHijacking,
+        false,
+      );
+    },
+  );
 
   test('group derivation sanitizes runtime state and respects clash mode', () {
     final groups = [
@@ -273,13 +363,7 @@ void main() {
     container.read(groupsProvider.notifier).update((_) => groups);
     container
         .read(delayDataSourceProvider.notifier)
-        .setDelay(
-          const Delay(
-            name: 'Leaf',
-            url: defaultTestUrl,
-            value: 42,
-          ),
-        );
+        .setDelay(const Delay(name: 'Leaf', url: defaultTestUrl, value: 42));
 
     expect(container.read(selectedMapProvider), {'Selector': 'Leaf'});
     expect(container.read(unfoldSetProvider), {'Selector'});

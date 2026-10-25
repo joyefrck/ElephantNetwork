@@ -365,6 +365,7 @@ class SetupAction extends _$SetupAction {
         realPatchConfig: realPatchConfig,
         overrideDns: overrideDns,
         appendSystemDns: appendSystemDns,
+        profileSource: setupState.profileSource,
         addedRules: addedRules,
         defaultUA: defaultUA,
       ),

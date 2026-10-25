@@ -66,13 +66,22 @@ NavigationItemsState currentNavigationItemsState(Ref ref) {
 
 @riverpod
 UpdateParams updateParams(Ref ref) {
+  final managedDns = ref.watch(
+    currentProfileProvider.select(
+      (profile) => profile?.source == ProfileSource.xboard,
+    ),
+  );
   final routeMode = ref.watch(
     networkSettingProvider.select((state) => state.routeMode),
   );
   return ref.watch(
     patchClashConfigProvider.select(
       (state) => UpdateParams(
-        tun: state.tun.getRealTun(routeMode),
+        tun: managedDns
+            ? state.tun
+                  .getRealTun(routeMode)
+                  .copyWith(dnsHijack: const ['any:53'])
+            : state.tun.getRealTun(routeMode),
         allowLan: state.allowLan,
         findProcessMode: state.findProcessMode,
         mode: state.mode,
@@ -158,10 +167,18 @@ TrayTitleState trayTitleState(Ref ref) {
 @riverpod
 VpnState vpnState(Ref ref) {
   final vpnProps = ref.watch(vpnSettingProvider);
+  final managedDns = ref.watch(
+    currentProfileProvider.select(
+      (profile) => profile?.source == ProfileSource.xboard,
+    ),
+  );
   final stack = ref.watch(
     patchClashConfigProvider.select((state) => state.tun.stack),
   );
-  return VpnState(stack: stack, vpnProps: vpnProps);
+  return VpnState(
+    stack: stack,
+    vpnProps: managedDns ? vpnProps.copyWith(dnsHijacking: true) : vpnProps,
+  );
 }
 
 @riverpod
@@ -415,6 +432,7 @@ HotKeyAction getHotKeyAction(Ref ref, HotAction hotAction) {
 @riverpod
 Profile? currentProfile(Ref ref) {
   final profileId = ref.watch(currentProfileIdProvider);
+  if (profileId == null) return null;
   return ref.watch(
     profilesProvider.select((state) => state.getProfile(profileId)),
   );
@@ -567,7 +585,7 @@ SharedState sharedState(Ref ref) {
       (state) => VM2(state.tun.stack.name, state.mixedPort),
     ),
   );
-  final vpnSetting = ref.watch(vpnSettingProvider);
+  final vpnSetting = ref.watch(vpnStateProvider).vpnProps;
   final currentProfileName = currentProfileVM2.a;
   final selectedMap = currentProfileVM2.b;
   final onlyStatisticsProxy = appSettingVM3.a;
@@ -776,6 +794,7 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
     script: script,
     overrideDns: overrideDns,
     dns: dns,
+    profileSource: profile?.source ?? ProfileSource.user,
   );
 }
 

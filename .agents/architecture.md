@@ -8,6 +8,14 @@ shared `%APPDATA%\com.follow\clash` directory during upgrade. Users may need to 
 downloaded from the authenticated account. Clear a foreign selected profile before subscription lookup, and activate the
 current account's managed profile before restoring the running state. A failed refresh must not reactivate a foreign profile.
 
+Official `ProfileSource.xboard` profiles receive the shared DNS policy in
+`lib/features/account/xboard_dns_policy.dart` after subscription, script, and user patches are compiled. This applies to
+both existing and new profiles without changing the saved DNS preferences for imported user profiles. Proxy-domain DoH
+connections follow routing mode through reserved resolver-IP routes targeting the effective catch-all proxy; domestic
+domains use their separate resolver policy, and node bootstrap resolution stays explicitly direct. Never append system DNS
+or retain subscription fallback resolvers in the official runtime policy. Desktop runtime updates preserve DNS interception,
+and Android VPN/shared state enables interception before native service startup, including background restoration.
+
 The Go proxy core in `core/` operates in two modes.
 
 Android lib mode:

@@ -187,7 +187,7 @@ final class UpdateParamsProvider
   }
 }
 
-String _$updateParamsHash() => r'6f471ce2a4114291cc7dc725723911764c8c3cd9';
+String _$updateParamsHash() => r'72605dc4adeb8d11d1fee806d669f1d1afa53520';
 
 @ProviderFor(proxyState)
 final proxyStateProvider = ProxyStateProvider._();
@@ -351,7 +351,7 @@ final class VpnStateProvider
   }
 }
 
-String _$vpnStateHash() => r'128ddad03ce045ad1f8204e47aec3cb6cfa29f6e';
+String _$vpnStateHash() => r'999af5e4b274d018f7ea49fd56f2a15b866340ce';
 
 @ProviderFor(navigationState)
 final navigationStateProvider = NavigationStateProvider._();
@@ -1420,7 +1420,7 @@ final class CurrentProfileProvider
   }
 }
 
-String _$currentProfileHash() => r'55f3cb9570a0aa6b9e0b83a36693b69d52e753ab';
+String _$currentProfileHash() => r'22f9ba88f081a8b0911765eb9e3fe56bf0e2de1b';
 
 @ProviderFor(realSelectedProxyState)
 final realSelectedProxyStateProvider = RealSelectedProxyStateFamily._();
@@ -2050,7 +2050,7 @@ final class SharedStateProvider
   }
 }
 
-String _$sharedStateHash() => r'eeae9ab857cd6263f761290054774460f9e86069';
+String _$sharedStateHash() => r'70952f1a2212fe282d28f4da576eaab27810ca44';
 
 @ProviderFor(overlayTopOffset)
 final overlayTopOffsetProvider = OverlayTopOffsetProvider._();
@@ -2881,7 +2881,7 @@ final class SetupStateProvider
   }
 }
 
-String _$setupStateHash() => r'69e69aea042907d294d30f6fea1f3c31702272c4';
+String _$setupStateHash() => r'022d8b34a507a81eda198f9c678dd478d68ce9a5';
 
 final class SetupStateFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<SetupState>, int?> {

@@ -336,6 +336,7 @@ abstract class MakeRealProfileState with _$MakeRealProfileState {
     required PatchClashConfig realPatchConfig,
     required bool overrideDns,
     required bool appendSystemDns,
+    @Default(ProfileSource.user) ProfileSource profileSource,
     required List<ProxyGroup> proxyGroups,
     required List<Rule> rules,
     required List<Rule> addedRules,
@@ -367,5 +368,6 @@ abstract class SetupState with _$SetupState {
     required Script? script,
     required bool overrideDns,
     required Dns dns,
+    @Default(ProfileSource.user) ProfileSource profileSource,
   }) = _SetupState;
 }

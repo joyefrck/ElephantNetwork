@@ -8,6 +8,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/account/xboard_dns_policy.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -94,7 +95,7 @@ Future<VM2<String, String>> makeRealProfileTask(
 Future<VM2<String, String>> _makeRealProfileTask(
   MakeRealProfileState data,
 ) async {
-  final rawConfig = Map.from(data.rawConfig);
+  final rawConfig = Map<String, dynamic>.from(data.rawConfig);
   final realPatchConfig = data.realPatchConfig;
   final profilesPath = data.profilesPath;
   final profileId = data.profileId;
@@ -264,9 +265,14 @@ Future<VM2<String, String>> _makeRealProfileTask(
     rules = data.rules.map((item) => item.rawValue).toList();
   }
   if (data.proxyGroups.isNotEmpty) {
-    rawConfig['proxy-groups'] = data.proxyGroups;
+    rawConfig['proxy-groups'] = data.proxyGroups
+        .map((group) => group.toJson())
+        .toList();
   }
   rawConfig['rules'] = rules;
+  if (data.profileSource == ProfileSource.xboard) {
+    applyXboardDnsPolicy(rawConfig);
+  }
   final yaml = await _encodeYaml(Map<String, dynamic>.from(rawConfig));
   return VM2(yaml, yaml.toMd5());
 }
