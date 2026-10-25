@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yaml/yaml.dart';
 
 void main() {
   test(
@@ -30,11 +32,9 @@ void main() {
       final windows = File(
         'windows/packaging/exe/make_config.yaml',
       ).readAsStringSync();
-      final workflow = File(
-        '.github/workflows/build.yaml',
-      ).readAsStringSync();
+      final workflow = File('.github/workflows/build.yaml').readAsStringSync();
 
-    expect(pubspec, contains('version: 2.0.7+20007'));
+      expect(pubspec, contains('version: 2.0.7+20007'));
       expect(pubspec, contains('flutter_secure_storage: 10.0.0'));
       expect(constants, contains("const packageName = 'com.elephantroute';"));
       expect(android, contains('applicationId = "com.elephantroute"'));
@@ -65,14 +65,8 @@ void main() {
         macosDebugEntitlements,
         isNot(contains('<key>keychain-access-groups</key>')),
       );
-      expect(
-        sessionStore,
-        contains('usesDataProtectionKeychain: false'),
-      );
-      expect(
-        sessionStore,
-        contains("'useDataProtectionKeyChain': 'false'"),
-      );
+      expect(sessionStore, contains('usesDataProtectionKeychain: false'));
+      expect(sessionStore, contains("'useDataProtectionKeyChain': 'false'"));
       expect(
         windows,
         contains('app_id: "{{5F1D7A6E-2B3C-4A91-9D74-E0C8F6B1A245}"'),
@@ -112,13 +106,24 @@ void main() {
   });
 
   test('manual workflow builds unsigned desktop installers', () {
-    final workflow = File('.github/workflows/build.yaml').readAsStringSync();
-
-    expect(workflow, contains('unsigned-desktop-build:'));
-    expect(workflow, contains('platform: windows'));
-    expect(workflow, contains('target: exe'));
-    expect(workflow, contains('platform: macos'));
-    expect(workflow, contains('target: dmg'));
-    expect(workflow, contains("if: github.event_name == 'workflow_dispatch'"));
+    final workflow =
+        loadYaml(File('.github/workflows/build.yaml').readAsStringSync())
+            as YamlMap;
+    final job = workflow['jobs']['unsigned-desktop-build'] as YamlMap;
+    expect(job['if'], startsWith("github.event_name == 'workflow_dispatch'"));
+    final matrix = job['strategy']['matrix']['include'] as String;
+    final targets = RegExp(r"'(\[.*?\])'")
+        .allMatches(matrix)
+        .map((match) => jsonDecode(match.group(1)!) as List<Object?>)
+        .map(
+          (entries) => entries.map((entry) {
+            final target = entry as Map<String, Object?>;
+            return (target['platform'], target['target']);
+          }).toList(),
+        )
+        .toList();
+    expect(targets, hasLength(2));
+    expect(targets.first, [('windows', 'exe')]);
+    expect(targets.last, [('windows', 'exe'), ('macos', 'dmg')]);
   });
 }
