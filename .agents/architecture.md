@@ -16,6 +16,27 @@ domains use their separate resolver policy, and node bootstrap resolution stays 
 or retain subscription fallback resolvers in the official runtime policy. Desktop runtime updates preserve DNS interception,
 and Android VPN/shared state enables interception before native service startup, including background restoration.
 
+Core upgrades preserve ElephantNetwork navigation, account pages, profile ownership, custom overwrites and scripts.
+The optional `*-override-keys` fields in `PatchClashConfig` distinguish absent (legacy behavior) from an empty set
+(inherit subscription fields). Local inbound ownership stays with the app; Android's native VPN keeps its explicit stack
+selection. New DNS/TUN options remain nullable so old backups do not acquire new defaults during restore.
+
+Compiled profiles retain a structural fingerprint separate from DNS, Hosts, NTP and sniffer sections. Isolated runtime
+changes use `updateRuntimeConfig` under the Core configuration lock; proxy groups are not rebuilt, and failed parsing
+must preserve both the accepted config and the proxy order cache. Rules referencing providers still require a full apply.
+Android engine attachment resumes a running service using the persisted digest of the last accepted config; an unchanged
+config must still open its listeners without forcing a profile reload.
+
+Core responses larger than 1 MiB spill into the app-owned `responses` directory. Dart validates the directory, refuses
+symlinks, checks request IDs, and deletes consumed or late responses. Keep the optional `file` response envelope identical
+in Go, desktop RPC and Android service calls. `SystemProxyQueue` owns setting and undoing the system proxy, including exit;
+only a run that attempted to set a proxy may undo it.
+
+Android `NetworkObserver` outlives individual VPN runs, observes on a background looper and resets old-network sockets
+when the preferred network changes. Core MethodChannel calls decode on a background task queue while events are sent on
+the main thread. `AppSettingProps.testTimeout` is a persisted millisecond budget (default 5000, bounded 100–120000); preserve
+the existing AnyTLS retry and concurrency policy when changing delay testing.
+
 The Go proxy core in `core/` operates in two modes.
 
 Android lib mode:

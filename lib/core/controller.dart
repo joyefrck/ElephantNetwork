@@ -74,6 +74,7 @@ class CoreController {
   Future<bool> init(int version) async {
     await initGeo();
     final homeDirPath = await appPath.homeDirPath;
+    await Directory(join(homeDirPath, 'responses')).create(recursive: true);
     return _interface.init(InitParams(homeDir: homeDirPath, version: version));
   }
 
@@ -185,8 +186,14 @@ class CoreController {
     return _interface.stopListener();
   }
 
-  Future<Delay> getDelay(String url, String proxyName) async {
-    return _interface.asyncTestDelay(url, proxyName);
+  Future<Delay> getDelay(
+    String url,
+    String proxyName, {
+    Duration? timeout,
+  }) async {
+    return timeout == null
+        ? _interface.asyncTestDelay(url, proxyName)
+        : _interface.asyncTestDelay(url, proxyName, timeout);
   }
 
   Future<Map<String, dynamic>> getConfig(int id) async {
@@ -238,6 +245,13 @@ class CoreController {
   Future<void> crash() async {
     await _interface.crash();
   }
+
+  Future<bool> clearDnsCache() => _interface.clearDnsCache();
+
+  Future<bool> resetNetwork() => _interface.resetNetwork();
+
+  Future<String> updateRuntimeConfig(Map<String, dynamic> config) =>
+      _interface.updateRuntimeConfig(config);
 
   Future<String> clearEffect(int profileId) async {
     return _interface.clearEffect(profileId);

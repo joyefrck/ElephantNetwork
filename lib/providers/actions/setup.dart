@@ -5,8 +5,13 @@ enum _SetupTaskResult { completed, handoffToCoreRestart }
 class _RunRequest {
   final bool running;
   final bool initialize;
+  final bool resume;
 
-  const _RunRequest({required this.running, required this.initialize});
+  const _RunRequest({
+    required this.running,
+    required this.initialize,
+    this.resume = false,
+  });
 }
 
 @Riverpod(keepAlive: true)
@@ -16,11 +21,15 @@ class SetupAction extends _$SetupAction {
   final _listenerScheduler = SerialTaskScheduler();
   _RunRequest? _latestRunRequest;
   DateTime? _startTime;
+  String? _appliedStructureMd5;
+  int? _appliedProfileId;
 
   bool get _isRunning => _startTime != null && _startTime!.isBeforeNow;
 
   @override
-  void build() {}
+  void build() {
+    ref.onDispose(() => _runtimeTimer?.cancel());
+  }
 
   SetupParams get _setupParams {
     final selectedMap = ref.read(selectedMapProvider);
@@ -69,9 +78,8 @@ class SetupAction extends _$SetupAction {
               startTime.millisecondsSinceEpoch;
   }
 
-  Future<void> _updateStartTime() async {
-    _startTime = await service?.getRunTime();
-  }
+  @protected
+  Future<DateTime?> serviceStartTime() async => service?.getRunTime();
 
   Future<void> initStatus() async {
     if (!globalState.needInitStatus) {
@@ -79,11 +87,11 @@ class SetupAction extends _$SetupAction {
       return;
     }
     commonPrint.log('init status');
-    if (system.isAndroid) {
-      await _updateStartTime();
-    }
-    final shouldRun = _isRunning || ref.read(appSettingProvider).autoRun;
-    if (shouldRun) {
+    _startTime = await serviceStartTime();
+    if (_isRunning) {
+      globalState.lastConfigMd5 = await preferences.getAppliedConfigMd5();
+      await _run(true, initialize: true, resume: true);
+    } else if (ref.read(appSettingProvider).autoRun) {
       await setRunning(true, initialize: true);
     } else {
       await applyProfile(force: true);
@@ -95,9 +103,18 @@ class SetupAction extends _$SetupAction {
       return Future.value();
     }
 
+    return _run(running, initialize: running && initialize);
+  }
+
+  Future<void> _run(
+    bool running, {
+    required bool initialize,
+    bool resume = false,
+  }) {
     final request = _RunRequest(
       running: running,
-      initialize: running && initialize,
+      initialize: initialize,
+      resume: resume,
     );
     _latestRunRequest = request;
     _setLocalRunning(running);
@@ -111,7 +128,7 @@ class SetupAction extends _$SetupAction {
     if (request.initialize) {
       try {
         await applyProfile(
-          force: true,
+          force: !request.resume,
           preloadInvoke: () => _setCoreRunning(request),
         );
       } catch (_) {
@@ -171,6 +188,11 @@ class SetupAction extends _$SetupAction {
 
   @visibleForTesting
   Future<void> updateConfig() async {
+    final patch = ref.read(patchClashConfigProvider);
+    if (patch.generalOverrideKeys != null || patch.tunOverrideKeys != null) {
+      await applyProfile(silence: true);
+      return;
+    }
     await globalState.safeRun(() async {
       final updateParams = ref.read(updateParamsProvider);
       final shouldContinueSetup = await requestAdmin(updateParams.tun.enable);
@@ -322,6 +344,7 @@ class SetupAction extends _$SetupAction {
   Future<VM2<String, String>> getProfile({
     required SetupState setupState,
     required PatchClashConfig patchConfig,
+    void Function(CompiledProfile)? onCompiled,
   }) async {
     final profileId = setupState.profileId;
     if (profileId == null) return const VM2('', '');
@@ -348,14 +371,17 @@ class SetupAction extends _$SetupAction {
       rules.addAll(setupState.rules);
     }
     final realPatchConfig = patchConfig.copyWith(
-      tun: patchConfig.tun.getRealTun(routeMode),
+      tun: patchConfig.tun.getRealTun(
+        routeMode,
+        preserveRouteAddress: patchConfig.tunOverrideKeys != null,
+      ),
     );
     Map<String, dynamic> rawConfig = configMap;
     if (scriptContent?.isNotEmpty == true) {
       rawConfig = await handleEvaluate(scriptContent!, rawConfig);
     }
     final directory = await appPath.profilesPath;
-    final res = makeRealProfileTask(
+    final res = await compileProfileTask(
       MakeRealProfileState(
         rules: rules,
         proxyGroups: proxyGroups,
@@ -370,7 +396,8 @@ class SetupAction extends _$SetupAction {
         defaultUA: defaultUA,
       ),
     );
-    return res;
+    onCompiled?.call(res);
+    return VM2(res.yaml, res.md5);
   }
 
   Future<String> getProfileWithId(int profileId) async {
@@ -427,6 +454,17 @@ class SetupAction extends _$SetupAction {
     }
   }
 
+  @protected
+  Future<String> applyRuntimeSections(Map<String, dynamic> config) =>
+      coreController.updateRuntimeConfig(config);
+
+  @protected
+  Future<void> writeRuntimeProfile(String yaml, String md5) async {
+    final path = await appPath.configFilePath;
+    await File(path).safeWriteAsString(yaml);
+    if (system.isAndroid) await preferences.saveAppliedConfigMd5(md5);
+  }
+
   Future<_SetupTaskResult> _setupConfig({
     bool force = false,
     bool silence = false,
@@ -450,19 +488,40 @@ class SetupAction extends _$SetupAction {
       enable: effectiveTunEnable,
     );
     final setupState = await ref.read(setupStateProvider(profile?.id).future);
+    CompiledProfile? compiled;
     final vm2 = await getProfile(
       setupState: setupState,
       patchConfig: realPatchConfig,
+      onCompiled: (value) => compiled = value,
     );
     final yamlString = vm2.a;
     final yamlMd5 = vm2.b;
     if (yamlMd5 == globalState.lastConfigMd5 && force == false) {
+      _appliedStructureMd5 = compiled?.structureMd5;
+      _appliedProfileId = profile?.id;
+      await preloadInvoke?.call();
+      return _SetupTaskResult.completed;
+    }
+    final built = compiled;
+    if (!force &&
+        built != null &&
+        built.structureMd5 == _appliedStructureMd5 &&
+        profile?.id == _appliedProfileId &&
+        supportsRuntimeConfig(built.runtimeConfig)) {
+      await globalState.safeRun(() async {
+        final message = await applyRuntimeSections(built.runtimeConfig);
+        if (message.isNotEmpty) throw StateError(message);
+        await writeRuntimeProfile(yamlString, yamlMd5);
+        globalState.lastConfigMd5 = yamlMd5;
+        await preloadInvoke?.call();
+      });
       return _SetupTaskResult.completed;
     }
     if (system.isAndroid) {
       globalState.lastVpnState = ref.read(vpnStateProvider);
       final sharedState = ref.read(sharedStateProvider);
       await preferences.saveShareState(sharedState);
+      await preferences.saveAppliedConfigMd5(null);
     }
     await globalState.loadingRun(
       () async {
@@ -476,6 +535,11 @@ class SetupAction extends _$SetupAction {
           throw message;
         }
         globalState.lastConfigMd5 = yamlMd5;
+        _appliedStructureMd5 = compiled?.structureMd5;
+        _appliedProfileId = profile?.id;
+        if (system.isAndroid) {
+          await preferences.saveAppliedConfigMd5(yamlMd5);
+        }
         ref.read(checkIpNumProvider.notifier).add();
         await onUpdated?.call();
       },

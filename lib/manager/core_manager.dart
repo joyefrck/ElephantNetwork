@@ -46,6 +46,58 @@ class _CoreContainerState extends ConsumerState<CoreManager>
         ref.read(setupActionProvider.notifier).updateConfigDebounce();
       }
     });
+    ref.listenManual(
+      patchClashConfigProvider.select(
+        (value) => (
+          value.dns,
+          value.hosts,
+          value.generalOverrideKeys,
+          value.dnsOverrideKeys,
+          value.tunOverrideKeys,
+          value.ntp,
+          value.ntpOverrideKeys,
+          value.sniffer,
+          value.snifferOverrideKeys,
+          value.port,
+          value.socksPort,
+          value.redirPort,
+          value.tproxyPort,
+          value.globalUa,
+          value.keepAliveInterval,
+          value.geodataLoader,
+          value.geoXUrl,
+          value.tun.dnsMode,
+          value.tun.mtu,
+          value.tun.strictRoute,
+          value.tun.autoDetectInterface,
+          value.tun.routeExcludeAddress,
+          value.tun.includeInterface,
+          value.tun.excludeInterface,
+          value.tun.includeUid,
+          value.tun.excludeUid,
+          value.tun.excludeSrcPort,
+          value.tun.excludeDstPort,
+          value.tun.udpTimeout,
+          value.tun.disableIcmpForwarding,
+          value.tun.gso,
+          value.tun.congestionController,
+        ),
+      ),
+      (previous, next) {
+        if (previous != next && ref.read(initProvider)) {
+          ref
+              .read(setupActionProvider.notifier)
+              .applyProfileDebounce(silence: true);
+        }
+      },
+    );
+    ref.listenManual(overrideDnsProvider, (previous, next) {
+      if (previous != next && ref.read(initProvider)) {
+        ref
+            .read(setupActionProvider.notifier)
+            .applyProfileDebounce(silence: true);
+      }
+    });
     ref.listenManual(appSettingProvider.select((state) => state.openLogs), (
       prev,
       next,

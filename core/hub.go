@@ -14,6 +14,7 @@ import (
 	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/constant/features"
 	cp "github.com/metacubex/mihomo/constant/provider"
+	"github.com/metacubex/mihomo/dns"
 	"github.com/metacubex/mihomo/hub/executor"
 	"github.com/metacubex/mihomo/listener"
 	"github.com/metacubex/mihomo/log"
@@ -41,6 +42,9 @@ func handleInitClash(params *InitParams) bool {
 	defer runLock.Unlock()
 	version = params.Version
 	constant.SetHomeDir(params.HomeDir)
+	if !isInit.Load() {
+		cleanupSpilledResponses()
+	}
 	isInit.Store(true)
 	return true
 }
@@ -84,6 +88,11 @@ func handleShutdown() bool {
 }
 
 func handleValidateConfig(path string) string {
+	runLock.Lock()
+	defer runLock.Unlock()
+	names := config.GetProxyNameList()
+	defer config.SetProxyNameList(names)
+
 	buf, err := readFile(path)
 	_, err = config.UnmarshalRawConfig(buf)
 	if err != nil {
@@ -190,7 +199,13 @@ func handleResetTraffic() {
 }
 
 func handleAsyncTestDelay(params *TestDelayParams, fn func(*Delay)) {
-	batchKey := params.ProxyName + "\x00" + params.TestUrl
+	if params.Timeout <= 0 {
+		params.Timeout = 5000
+	}
+	if params.Timeout > 120000 {
+		params.Timeout = 120000
+	}
+	batchKey := params.ProxyName + "\x00" + params.TestUrl + "\x00" + strconv.FormatInt(params.Timeout, 10)
 	mBatch.Go(batchKey, func() (bool, error) {
 		testUrl := params.TestUrl
 		if testUrl == "" {
@@ -219,12 +234,12 @@ func handleAsyncTestDelay(params *TestDelayParams, fn func(*Delay)) {
 			return false, nil
 		}
 		delay, err := proxy.URLTest(ctx, testUrl, expectedStatus)
-		if err != nil || delay == 0 {
+		if err != nil {
 			fn(delayData)
 			return false, nil
 		}
 
-		delayData.Value = int32(delay)
+		delayData.Value = max(1, int32(delay))
 		fn(delayData)
 		return false, nil
 	})
@@ -258,6 +273,19 @@ func handleResetConnections() bool {
 	defer runLock.Unlock()
 	resolver.ResetConnection()
 	return true
+}
+
+func handleClearDnsCache() {
+	runLock.Lock()
+	defer runLock.Unlock()
+	dns.ClearAll()
+}
+
+func handleResetNetwork() {
+	runLock.Lock()
+	defer runLock.Unlock()
+	closeConnections()
+	dns.ClearAll()
 }
 
 func handleCloseConnection(connectionId string) bool {
@@ -480,7 +508,7 @@ func handleSetupConfig(params *SetupParams) string {
 }
 
 func init() {
-	adapter.UrlTestHook = func(url string, name string, delay uint16) {
+	adapter.UrlTestHook = func(url string, name string, delay uint16, _ bool) {
 		delayData := &Delay{
 			Url:  url,
 			Name: name,
@@ -488,7 +516,7 @@ func init() {
 		if delay == 0 {
 			delayData.Value = -1
 		} else {
-			delayData.Value = int32(delay)
+			delayData.Value = max(1, int32(delay))
 		}
 		sendMessage(Message{
 			Type: DelayMessage,

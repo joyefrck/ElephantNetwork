@@ -1,6 +1,5 @@
-package com.follow.clash.service.modules
+package com.follow.clash.service
 
-import android.app.Service
 import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.Network
@@ -9,7 +8,10 @@ import android.net.NetworkCapabilities.TRANSPORT_SATELLITE
 import android.net.NetworkCapabilities.TRANSPORT_USB
 import android.net.NetworkRequest
 import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
 import androidx.core.content.getSystemService
+import com.follow.clash.common.GlobalState
 import com.follow.clash.core.Core
 import java.net.Inet4Address
 import java.net.Inet6Address
@@ -24,13 +26,18 @@ private data class NetworkInfo(
         get() = if (losingUntilMillis > System.currentTimeMillis()) 10 else 0
 }
 
-internal class NetworkObserveModule(private val service: Service) : ServiceModule {
+object NetworkObserver {
 
     private val networkInfos = ConcurrentHashMap<Network, NetworkInfo>()
     private val connectivity by lazy {
-        service.getSystemService<ConnectivityManager>()
+        GlobalState.application.getSystemService<ConnectivityManager>()
+    }
+    private val handler by lazy {
+        Handler(HandlerThread("NetworkObserve").apply { start() }.looper)
     }
     private var currentDnsList = listOf<String>()
+    private var currentNetwork: Network? = null
+    private var started = false
 
     private val request = NetworkRequest.Builder().apply {
         addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
@@ -44,28 +51,46 @@ internal class NetworkObserveModule(private val service: Service) : ServiceModul
     private val callback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
             networkInfos[network] = NetworkInfo()
-            updateDns()
+            scheduleUpdateDns()
         }
 
         override fun onLosing(network: Network, maxMsToLive: Int) {
-            networkInfos[network]?.losingUntilMillis = System.currentTimeMillis() + maxMsToLive
-            updateDns()
+            val info = networkInfos[network] ?: return
+            info.losingUntilMillis = System.currentTimeMillis() + maxMsToLive
+            scheduleUpdateDns()
+            if (maxMsToLive > 0) {
+                handler.postDelayed({
+                    if (networkInfos.containsKey(network)) {
+                        updateDns()
+                    }
+                }, maxMsToLive.toLong() + 50)
+            }
         }
 
         override fun onLost(network: Network) {
             networkInfos.remove(network)
-            updateDns()
+            scheduleUpdateDns()
         }
 
         override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) {
             networkInfos[network]?.dnsList = linkProperties.dnsServers
-            updateDns()
+            scheduleUpdateDns()
         }
     }
 
-    override fun start() {
-        updateDns()
-        connectivity?.registerNetworkCallback(request, callback)
+    private val updateDnsTask = Runnable(::updateDns)
+
+    private fun scheduleUpdateDns() {
+        handler.removeCallbacks(updateDnsTask)
+        handler.postDelayed(updateDnsTask, DNS_UPDATE_DELAY_MILLIS)
+    }
+
+    @Synchronized
+    fun start() {
+        if (started) return
+        runCatching { requireNotNull(connectivity).registerNetworkCallback(request, callback) }
+            .onSuccess { started = true }
+            .onFailure { error -> GlobalState.log("Unable to observe networks: $error") }
     }
 
     private fun networkPriority(entry: Map.Entry<Network, NetworkInfo>): Int {
@@ -89,31 +114,27 @@ internal class NetworkObserveModule(private val service: Service) : ServiceModul
 
     @Synchronized
     private fun updateDns() {
-        val dnsList = networkInfos.asSequence()
-            .minByOrNull(::networkPriority)
+        val preferred = networkInfos.entries.minByOrNull(::networkPriority)
+        val dnsList = preferred
             ?.value
             ?.dnsList
             .orEmpty()
             .map { address -> address.asSocketAddressText(DNS_PORT) }
             .distinct()
-        if (dnsList == currentDnsList) {
-            return
+        if (dnsList != currentDnsList) {
+            currentDnsList = dnsList
+            Core.updateDNS(dnsList.joinToString(","))
         }
-        currentDnsList = dnsList
-        Core.updateDNS(dnsList.joinToString(","))
-    }
-
-    override fun stop() {
-        try {
-            connectivity?.unregisterNetworkCallback(callback)
-        } finally {
-            networkInfos.clear()
-            updateDns()
+        val network = preferred?.key ?: return
+        if (currentNetwork != null && currentNetwork != network) {
+            Core.resetNetwork()
         }
+        currentNetwork = network
     }
 }
 
 private const val DNS_PORT = 53
+private const val DNS_UPDATE_DELAY_MILLIS = 200L
 
 private fun InetAddress.asSocketAddressText(port: Int): String = when (this) {
     is Inet6Address -> "[$hostAddress]:$port"

@@ -23,7 +23,7 @@ func (response MethodResponse) send() {
 		logError("MethodResponse marshal error: id=%s err=%v", response.ID, err)
 		return
 	}
-	send(data)
+	send(spillResponse(response.ID, data))
 }
 
 func sendMessageBatch(messages []Message) {

@@ -20,6 +20,9 @@ enum CoreMethod {
   getConnections,
   closeConnections,
   resetConnections,
+  clearDnsCache,
+  resetNetwork,
+  updateRuntimeConfig,
   closeConnection,
   getExternalProviders,
   getExternalProvider,
@@ -90,13 +93,15 @@ class CoreMethodResponse {
   final String? id;
   final Object? result;
   final CoreMethodError? error;
+  final String? file;
 
-  const CoreMethodResponse({this.id, this.result, this.error});
+  const CoreMethodResponse({this.id, this.result, this.error, this.file});
 
   factory CoreMethodResponse.fromJson(Map<String, Object?> json) {
     final error = json['error'];
     return CoreMethodResponse(
       id: json['id'] as String?,
+      file: json['file'] as String?,
       result: json['result'],
       error: error is Map
           ? CoreMethodError.fromJson(Map<String, Object?>.from(error))
@@ -108,6 +113,7 @@ class CoreMethodResponse {
     return {
       if (id != null) 'id': id,
       'result': result,
+      if (file != null) 'file': file,
       if (error != null) 'error': error!.toJson(),
     };
   }

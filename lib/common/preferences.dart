@@ -39,6 +39,21 @@ class Preferences {
     await preferences?.setString('sharedState', json.encode(shareState));
   }
 
+  Future<String?> getAppliedConfigMd5() async {
+    return (await sharedPreferencesCompleter.future)?.getString(
+      'appliedConfigMd5',
+    );
+  }
+
+  Future<void> saveAppliedConfigMd5(String? value) async {
+    final store = await sharedPreferencesCompleter.future;
+    if (value == null) {
+      await store?.remove('appliedConfigMd5');
+    } else {
+      await store?.setString('appliedConfigMd5', value);
+    }
+  }
+
   Future<Map<String, Object?>?> getConfigMap() async {
     try {
       final preferences = await sharedPreferencesCompleter.future;

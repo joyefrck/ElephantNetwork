@@ -222,6 +222,29 @@ abstract class Tun with _$Tun {
     @Default(TunStack.mixed) TunStack stack,
     @JsonKey(name: 'dns-hijack') @Default(['any:53']) List<String> dnsHijack,
     @JsonKey(name: 'route-address') @Default([]) List<String> routeAddress,
+    @JsonKey(name: 'dns-mode', includeIfNull: false) String? dnsMode,
+    @JsonKey(name: 'mtu', includeIfNull: false) int? mtu,
+    @JsonKey(name: 'strict-route', includeIfNull: false) bool? strictRoute,
+    @JsonKey(name: 'auto-detect-interface', includeIfNull: false)
+    bool? autoDetectInterface,
+    @JsonKey(name: 'route-exclude-address', includeIfNull: false)
+    List<String>? routeExcludeAddress,
+    @JsonKey(name: 'include-interface', includeIfNull: false)
+    List<String>? includeInterface,
+    @JsonKey(name: 'exclude-interface', includeIfNull: false)
+    List<String>? excludeInterface,
+    @JsonKey(name: 'include-uid', includeIfNull: false) List<int>? includeUid,
+    @JsonKey(name: 'exclude-uid', includeIfNull: false) List<int>? excludeUid,
+    @JsonKey(name: 'exclude-src-port', includeIfNull: false)
+    List<int>? excludeSrcPort,
+    @JsonKey(name: 'exclude-dst-port', includeIfNull: false)
+    List<int>? excludeDstPort,
+    @JsonKey(name: 'udp-timeout', includeIfNull: false) int? udpTimeout,
+    @JsonKey(name: 'disable-icmp-forwarding', includeIfNull: false)
+    bool? disableIcmpForwarding,
+    @JsonKey(name: 'gso', includeIfNull: false) bool? gso,
+    @JsonKey(name: 'congestion-controller', includeIfNull: false)
+    String? congestionController,
   }) = _Tun;
 
   factory Tun.fromJson(Map<String, Object?> json) => _$TunFromJson(json);
@@ -239,12 +262,15 @@ abstract class Tun with _$Tun {
 }
 
 extension TunExt on Tun {
-  Tun getRealTun(RouteMode routeMode) {
+  Tun getRealTun(RouteMode routeMode, {bool preserveRouteAddress = false}) {
     final mRouteAddress = routeMode == RouteMode.bypassPrivate
         ? defaultBypassPrivateRouteAddress
         : routeAddress;
     return switch (system.isDesktop) {
-      true => copyWith(autoRoute: true, routeAddress: []),
+      true => copyWith(
+        autoRoute: true,
+        routeAddress: preserveRouteAddress ? routeAddress : const [],
+      ),
       false => copyWith(
         autoRoute: mRouteAddress.isEmpty ? true : false,
         routeAddress: mRouteAddress,
@@ -306,6 +332,24 @@ abstract class Dns with _$Dns {
     @Default(FallbackFilter())
     @JsonKey(name: 'fallback-filter')
     FallbackFilter fallbackFilter,
+    @JsonKey(name: 'ipv6-timeout', includeIfNull: false) int? ipv6Timeout,
+    @JsonKey(name: 'listen-routing-mark', includeIfNull: false)
+    int? listenRoutingMark,
+    @JsonKey(name: 'cache-algorithm', includeIfNull: false)
+    String? cacheAlgorithm,
+    @JsonKey(name: 'cache-max-size', includeIfNull: false) int? cacheMaxSize,
+    @JsonKey(name: 'fake-ip-range6', includeIfNull: false) String? fakeIpRange6,
+    @JsonKey(name: 'fake-ip-filter-mode', includeIfNull: false)
+    String? fakeIpFilterMode,
+    @JsonKey(name: 'fake-ip-ttl', includeIfNull: false) int? fakeIpTtl,
+    @JsonKey(name: 'fallback-lazy-query', includeIfNull: false)
+    bool? fallbackLazyQuery,
+    @JsonKey(name: 'proxy-server-nameserver-policy', includeIfNull: false)
+    Map<String, String>? proxyServerNameserverPolicy,
+    @JsonKey(name: 'direct-nameserver', includeIfNull: false)
+    List<String>? directNameserver,
+    @JsonKey(name: 'direct-nameserver-follow-policy', includeIfNull: false)
+    bool? directNameserverFollowPolicy,
   }) = _Dns;
 
   factory Dns.fromJson(Map<String, Object?> json) => _$DnsFromJson(json);
@@ -490,8 +534,34 @@ Map<String, String> _geoXUrlToJson(Map<GeoResource, String> value) {
 }
 
 @freezed
+abstract class Ntp with _$Ntp {
+  const factory Ntp({
+    @Default(false) bool enable,
+    @Default('time.apple.com') String server,
+    @Default(123) int port,
+    @Default(30) int interval,
+    @Default(false) @JsonKey(name: 'write-to-system') bool writeToSystem,
+    @Default('DIRECT') @JsonKey(name: 'dialer-proxy') String dialerProxy,
+  }) = _Ntp;
+
+  factory Ntp.fromJson(Map<String, Object?> json) => _$NtpFromJson(json);
+}
+
+@freezed
 abstract class PatchClashConfig with _$PatchClashConfig {
   const factory PatchClashConfig({
+    @JsonKey(name: 'general-override-keys', includeIfNull: false)
+    Set<String>? generalOverrideKeys,
+    @JsonKey(name: 'dns-override-keys', includeIfNull: false)
+    Set<String>? dnsOverrideKeys,
+    @JsonKey(name: 'tun-override-keys', includeIfNull: false)
+    Set<String>? tunOverrideKeys,
+    @JsonKey(name: 'ntp-override-keys', includeIfNull: false)
+    Set<String>? ntpOverrideKeys,
+    @JsonKey(name: 'sniffer-override-keys', includeIfNull: false)
+    Set<String>? snifferOverrideKeys,
+    @JsonKey(includeIfNull: false) Ntp? ntp,
+    @JsonKey(includeIfNull: false) Sniffer? sniffer,
     @Default(defaultMixedPort) @JsonKey(name: 'mixed-port') int mixedPort,
     @Default(0) @JsonKey(name: 'socks-port') int socksPort,
     @Default(0) @JsonKey(name: 'port') int port,

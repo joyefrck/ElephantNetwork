@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 class _RecordingCoreHandler extends CoreHandlerInterface {
   final Map<CoreMethod, Object?> calls = {};
+  final Map<CoreMethod, Duration?> timeouts = {};
 
   @override
   Future<CoreLifecycleResult> start() async => const CoreLifecycleResult(
@@ -34,8 +35,11 @@ class _RecordingCoreHandler extends CoreHandlerInterface {
     Duration? timeout,
   }) async {
     calls[method] = arguments;
+    timeouts[method] = timeout;
     final result = switch (method) {
-      CoreMethod.initClash => true as T,
+      CoreMethod.initClash ||
+      CoreMethod.clearDnsCache ||
+      CoreMethod.resetNetwork => true as T,
       CoreMethod.getTraffic ||
       CoreMethod.getTotalTraffic => {'up': 12, 'down': 34},
       CoreMethod.asyncTestDelay => {
@@ -125,6 +129,33 @@ class _EmptyConfigCoreHandler extends _RecordingCoreHandler {
 }
 
 void main() {
+  test(
+    'cache, network reset, runtime patches and custom delay budgets cross Core',
+    () async {
+      final handler = _RecordingCoreHandler();
+      expect(await handler.clearDnsCache(), true);
+      expect(await handler.resetNetwork(), true);
+      final patch = <String, dynamic>{
+        'dns': {'enable': true, 'cache-max-size': 8192},
+      };
+      expect(await handler.updateRuntimeConfig(patch), '');
+      expect(handler.calls[CoreMethod.updateRuntimeConfig], patch);
+      await handler.asyncTestDelay(
+        'https://example.com',
+        'DIRECT',
+        const Duration(seconds: 12),
+      );
+      expect(
+        (handler.calls[CoreMethod.asyncTestDelay] as Map)['timeout'],
+        12000,
+      );
+      expect(
+        handler.timeouts[CoreMethod.asyncTestDelay],
+        const Duration(seconds: 14),
+      );
+    },
+  );
+
   test('method call keeps structured arguments', () async {
     final fixture =
         json.decode(

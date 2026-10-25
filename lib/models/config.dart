@@ -66,6 +66,9 @@ String testUrlSafeFromJson(String? testUrl) {
   return testUrl;
 }
 
+int testTimeoutSafeFromJson(num? value) =>
+    (value?.toInt() ?? 5000).clamp(100, 120000);
+
 @freezed
 abstract class AppSettingProps with _$AppSettingProps {
   const factory AppSettingProps({
@@ -82,6 +85,7 @@ abstract class AppSettingProps with _$AppSettingProps {
     @Default(defaultTestUrl)
     @JsonKey(fromJson: testUrlSafeFromJson)
     String testUrl,
+    @Default(5000) @JsonKey(fromJson: testTimeoutSafeFromJson) int testTimeout,
     @Default(true) bool isAnimateToPage,
     @Default(true) bool autoCheckUpdate,
     @Default(false) bool showLabel,

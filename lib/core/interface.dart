@@ -25,7 +25,11 @@ mixin CoreInterface {
 
   Future<Map<String, dynamic>> getConfig(String path);
 
-  Future<Delay> asyncTestDelay(String url, String proxyName);
+  Future<Delay> asyncTestDelay(
+    String url,
+    String proxyName, [
+    Duration? timeout,
+  ]);
 
   Future<String> updateConfig(UpdateParams updateParams);
 
@@ -77,6 +81,12 @@ mixin CoreInterface {
   FutureOr<bool> closeConnections();
 
   FutureOr<bool> resetConnections();
+
+  Future<bool> clearDnsCache();
+
+  Future<bool> resetNetwork();
+
+  Future<String> updateRuntimeConfig(Map<String, dynamic> config);
 }
 
 abstract class CoreHandlerInterface with CoreInterface {
@@ -111,6 +121,22 @@ abstract class CoreHandlerInterface with CoreInterface {
     Object? arguments,
     Duration? timeout,
   });
+
+  @override
+  Future<bool> clearDnsCache() async =>
+      await _invokeMethod<bool>(method: CoreMethod.clearDnsCache) ?? false;
+
+  @override
+  Future<bool> resetNetwork() async =>
+      await _invokeMethod<bool>(method: CoreMethod.resetNetwork) ?? false;
+
+  @override
+  Future<String> updateRuntimeConfig(Map<String, dynamic> config) async =>
+      await _invokeMethod<String>(
+        method: CoreMethod.updateRuntimeConfig,
+        arguments: config,
+      ) ??
+      'Core runtime update did not complete';
 
   @override
   Future<bool> init(InitParams params) async {
@@ -342,16 +368,26 @@ abstract class CoreHandlerInterface with CoreInterface {
   }
 
   @override
-  Future<Delay> asyncTestDelay(String url, String proxyName) async {
+  Future<Delay> asyncTestDelay(
+    String url,
+    String proxyName, [
+    Duration? timeout,
+  ]) async {
+    final effectiveTimeout = Duration(
+      milliseconds: (timeout ?? httpTimeoutDuration).inMilliseconds.clamp(
+        100,
+        120000,
+      ),
+    );
     final delayParams = {
       'proxy-name': proxyName,
-      'timeout': httpTimeoutDuration.inMilliseconds,
+      'timeout': effectiveTimeout.inMilliseconds,
       'test-url': url,
     };
     final data = await _invokeMethod<Map<String, dynamic>>(
       method: CoreMethod.asyncTestDelay,
       arguments: delayParams,
-      timeout: const Duration(seconds: 6),
+      timeout: effectiveTimeout + const Duration(seconds: 2),
     );
     return data == null
         ? Delay(name: proxyName, value: -1, url: url)

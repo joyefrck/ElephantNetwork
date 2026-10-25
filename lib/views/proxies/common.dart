@@ -71,6 +71,9 @@ Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
       final delay = await coreController.getDelay(
         currentTestUrl,
         state.proxyName,
+        timeout: Duration(
+          milliseconds: ref.read(appSettingProvider).testTimeout,
+        ),
       );
       return delay.value ?? -1;
     },

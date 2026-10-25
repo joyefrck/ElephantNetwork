@@ -5,6 +5,7 @@ import 'dart:isolate';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/event.dart';
 import 'package:fl_clash/core/method.dart';
+import 'package:fl_clash/core/spill.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:flutter/foundation.dart';
@@ -17,6 +18,7 @@ abstract mixin class ServiceListener {
 class Service {
   static Service? _instance;
   late MethodChannel methodChannel;
+  final MethodChannel coreChannel = const MethodChannel('$packageName/core');
   ReceivePort? receiver;
 
   final ObserverList<ServiceListener> _listeners =
@@ -57,7 +59,7 @@ class Service {
   }
 
   Future<CoreMethodResponse?> invokeMethod(CoreMethodCall call) async {
-    final data = await methodChannel.invokeMethod<String>(
+    final data = await coreChannel.invokeMethod<String>(
       'invokeMethod',
       json.encode(call),
     );
@@ -65,7 +67,7 @@ class Service {
       return null;
     }
     final dataJson = await data.commonToJSON<dynamic>();
-    return CoreMethodResponse.fromJson(dataJson);
+    return coreSpillStore.resolve(CoreMethodResponse.fromJson(dataJson));
   }
 
   Future<bool> start() async {

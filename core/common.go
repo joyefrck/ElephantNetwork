@@ -184,7 +184,13 @@ func readFile(path string) ([]byte, error) {
 func updateConfig(params *UpdateParams) {
 	runLock.Lock()
 	defer runLock.Unlock()
+	if currentConfig == nil {
+		return
+	}
 	general := currentConfig.General
+	if params.AllowLan != nil {
+		general.AllowLan = *params.AllowLan
+	}
 	if params.MixedPort != nil {
 		general.MixedPort = *params.MixedPort
 	}
@@ -246,6 +252,53 @@ func updateConfig(params *UpdateParams) {
 		}
 	}
 
+	if params.Tun != nil {
+		if params.Tun.DNSMode != nil {
+			general.Tun.DNSMode = *params.Tun.DNSMode
+		}
+		if params.Tun.MTU != nil {
+			general.Tun.MTU = *params.Tun.MTU
+		}
+		if params.Tun.StrictRoute != nil {
+			general.Tun.StrictRoute = *params.Tun.StrictRoute
+		}
+		if params.Tun.AutoDetectInterface != nil {
+			general.Tun.AutoDetectInterface = *params.Tun.AutoDetectInterface
+		}
+		if params.Tun.RouteExcludeAddress != nil {
+			general.Tun.RouteExcludeAddress = *params.Tun.RouteExcludeAddress
+		}
+		if params.Tun.IncludeInterface != nil {
+			general.Tun.IncludeInterface = *params.Tun.IncludeInterface
+		}
+		if params.Tun.ExcludeInterface != nil {
+			general.Tun.ExcludeInterface = *params.Tun.ExcludeInterface
+		}
+		if params.Tun.IncludeUID != nil {
+			general.Tun.IncludeUID = *params.Tun.IncludeUID
+		}
+		if params.Tun.ExcludeUID != nil {
+			general.Tun.ExcludeUID = *params.Tun.ExcludeUID
+		}
+		if params.Tun.ExcludeSrcPort != nil {
+			general.Tun.ExcludeSrcPort = *params.Tun.ExcludeSrcPort
+		}
+		if params.Tun.ExcludeDstPort != nil {
+			general.Tun.ExcludeDstPort = *params.Tun.ExcludeDstPort
+		}
+		if params.Tun.UDPTimeout != nil {
+			general.Tun.UDPTimeout = *params.Tun.UDPTimeout
+		}
+		if params.Tun.DisableICMPForwarding != nil {
+			general.Tun.DisableICMPForwarding = *params.Tun.DisableICMPForwarding
+		}
+		if params.Tun.GSO != nil {
+			general.Tun.GSO = *params.Tun.GSO
+		}
+		if params.Tun.CongestionController != nil {
+			general.Tun.CongestionController = *params.Tun.CongestionController
+		}
+	}
 	if params.GeoAutoUpdate != nil {
 		updater.SetGeoAutoUpdate(*params.GeoAutoUpdate)
 	}

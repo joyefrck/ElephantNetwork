@@ -36,7 +36,7 @@ class SystemAction extends _$SystemAction {
     await Future.wait([
       if (needSave) preferences.saveConfig(ref.read(configProvider)),
       if (macOS != null) macOS!.updateDns(true),
-      if (proxy != null) proxy!.stopProxy(),
+      if (systemProxyQueue != null) systemProxyQueue!.close(),
       if (tray != null) tray!.destroy(),
     ]);
   }

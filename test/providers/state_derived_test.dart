@@ -181,7 +181,12 @@ void main() {
     expect(desktop.currentIndex, greaterThan(0));
     expect(
       desktop.navigationItems.map((item) => item.label),
-      contains(PageLabel.proxies),
+      orderedEquals([
+        PageLabel.dashboard,
+        PageLabel.proxies,
+        PageLabel.account,
+        PageLabel.tools,
+      ]),
     );
     expect(
       desktop.navigationItems[desktop.currentIndex].label,

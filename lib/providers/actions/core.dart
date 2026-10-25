@@ -17,6 +17,19 @@ class CoreAction extends _$CoreAction {
       commonPrint.log('init result: $res');
     } else {
       await ref.read(proxiesActionProvider.notifier).updateGroups();
+      await ref.read(providersProvider.notifier).syncProviders();
+    }
+  }
+
+  Future<void> clearDnsCacheOnNetworkChange() async {
+    if (ref.read(coreStatusProvider) != CoreStatus.connected) return;
+    try {
+      await coreController.clearDnsCache();
+    } catch (error) {
+      commonPrint.log(
+        'clearDnsCache: $error',
+        logLevel: coreFailureLogLevel(error),
+      );
     }
   }
 

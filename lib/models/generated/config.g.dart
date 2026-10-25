@@ -21,6 +21,9 @@ _AppSettingProps _$AppSettingPropsFromJson(Map<String, dynamic> json) =>
       testUrl: json['testUrl'] == null
           ? defaultTestUrl
           : testUrlSafeFromJson(json['testUrl'] as String?),
+      testTimeout: json['testTimeout'] == null
+          ? 5000
+          : testTimeoutSafeFromJson(json['testTimeout'] as num?),
       isAnimateToPage: json['isAnimateToPage'] as bool? ?? true,
       autoCheckUpdate: json['autoCheckUpdate'] as bool? ?? true,
       showLabel: json['showLabel'] as bool? ?? false,
@@ -55,6 +58,7 @@ Map<String, dynamic> _$AppSettingPropsToJson(_AppSettingProps instance) =>
       'openLogs': instance.openLogs,
       'closeConnections': instance.closeConnections,
       'testUrl': instance.testUrl,
+      'testTimeout': instance.testTimeout,
       'isAnimateToPage': instance.isAnimateToPage,
       'autoCheckUpdate': instance.autoCheckUpdate,
       'showLabel': instance.showLabel,

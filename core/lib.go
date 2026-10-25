@@ -23,6 +23,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"unsafe"
 )
@@ -151,10 +152,27 @@ func handleStartTun(callback unsafe.Pointer, fd int, stack, address, dns string)
 	}
 }
 
+var dnsUpdateRevision atomic.Uint64
+var dnsUpdateMu sync.Mutex
+
 func handleUpdateDns(value string) {
+	var addresses []string
+	for _, address := range strings.Split(value, ",") {
+		if address = strings.TrimSpace(address); address != "" {
+			addresses = append(addresses, address)
+		}
+	}
+	revision := dnsUpdateRevision.Add(1)
 	go func() {
+		dnsUpdateMu.Lock()
+		defer dnsUpdateMu.Unlock()
+		if revision != dnsUpdateRevision.Load() {
+			return
+		}
+		runLock.Lock()
+		defer runLock.Unlock()
 		log.Infoln("[DNS] updateDns %s", value)
-		dns.UpdateSystemDNS(strings.Split(value, ","))
+		dns.UpdateSystemDNS(addresses)
 		dns.FlushCacheWithDefaultResolver()
 	}()
 }
@@ -164,7 +182,7 @@ func (response MethodResponse) send() {
 	if err != nil {
 		return
 	}
-	invokeResult(response.callback, string(data))
+	invokeResult(response.callback, string(spillResponse(response.ID, data)))
 	releaseObject(response.callback)
 }
 
@@ -295,7 +313,7 @@ func suspend(suspended bool) {
 
 //export forceGC
 func forceGC() {
-	handleForceGC()
+	go handleForceGC()
 }
 
 //export updateDns

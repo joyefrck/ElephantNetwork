@@ -176,6 +176,35 @@ _Tun _$TunFromJson(Map<String, dynamic> json) => _Tun(
           ?.map((e) => e as String)
           .toList() ??
       const [],
+  dnsMode: json['dns-mode'] as String?,
+  mtu: (json['mtu'] as num?)?.toInt(),
+  strictRoute: json['strict-route'] as bool?,
+  autoDetectInterface: json['auto-detect-interface'] as bool?,
+  routeExcludeAddress: (json['route-exclude-address'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  includeInterface: (json['include-interface'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  excludeInterface: (json['exclude-interface'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  includeUid: (json['include-uid'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList(),
+  excludeUid: (json['exclude-uid'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList(),
+  excludeSrcPort: (json['exclude-src-port'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList(),
+  excludeDstPort: (json['exclude-dst-port'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList(),
+  udpTimeout: (json['udp-timeout'] as num?)?.toInt(),
+  disableIcmpForwarding: json['disable-icmp-forwarding'] as bool?,
+  gso: json['gso'] as bool?,
+  congestionController: json['congestion-controller'] as String?,
 );
 
 Map<String, dynamic> _$TunToJson(_Tun instance) => <String, dynamic>{
@@ -185,12 +214,28 @@ Map<String, dynamic> _$TunToJson(_Tun instance) => <String, dynamic>{
   'stack': _$TunStackEnumMap[instance.stack]!,
   'dns-hijack': instance.dnsHijack,
   'route-address': instance.routeAddress,
+  'dns-mode': ?instance.dnsMode,
+  'mtu': ?instance.mtu,
+  'strict-route': ?instance.strictRoute,
+  'auto-detect-interface': ?instance.autoDetectInterface,
+  'route-exclude-address': ?instance.routeExcludeAddress,
+  'include-interface': ?instance.includeInterface,
+  'exclude-interface': ?instance.excludeInterface,
+  'include-uid': ?instance.includeUid,
+  'exclude-uid': ?instance.excludeUid,
+  'exclude-src-port': ?instance.excludeSrcPort,
+  'exclude-dst-port': ?instance.excludeDstPort,
+  'udp-timeout': ?instance.udpTimeout,
+  'disable-icmp-forwarding': ?instance.disableIcmpForwarding,
+  'gso': ?instance.gso,
+  'congestion-controller': ?instance.congestionController,
 };
 
 const _$TunStackEnumMap = {
   TunStack.gvisor: 'gvisor',
   TunStack.system: 'system',
   TunStack.mixed: 'mixed',
+  TunStack.mips: 'mips',
 };
 
 _FallbackFilter _$FallbackFilterFromJson(
@@ -267,6 +312,23 @@ _Dns _$DnsFromJson(Map<String, dynamic> json) => _Dns(
       : FallbackFilter.fromJson(
           json['fallback-filter'] as Map<String, dynamic>,
         ),
+  ipv6Timeout: (json['ipv6-timeout'] as num?)?.toInt(),
+  listenRoutingMark: (json['listen-routing-mark'] as num?)?.toInt(),
+  cacheAlgorithm: json['cache-algorithm'] as String?,
+  cacheMaxSize: (json['cache-max-size'] as num?)?.toInt(),
+  fakeIpRange6: json['fake-ip-range6'] as String?,
+  fakeIpFilterMode: json['fake-ip-filter-mode'] as String?,
+  fakeIpTtl: (json['fake-ip-ttl'] as num?)?.toInt(),
+  fallbackLazyQuery: json['fallback-lazy-query'] as bool?,
+  proxyServerNameserverPolicy:
+      (json['proxy-server-nameserver-policy'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as String),
+      ),
+  directNameserver: (json['direct-nameserver'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  directNameserverFollowPolicy:
+      json['direct-nameserver-follow-policy'] as bool?,
 );
 
 Map<String, dynamic> _$DnsToJson(_Dns instance) => <String, dynamic>{
@@ -286,6 +348,17 @@ Map<String, dynamic> _$DnsToJson(_Dns instance) => <String, dynamic>{
   'fallback': instance.fallback,
   'proxy-server-nameserver': instance.proxyServerNameserver,
   'fallback-filter': instance.fallbackFilter,
+  'ipv6-timeout': ?instance.ipv6Timeout,
+  'listen-routing-mark': ?instance.listenRoutingMark,
+  'cache-algorithm': ?instance.cacheAlgorithm,
+  'cache-max-size': ?instance.cacheMaxSize,
+  'fake-ip-range6': ?instance.fakeIpRange6,
+  'fake-ip-filter-mode': ?instance.fakeIpFilterMode,
+  'fake-ip-ttl': ?instance.fakeIpTtl,
+  'fallback-lazy-query': ?instance.fallbackLazyQuery,
+  'proxy-server-nameserver-policy': ?instance.proxyServerNameserverPolicy,
+  'direct-nameserver': ?instance.directNameserver,
+  'direct-nameserver-follow-policy': ?instance.directNameserverFollowPolicy,
 };
 
 const _$DnsModeEnumMap = {
@@ -396,8 +469,47 @@ Map<String, dynamic> _$ClashConfigToJson(_ClashConfig instance) =>
       'proxyTypeMap': instance.proxyTypeMap,
     };
 
+_Ntp _$NtpFromJson(Map<String, dynamic> json) => _Ntp(
+  enable: json['enable'] as bool? ?? false,
+  server: json['server'] as String? ?? 'time.apple.com',
+  port: (json['port'] as num?)?.toInt() ?? 123,
+  interval: (json['interval'] as num?)?.toInt() ?? 30,
+  writeToSystem: json['write-to-system'] as bool? ?? false,
+  dialerProxy: json['dialer-proxy'] as String? ?? 'DIRECT',
+);
+
+Map<String, dynamic> _$NtpToJson(_Ntp instance) => <String, dynamic>{
+  'enable': instance.enable,
+  'server': instance.server,
+  'port': instance.port,
+  'interval': instance.interval,
+  'write-to-system': instance.writeToSystem,
+  'dialer-proxy': instance.dialerProxy,
+};
+
 _PatchClashConfig _$PatchClashConfigFromJson(Map<String, dynamic> json) =>
     _PatchClashConfig(
+      generalOverrideKeys: (json['general-override-keys'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toSet(),
+      dnsOverrideKeys: (json['dns-override-keys'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toSet(),
+      tunOverrideKeys: (json['tun-override-keys'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toSet(),
+      ntpOverrideKeys: (json['ntp-override-keys'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toSet(),
+      snifferOverrideKeys: (json['sniffer-override-keys'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toSet(),
+      ntp: json['ntp'] == null
+          ? null
+          : Ntp.fromJson(json['ntp'] as Map<String, dynamic>),
+      sniffer: json['sniffer'] == null
+          ? null
+          : Sniffer.fromJson(json['sniffer'] as Map<String, dynamic>),
       mixedPort: (json['mixed-port'] as num?)?.toInt() ?? defaultMixedPort,
       socksPort: (json['socks-port'] as num?)?.toInt() ?? 0,
       port: (json['port'] as num?)?.toInt() ?? 0,
@@ -451,6 +563,13 @@ _PatchClashConfig _$PatchClashConfigFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$PatchClashConfigToJson(_PatchClashConfig instance) =>
     <String, dynamic>{
+      'general-override-keys': ?instance.generalOverrideKeys?.toList(),
+      'dns-override-keys': ?instance.dnsOverrideKeys?.toList(),
+      'tun-override-keys': ?instance.tunOverrideKeys?.toList(),
+      'ntp-override-keys': ?instance.ntpOverrideKeys?.toList(),
+      'sniffer-override-keys': ?instance.snifferOverrideKeys?.toList(),
+      'ntp': ?instance.ntp,
+      'sniffer': ?instance.sniffer,
       'mixed-port': instance.mixedPort,
       'socks-port': instance.socksPort,
       'port': instance.port,

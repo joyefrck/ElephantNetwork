@@ -98,4 +98,16 @@ TEST(ProxyPlugin, StartProxyRejectsNonStringBypassDomain) {
 }
 
 }  // namespace test
+TEST(ProxyPlugin, OnlyAConfirmedSessionEndTriggersShutdownCleanup) {
+  EXPECT_FALSE(ProxyPlugin::IsSessionEnding(WM_QUERYENDSESSION, TRUE));
+  EXPECT_FALSE(ProxyPlugin::IsSessionEnding(WM_ENDSESSION, FALSE));
+  EXPECT_FALSE(ProxyPlugin::IsSessionEnding(WM_CLOSE, TRUE));
+  EXPECT_TRUE(ProxyPlugin::IsSessionEnding(WM_ENDSESSION, TRUE));
+}
+
+TEST(ProxyPlugin, SessionEndWithoutAnAppliedProxyDoesNotHandleTheMessage) {
+  ProxyPlugin plugin;
+  EXPECT_FALSE(plugin.HandleWindowProc(nullptr, WM_ENDSESSION, TRUE, 0).has_value());
+}
+
 }  // namespace proxy

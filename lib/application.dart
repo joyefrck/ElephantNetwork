@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/features/account/account.dart';
 import 'package:fl_clash/l10n/l10n.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/manager/hotkey_manager.dart';
 import 'package:fl_clash/manager/manager.dart';
 import 'package:fl_clash/plugins/app.dart';
@@ -112,6 +113,15 @@ class ApplicationState extends ConsumerState<Application> {
             ref.read(systemActionProvider.notifier).updateLocalIp();
             final hasVpn = results.contains(ConnectivityResult.vpn);
             if (_preHasVpn == hasVpn) {
+              if (system.isDesktop) {
+                debouncer.call(
+                  FunctionTag.clearDnsCache,
+                  ref
+                      .read(coreActionProvider.notifier)
+                      .clearDnsCacheOnNetworkChange,
+                  duration: const Duration(milliseconds: 200),
+                );
+              }
               ref.read(checkIpNumProvider.notifier).add();
             }
             _preHasVpn = hasVpn;

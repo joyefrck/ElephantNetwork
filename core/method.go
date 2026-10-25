@@ -39,6 +39,7 @@ type MethodError struct {
 }
 
 type MethodResponse struct {
+	File     string       `json:"file,omitempty"`
 	ID       string       `json:"id,omitempty"`
 	Result   any          `json:"result"`
 	Error    *MethodError `json:"error,omitempty"`
@@ -90,6 +91,20 @@ func handleMethodCall(call *MethodCall, response MethodResponse) {
 		}
 	}()
 	switch call.Method {
+	case updateRuntimeConfigMethod:
+		var sections map[string]any
+		if !decodeMethodArguments(call, response, &sections) {
+			return
+		}
+		response.success(handleUpdateRuntimeConfig(sections))
+		return
+	case clearDnsCacheMethod:
+		handleClearDnsCache()
+		response.success(true)
+	case resetNetworkMethod:
+		handleResetNetwork()
+		response.success(true)
+
 	case initClashMethod:
 		params := InitParams{}
 		if !decodeMethodArguments(call, response, &params) {

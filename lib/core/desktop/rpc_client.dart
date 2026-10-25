@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/event.dart';
 import 'package:fl_clash/core/method.dart';
+import 'package:fl_clash/core/spill.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
@@ -31,6 +32,7 @@ abstract interface class CoreRpcChannel {
 final class CoreRpcClient implements CoreRpcChannel {
   final DesktopCoreTransport transport;
   final Duration extensionGrace;
+  final CoreSpillStore spillStore;
   final Map<String, Completer<Object?>> _pending = {};
   late final StreamSubscription<Uint8List> _frameSubscription;
   late final StreamSubscription<DesktopTransportEvent> _eventSubscription;
@@ -48,7 +50,8 @@ final class CoreRpcClient implements CoreRpcChannel {
   CoreRpcClient(
     this.transport, {
     @visibleForTesting this.extensionGrace = _maxExtensionGrace,
-  }) {
+    CoreSpillStore? spillStore,
+  }) : spillStore = spillStore ?? coreSpillStore {
     _frameSubscription = transport.frames.listen(
       _handleFrame,
       onError: _handleFrameError,
@@ -201,17 +204,19 @@ final class CoreRpcClient implements CoreRpcChannel {
     }
   }
 
-  void _handleResponse(CoreMethodResponse response) {
-    // Proof of life for every pending request, including a late response whose
-    // own caller already gave up.
+  Future<void> _handleResponse(CoreMethodResponse response) async {
     _sinceLastResponse
       ..reset()
       ..start();
     final id = response.id;
-    final completer = id == null ? null : _pending.remove(id);
+    final completer = id == null ? null : _pending[id];
     if (completer == null || completer.isCompleted) {
+      await spillStore.discard(response);
       return;
     }
+    response = await spillStore.resolve(response);
+    if (!identical(_pending[id], completer) || completer.isCompleted) return;
+    _pending.remove(id);
     final error = response.error;
     if (error != null) {
       completer.completeError(

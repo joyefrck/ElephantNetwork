@@ -3,6 +3,7 @@ package com.follow.clash.plugins
 import com.follow.clash.ServiceController
 import com.follow.clash.ServiceState
 import com.follow.clash.common.Components
+import com.follow.clash.service.NetworkObserver
 import com.follow.clash.models.SharedState
 import com.google.gson.Gson
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 
 class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     private lateinit var channel: MethodChannel
+    private lateinit var coreChannel: MethodChannel
     private lateinit var scope: CoroutineScope
     private val gson = Gson()
 
@@ -23,10 +25,21 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         channel = MethodChannel(binding.binaryMessenger, "${Components.PACKAGE_NAME}/service")
         channel.setMethodCallHandler(this)
+        coreChannel = MethodChannel(
+            binding.binaryMessenger,
+            "${Components.PACKAGE_NAME}/core",
+            io.flutter.plugin.common.StandardMethodCodec.INSTANCE,
+            binding.binaryMessenger.makeBackgroundTaskQueue(),
+        )
+        coreChannel.setMethodCallHandler { call, result ->
+            if (call.method == "invokeMethod") invokeMethod(call, result)
+            else result.notImplemented()
+        }
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+        coreChannel.setMethodCallHandler(null)
         scope.cancel()
         ServiceController.setEventListener(null)
     }
@@ -45,6 +58,7 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 
     private fun initialize(result: MethodChannel.Result) {
+        NetworkObserver.start()
         ServiceController.setEventListener(::sendEvent)
             .onSuccess { result.success("") }
             .onFailure { error -> result.success(error.message.orEmpty()) }

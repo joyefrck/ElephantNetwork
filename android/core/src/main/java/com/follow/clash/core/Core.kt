@@ -124,6 +124,10 @@ object Core {
         cb: InvokeInterface,
     )
 
+    fun resetNetwork() {
+        invokeMethod("""{"method":"resetNetwork","arguments":null}""") {}
+    }
+
     external fun stopTun()
 
     external fun getTraffic(onlyStatisticsProxy: Boolean): String

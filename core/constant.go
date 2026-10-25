@@ -39,12 +39,27 @@ type UpdateParams struct {
 }
 
 type tunSchema struct {
-	Enable       bool               `yaml:"enable" json:"enable"`
-	Device       *string            `yaml:"device" json:"device"`
-	Stack        *constant.TUNStack `yaml:"stack" json:"stack"`
-	DNSHijack    *[]string          `yaml:"dns-hijack" json:"dns-hijack"`
-	AutoRoute    *bool              `yaml:"auto-route" json:"auto-route"`
-	RouteAddress *[]netip.Prefix    `yaml:"route-address" json:"route-address,omitempty"`
+	Enable                bool               `yaml:"enable" json:"enable"`
+	Device                *string            `yaml:"device" json:"device"`
+	Stack                 *constant.TUNStack `yaml:"stack" json:"stack"`
+	DNSHijack             *[]string          `yaml:"dns-hijack" json:"dns-hijack"`
+	AutoRoute             *bool              `yaml:"auto-route" json:"auto-route"`
+	RouteAddress          *[]netip.Prefix    `yaml:"route-address" json:"route-address,omitempty"`
+	DNSMode               *string            `json:"dns-mode"`
+	MTU                   *uint32            `json:"mtu"`
+	StrictRoute           *bool              `json:"strict-route"`
+	AutoDetectInterface   *bool              `json:"auto-detect-interface"`
+	RouteExcludeAddress   *[]netip.Prefix    `json:"route-exclude-address"`
+	IncludeInterface      *[]string          `json:"include-interface"`
+	ExcludeInterface      *[]string          `json:"exclude-interface"`
+	IncludeUID            *[]uint32          `json:"include-uid"`
+	ExcludeUID            *[]uint32          `json:"exclude-uid"`
+	ExcludeSrcPort        *[]uint16          `json:"exclude-src-port"`
+	ExcludeDstPort        *[]uint16          `json:"exclude-dst-port"`
+	UDPTimeout            *int64             `json:"udp-timeout"`
+	DisableICMPForwarding *bool              `json:"disable-icmp-forwarding"`
+	GSO                   *bool              `json:"gso"`
+	CongestionController  *string            `json:"congestion-controller"`
 }
 
 type ChangeProxyParams struct {
@@ -95,6 +110,9 @@ const (
 	getConnectionsMethod           CoreMethod = "getConnections"
 	closeConnectionsMethod         CoreMethod = "closeConnections"
 	resetConnectionsMethod         CoreMethod = "resetConnections"
+	clearDnsCacheMethod            CoreMethod = "clearDnsCache"
+	resetNetworkMethod             CoreMethod = "resetNetwork"
+	updateRuntimeConfigMethod      CoreMethod = "updateRuntimeConfig"
 	closeConnectionMethod          CoreMethod = "closeConnection"
 	getExternalProvidersMethod     CoreMethod = "getExternalProviders"
 	getExternalProviderMethod      CoreMethod = "getExternalProvider"

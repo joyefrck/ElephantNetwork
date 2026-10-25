@@ -6,6 +6,7 @@ import 'package:archive/archive_io.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/config_overrides.dart';
 import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/account/xboard_dns_policy.dart';
@@ -83,19 +84,26 @@ Future<List<Group>> _toGroupsTask(ComputeGroupsState state) async {
   );
 }
 
+typedef CompiledProfile = ({
+  String yaml,
+  String md5,
+  String structureMd5,
+  Map<String, dynamic> runtimeConfig,
+});
+
 Future<VM2<String, String>> makeRealProfileTask(
   MakeRealProfileState data,
 ) async {
-  return compute<MakeRealProfileState, VM2<String, String>>(
-    _makeRealProfileTask,
-    data,
-  );
+  final compiled = await compileProfileTask(data);
+  return VM2(compiled.yaml, compiled.md5);
 }
 
-Future<VM2<String, String>> _makeRealProfileTask(
-  MakeRealProfileState data,
-) async {
+Future<CompiledProfile> compileProfileTask(MakeRealProfileState data) =>
+    compute<MakeRealProfileState, CompiledProfile>(_compileProfileTask, data);
+
+Future<CompiledProfile> _compileProfileTask(MakeRealProfileState data) async {
   final rawConfig = Map<String, dynamic>.from(data.rawConfig);
+  final inherited = captureConfigOverrides(rawConfig);
   final realPatchConfig = data.realPatchConfig;
   final profilesPath = data.profilesPath;
   final profileId = data.profileId;
@@ -141,6 +149,12 @@ Future<VM2<String, String>> _makeRealProfileTask(
   rawConfig['tun']['stack'] = realPatchConfig.tun.stack.name;
   rawConfig['tun']['route-address'] = realPatchConfig.tun.routeAddress;
   rawConfig['tun']['auto-route'] = realPatchConfig.tun.autoRoute;
+  for (final entry in realPatchConfig.tun.toJson().entries) {
+    if (entry.value != null) rawConfig['tun'][entry.key] = entry.value;
+  }
+  if (system.isDesktop && realPatchConfig.tun.autoRoute) {
+    rawConfig['tun']['auto-detect-interface'] ??= true;
+  }
   rawConfig['geodata-loader'] = realPatchConfig.geodataLoader.name;
   if (rawConfig['sniffer']?['sniff'] != null) {
     for (final value in (rawConfig['sniffer']?['sniff'] as Map).values) {
@@ -270,11 +284,30 @@ Future<VM2<String, String>> _makeRealProfileTask(
         .toList();
   }
   rawConfig['rules'] = rules;
+  applyConfigOverrides(
+    rawConfig,
+    inherited,
+    realPatchConfig,
+    android: system.isAndroid,
+  );
   if (data.profileSource == ProfileSource.xboard) {
     applyXboardDnsPolicy(rawConfig);
   }
   final yaml = await _encodeYaml(Map<String, dynamic>.from(rawConfig));
-  return VM2(yaml, yaml.toMd5());
+  const runtimeKeys = {'dns', 'hosts', 'ntp', 'sniffer'};
+  final structure = Map<String, dynamic>.from(rawConfig)
+    ..removeWhere((key, _) => runtimeKeys.contains(key));
+  return (
+    yaml: yaml,
+    md5: yaml.toMd5(),
+    structureMd5: json.encode(structure).toMd5(),
+    runtimeConfig: Map<String, dynamic>.from(
+      json.decode(
+            json.encode({for (final key in runtimeKeys) key: rawConfig[key]}),
+          )
+          as Map,
+    ),
+  );
 }
 
 Future<List<String>> shakingProfileTask(
