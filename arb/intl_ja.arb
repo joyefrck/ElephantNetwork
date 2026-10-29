@@ -16,6 +16,7 @@
   "networkSpeed": "ネットワーク速度",
   "outboundMode": "アウトバウンドモード",
   "networkDetection": "ネットワーク検出",
+  "currentNodeLabel": "現在のノード：",
   "upload": "アップロード",
   "download": "ダウンロード",
   "nullProfileDesc": "プロファイルがありません。追加してください",

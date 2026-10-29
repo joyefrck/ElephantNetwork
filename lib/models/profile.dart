@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/account/xboard_config.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'clash_config.dart';
@@ -175,10 +176,14 @@ extension ProfileExtension on Profile {
   }
 
   Future<Profile> update() async {
-    final response = await request.getFileResponseForUrl(url);
+    final subscriptionUrl = source == ProfileSource.xboard
+        ? XboardConfig.managedSubscriptionUri(url).toString()
+        : url;
+    final response = await request.getFileResponseForUrl(subscriptionUrl);
     final disposition = response.headers.value('content-disposition');
     final userinfo = response.headers.value('subscription-userinfo');
     return copyWith(
+      url: subscriptionUrl,
       label: label.takeFirstValid([
         utils.getFileNameForDisposition(disposition),
         id.toString(),

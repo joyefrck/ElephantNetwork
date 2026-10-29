@@ -34,7 +34,7 @@ void main() {
       ).readAsStringSync();
       final workflow = File('.github/workflows/build.yaml').readAsStringSync();
 
-      expect(pubspec, contains('version: 2.0.7+20007'));
+      expect(pubspec, contains('version: 2.1.0+22101'));
       expect(pubspec, contains('flutter_secure_storage: 10.0.0'));
       expect(constants, contains("const packageName = 'com.elephantroute';"));
       expect(android, contains('applicationId = "com.elephantroute"'));

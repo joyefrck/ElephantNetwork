@@ -16,6 +16,7 @@
   "networkSpeed": "Network speed",
   "outboundMode": "Outbound mode",
   "networkDetection": "Network detection",
+  "currentNodeLabel": "Current node:",
   "upload": "Upload",
   "download": "Download",
   "nullProfileDesc": "No profile, Please add a profile",

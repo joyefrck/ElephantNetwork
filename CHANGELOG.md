@@ -1,3 +1,8 @@
+## v2.1.0
+
+- Fix missing Hysteria2 nodes in managed subscriptions and migrate saved subscription renderer parameters on refresh.
+- Show the resolved current node name with a label and a thin rounded border above the exit IP in the dashboard network detection card.
+
 ## v0.8.96
 
 - Optimize commented policy

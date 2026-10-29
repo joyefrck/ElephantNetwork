@@ -16,6 +16,7 @@
   "networkSpeed": "网络速度",
   "outboundMode": "出站模式",
   "networkDetection": "网络检测",
+  "currentNodeLabel": "当前节点：",
   "upload": "上传",
   "download": "下载",
   "nullProfileDesc": "没有配置文件,请先添加配置文件",

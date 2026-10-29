@@ -28,7 +28,7 @@ class XboardConfig {
   static Uri managedSubscriptionUri(String source) {
     final uri = Uri.parse(source);
     return uri.replace(
-      queryParameters: {...uri.queryParameters, 'flag': 'flclash'},
+      queryParameters: {...uri.queryParameters, 'flag': 'meta'},
     );
   }
 

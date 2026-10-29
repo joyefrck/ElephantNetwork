@@ -16,6 +16,7 @@
   "networkSpeed": "Скорость сети",
   "outboundMode": "Режим исходящего трафика",
   "networkDetection": "Обнаружение сети",
+  "currentNodeLabel": "Текущий узел:",
   "upload": "Загрузка",
   "download": "Скачивание",
   "nullProfileDesc": "Нет профиля, пожалуйста, добавьте профиль",

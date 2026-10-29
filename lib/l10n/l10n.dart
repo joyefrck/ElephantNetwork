@@ -169,6 +169,16 @@ class AppLocalizations {
     );
   }
 
+  /// `Current node:`
+  String get currentNodeLabel {
+    return Intl.message(
+      'Current node:',
+      name: 'currentNodeLabel',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Upload`
   String get upload {
     return Intl.message('Upload', name: 'upload', desc: '', args: []);

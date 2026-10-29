@@ -74,13 +74,13 @@ void main() {
       },
     );
 
-    test('managed subscription always requests the FlClash renderer', () async {
+    test('managed subscription requests the Mihomo renderer', () async {
       final api = XboardApi(
         transport: _FakeTransport({
           XboardConfig.subscribeInfoPath: {
             'data': {
               'subscribe_url':
-                  'https://example.com/api/v1/client/subscribe?token=secret',
+                  'https://example.com/api/v1/client/subscribe?token=secret&flag=flclash',
             },
           },
         }),
@@ -89,7 +89,7 @@ void main() {
       final uri = await api.managedSubscription('auth-token');
 
       expect(uri.queryParameters['token'], 'secret');
-      expect(uri.queryParameters['flag'], 'flclash');
+      expect(uri.queryParameters['flag'], 'meta');
     });
 
     test('managed subscription rejects an insecure URL', () async {
@@ -374,7 +374,7 @@ void main() {
 
       expect(await coordinator.syncManagedProfile(), isTrue);
       expect(gateway.account?.accountId, 'owner@example.com');
-      expect(gateway.subscription?.queryParameters['flag'], 'flclash');
+      expect(gateway.subscription?.queryParameters['flag'], 'meta');
     });
 
     test(
@@ -418,7 +418,7 @@ void main() {
         expect(await coordinator.syncManagedProfile(), isTrue);
         expect(gateway.subscription?.queryParameters, {
           'token': 'fresh-token',
-          'flag': 'flclash',
+          'flag': 'meta',
         });
         expect(gateway.account?.accountId, 'owner@example.com');
         expect(coordinator.state.error, isNull);
@@ -565,7 +565,7 @@ void main() {
 
       expect(await coordinator.syncManagedProfile(), isTrue);
       expect(gateway.account?.accountId, 'owner@example.com');
-      expect(gateway.subscription?.queryParameters['flag'], 'flclash');
+      expect(gateway.subscription?.queryParameters['flag'], 'meta');
     });
 
     test('secure storage failure opens a clean login entry', () async {
