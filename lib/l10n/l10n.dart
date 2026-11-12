@@ -4898,6 +4898,101 @@ class AppLocalizations {
       args: [count],
     );
   }
+
+  /// `Downloading update…`
+  String get updateDownloading {
+    return Intl.message(
+      'Downloading update…',
+      name: 'updateDownloading',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Verifying update…`
+  String get updateVerifying {
+    return Intl.message(
+      'Verifying update…',
+      name: 'updateVerifying',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Update verified and ready to install`
+  String get updateReady {
+    return Intl.message(
+      'Update verified and ready to install',
+      name: 'updateReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Waiting for the system installer…`
+  String get updateInstalling {
+    return Intl.message(
+      'Waiting for the system installer…',
+      name: 'updateInstalling',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Allow app installation in system settings, then tap Install now.`
+  String get updateAuthorizationRequired {
+    return Intl.message(
+      'Allow app installation in system settings, then tap Install now.',
+      name: 'updateAuthorizationRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Update failed. Please try again.`
+  String get updateFailed {
+    return Intl.message(
+      'Update failed. Please try again.',
+      name: 'updateFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download cancelled. You can try again.`
+  String get updateCancelled {
+    return Intl.message(
+      'Download cancelled. You can try again.',
+      name: 'updateCancelled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Update installed`
+  String get updateInstalled {
+    return Intl.message(
+      'Update installed',
+      name: 'updateInstalled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Install now`
+  String get updateInstallNow {
+    return Intl.message(
+      'Install now',
+      name: 'updateInstallNow',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Later`
+  String get updateLater {
+    return Intl.message('Later', name: 'updateLater', desc: '', args: []);
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -110,7 +110,6 @@
   "compatible": "Режим совместимости",
   "notSelectedTip": "Текущая группа прокси не может быть выбрана.",
   "tip": "подсказка",
-  "account": "Аккаунт",
   "emailAddress": "Электронная почта",
   "signIn": "Войти",
   "signOut": "Выйти",
@@ -158,7 +157,16 @@
   "versionWithBuild": "v{version} (сборка {build})",
   "releaseNotes": "Что нового",
   "releaseNotesUnavailable": "Описание обновления отсутствует",
-  "@versionWithBuild": {"placeholders": {"version": {"type": "String"}, "build": {"type": "String"}}},
+  "@versionWithBuild": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
   "discoverNewVersion": "Обнаружена новая версия",
   "checkUpdateError": "Текущее приложение уже является последней версией",
   "goDownload": "Перейти к загрузке",
@@ -598,5 +606,15 @@
   "geoSkipped": "Для {name} уже установлена последняя версия",
   "geoUpdated": "{name} обновлено",
   "secondsCount": "{count} секунд",
-  "entriesCount": "{count} записей"
+  "entriesCount": "{count} записей",
+  "updateDownloading": "Загрузка обновления…",
+  "updateVerifying": "Проверка обновления…",
+  "updateReady": "Обновление проверено и готово к установке",
+  "updateInstalling": "Ожидание системного установщика…",
+  "updateAuthorizationRequired": "Разрешите установку в настройках системы, затем нажмите «Установить сейчас».",
+  "updateFailed": "Не удалось завершить обновление. Повторите попытку.",
+  "updateCancelled": "Загрузка отменена. Можно повторить попытку.",
+  "updateInstalled": "Обновление установлено",
+  "updateInstallNow": "Установить сейчас",
+  "updateLater": "Позже"
 }

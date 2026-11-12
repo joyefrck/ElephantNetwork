@@ -68,6 +68,13 @@ class CommonAction extends _$CommonAction {
 
   Future<void> _fetchUpdate({required bool isUser}) async {
     try {
+      final task = ref.read(updateTaskProvider);
+      await task.recover();
+      if (!ref.mounted) return;
+      if (task.value.busy) {
+        await _showUpdateDialog();
+        return;
+      }
       final data = await ref
           .read(appUpdateClientProvider)
           .check(
@@ -75,7 +82,11 @@ class CommonAction extends _$CommonAction {
             build: globalState.packageInfo.buildNumber,
           );
       if (!ref.mounted) return;
-      await checkUpdateResultHandle(data: data, isUser: isUser);
+      if (data == null && task.canInstall) {
+        await _showUpdateDialog();
+      } else {
+        await checkUpdateResultHandle(data: data, isUser: isUser);
+      }
     } catch (error) {
       commonPrint.log(
         'checkForUpdate failed: $error',
@@ -86,7 +97,11 @@ class CommonAction extends _$CommonAction {
           globalState.navigatorKey.currentContext?.mounted == true) {
         await globalState.showMessage(
           title: currentAppLocalizations.checkUpdate,
-          message: TextSpan(text: currentAppLocalizations.networkException),
+          message: TextSpan(
+            text: error is FormatException
+                ? currentAppLocalizations.updateFailed
+                : currentAppLocalizations.networkException,
+          ),
         );
       }
     }
@@ -99,44 +114,25 @@ class CommonAction extends _$CommonAction {
     final context = globalState.navigatorKey.currentContext;
     if (context == null || !context.mounted) return;
     if (data != null) {
-      final tagName = data['tag_name']?.toString() ?? '';
-      final version = tagName.startsWith('v') ? tagName.substring(1) : tagName;
-      final build = data['build_number']?.toString() ?? '';
-      final body = data['body']?.toString().trim() ?? '';
-      final l10n = context.appLocalizations;
-      final textTheme = context.textTheme;
-      final res = await globalState.showMessage(
-        title: l10n.discoverNewVersion,
-        message: TextSpan(
-          text: '${l10n.versionWithBuild(version, build)}\n\n',
-          style: textTheme.headlineSmall,
-          children: [
-            TextSpan(
-              text: '${l10n.releaseNotes}\n',
-              style: textTheme.titleSmall,
-            ),
-            TextSpan(
-              text: body.isEmpty ? l10n.releaseNotesUnavailable : body,
-              style: textTheme.bodyMedium,
-            ),
-          ],
-        ),
-        confirmText: l10n.update,
-        cancelText: l10n.cancel,
-      );
-      if (res == true) {
-        final downloadUri = Uri.tryParse(
-          data['download_url']?.toString() ?? '',
-        );
-        if (downloadUri != null && downloadUri.scheme == 'https') {
-          await launchUrl(downloadUri, mode: LaunchMode.externalApplication);
-        }
-      }
+      final task = ref.read(updateTaskProvider);
+      await task.offer(UpdateRelease.fromJson(data));
+      if (!ref.mounted) return;
+      await _showUpdateDialog();
     } else if (isUser) {
       await globalState.showMessage(
         title: currentAppLocalizations.checkUpdate,
         message: TextSpan(text: currentAppLocalizations.checkUpdateError),
       );
     }
+  }
+
+  Future<void> _showUpdateDialog() async {
+    final context = globalState.navigatorKey.currentContext;
+    if (context == null || !context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const UpdateDownloadDialog(),
+    );
   }
 }

@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		E1E000012EF0267400E05D67 = {isa = PBXBuildFile; fileRef = E1E000022EF0267400E05D67; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C80D7294CF71000263BE5 /* RunnerTests.swift */; };
 		335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335BBD1A22A9A15E00E9071D /* GeneratedPluginRegistrant.swift */; };
 		33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC10F02044A3C60003C045 /* AppDelegate.swift */; };
@@ -69,6 +70,7 @@
 			dstSubfolderSpec = 6;
 			files = (
 				F51BB7CB2EF0267400E05D67 /* FlClashCore in Copy Core */,
+				E1E000012EF0267400E05D67,
 			);
 			name = "Copy Core";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -76,6 +78,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E1E000022EF0267400E05D67 = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = ElephantNetworkUpdater; path = ../libclash/macos/ElephantNetworkUpdater; sourceTree = "<group>"; };
 		1C8D2B0222EEC9EFBD4CB7D3 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		318645D7A7E65945F20006A1 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		331C80D5294CF71000263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -151,6 +154,7 @@
 			isa = PBXGroup;
 			children = (
 				F51BB7CA2EF0267400E05D67 /* FlClashCore */,
+				E1E000022EF0267400E05D67,
 				33FAB671232836740065AC1E /* Runner */,
 				33CEB47122A05771004F2AC0 /* Flutter */,
 				331C80D6294CF71000263BE5 /* RunnerTests */,

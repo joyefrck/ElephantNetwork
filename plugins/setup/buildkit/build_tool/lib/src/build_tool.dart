@@ -149,6 +149,7 @@ class BuildLinuxCommand extends BuildCommand {
       notice: notice,
     );
     final results = await builder.buildAll(targets, force: force);
+    await _buildUpdater(targets.first, config);
 
     if (results.any((result) => result.rebuilt)) {
       _log.info(
@@ -273,6 +274,7 @@ class BuildMacosCommand extends BuildCommand {
       notice: notice,
     );
     final results = await builder.buildAll(targets, force: force);
+    await _buildUpdater(targets.first, config);
 
     if (results.any((result) => result.rebuilt)) {
       _log.info(
@@ -280,6 +282,23 @@ class BuildMacosCommand extends BuildCommand {
       );
     }
   }
+}
+
+Future<void> _buildUpdater(Target target, BuildConfig config) async {
+  final platform = target.goos == 'darwin' ? 'macos' : target.goos;
+  final output =
+      p.join(_rootDir, config.outputDir, platform, 'ElephantNetworkUpdater');
+  ensureDir(p.dirname(output));
+  await runCommandStream(
+    'go',
+    ['build', '-trimpath', '-ldflags=-s -w', '-o', output, '.'],
+    workingDirectory: p.join(_rootDir, 'services', 'updater'),
+    environment: {
+      'GOOS': target.goos,
+      'GOARCH': target.goarch,
+      'CGO_ENABLED': '0'
+    },
+  );
 }
 
 Future<void> runMain(List<String> args) async {

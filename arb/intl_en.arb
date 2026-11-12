@@ -110,7 +110,6 @@
   "compatible": "Compatibility mode",
   "notSelectedTip": "The current proxy group cannot be selected.",
   "tip": "tip",
-  "account": "Account",
   "emailAddress": "Email address",
   "signIn": "Sign in",
   "signOut": "Sign out",
@@ -133,7 +132,13 @@
   "neverExpires": "Never expires",
   "trafficOverview": "Traffic overview",
   "currentPlanName": "Current plan: {name}",
-  "@currentPlanName": {"placeholders": {"name": {"type": "String"}}},
+  "@currentPlanName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "noActivePlan": "No active plan",
   "planTraffic": "Plan traffic",
   "trafficPackage": "Traffic package",
@@ -159,7 +164,16 @@
   "versionWithBuild": "v{version} (Build {build})",
   "releaseNotes": "What's new",
   "releaseNotesUnavailable": "No release notes provided",
-  "@versionWithBuild": {"placeholders": {"version": {"type": "String"}, "build": {"type": "String"}}},
+  "@versionWithBuild": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
   "discoverNewVersion": "Discover the new version",
   "checkUpdateError": "The current application is already the latest version",
   "goDownload": "Go to download",
@@ -599,5 +613,15 @@
   "geoSkipped": "{name} is already up to date",
   "geoUpdated": "{name} updated",
   "secondsCount": "{count} seconds",
-  "entriesCount": "{count} entries"
+  "entriesCount": "{count} entries",
+  "updateDownloading": "Downloading update…",
+  "updateVerifying": "Verifying update…",
+  "updateReady": "Update verified and ready to install",
+  "updateInstalling": "Waiting for the system installer…",
+  "updateAuthorizationRequired": "Allow app installation in system settings, then tap Install now.",
+  "updateFailed": "Update failed. Please try again.",
+  "updateCancelled": "Download cancelled. You can try again.",
+  "updateInstalled": "Update installed",
+  "updateInstallNow": "Install now",
+  "updateLater": "Later"
 }

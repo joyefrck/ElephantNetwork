@@ -110,7 +110,6 @@
   "compatible": "互換モード",
   "notSelectedTip": "現在のプロキシグループは選択できません",
   "tip": "ヒント",
-  "account": "アカウント",
   "emailAddress": "メールアドレス",
   "signIn": "ログイン",
   "signOut": "ログアウト",
@@ -158,7 +157,16 @@
   "versionWithBuild": "v{version}（ビルド {build}）",
   "releaseNotes": "更新内容",
   "releaseNotesUnavailable": "更新内容はありません",
-  "@versionWithBuild": {"placeholders": {"version": {"type": "String"}, "build": {"type": "String"}}},
+  "@versionWithBuild": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
   "discoverNewVersion": "新バージョンを発見",
   "checkUpdateError": "アプリは最新版です",
   "goDownload": "ダウンロードへ",
@@ -598,5 +606,15 @@
   "geoSkipped": "{name} はすでに最新です",
   "geoUpdated": "{name} 更新済み",
   "secondsCount": "{count} 秒",
-  "entriesCount": "{count} エントリ"
+  "entriesCount": "{count} エントリ",
+  "updateDownloading": "アップデートをダウンロード中…",
+  "updateVerifying": "アップデートを検証中…",
+  "updateReady": "検証済み・インストール可能",
+  "updateInstalling": "システムのインストーラーを待機中…",
+  "updateAuthorizationRequired": "システム設定でインストールを許可してから「今すぐインストール」を選択してください。",
+  "updateFailed": "更新を完了できませんでした。再試行してください。",
+  "updateCancelled": "ダウンロードをキャンセルしました。再試行できます。",
+  "updateInstalled": "更新をインストールしました",
+  "updateInstallNow": "今すぐインストール",
+  "updateLater": "後で"
 }

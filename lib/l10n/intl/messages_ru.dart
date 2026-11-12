@@ -1174,9 +1174,37 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unnamed": MessageLookupByLibrary.simpleMessage("Без имени"),
     "update": MessageLookupByLibrary.simpleMessage("Обновить"),
+    "updateAuthorizationRequired": MessageLookupByLibrary.simpleMessage(
+      "Разрешите установку в настройках системы, затем нажмите «Установить сейчас».",
+    ),
+    "updateCancelled": MessageLookupByLibrary.simpleMessage(
+      "Загрузка отменена. Можно повторить попытку.",
+    ),
+    "updateDownloading": MessageLookupByLibrary.simpleMessage(
+      "Загрузка обновления…",
+    ),
+    "updateFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось завершить обновление. Повторите попытку.",
+    ),
+    "updateInstallNow": MessageLookupByLibrary.simpleMessage(
+      "Установить сейчас",
+    ),
+    "updateInstalled": MessageLookupByLibrary.simpleMessage(
+      "Обновление установлено",
+    ),
+    "updateInstalling": MessageLookupByLibrary.simpleMessage(
+      "Ожидание системного установщика…",
+    ),
+    "updateLater": MessageLookupByLibrary.simpleMessage("Позже"),
     "updateNow": MessageLookupByLibrary.simpleMessage("Обновить сейчас"),
+    "updateReady": MessageLookupByLibrary.simpleMessage(
+      "Обновление проверено и готово к установке",
+    ),
     "updateSubscription": MessageLookupByLibrary.simpleMessage(
       "Обновить подписку",
+    ),
+    "updateVerifying": MessageLookupByLibrary.simpleMessage(
+      "Проверка обновления…",
     ),
     "upload": MessageLookupByLibrary.simpleMessage("Загрузка"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),

@@ -905,8 +905,28 @@ class MessageLookup extends MessageLookupByLibrary {
     "unknownNetworkError": MessageLookupByLibrary.simpleMessage("不明なネットワークエラー"),
     "unnamed": MessageLookupByLibrary.simpleMessage("無題"),
     "update": MessageLookupByLibrary.simpleMessage("更新"),
+    "updateAuthorizationRequired": MessageLookupByLibrary.simpleMessage(
+      "システム設定でインストールを許可してから「今すぐインストール」を選択してください。",
+    ),
+    "updateCancelled": MessageLookupByLibrary.simpleMessage(
+      "ダウンロードをキャンセルしました。再試行できます。",
+    ),
+    "updateDownloading": MessageLookupByLibrary.simpleMessage(
+      "アップデートをダウンロード中…",
+    ),
+    "updateFailed": MessageLookupByLibrary.simpleMessage(
+      "更新を完了できませんでした。再試行してください。",
+    ),
+    "updateInstallNow": MessageLookupByLibrary.simpleMessage("今すぐインストール"),
+    "updateInstalled": MessageLookupByLibrary.simpleMessage("更新をインストールしました"),
+    "updateInstalling": MessageLookupByLibrary.simpleMessage(
+      "システムのインストーラーを待機中…",
+    ),
+    "updateLater": MessageLookupByLibrary.simpleMessage("後で"),
     "updateNow": MessageLookupByLibrary.simpleMessage("今すぐ更新"),
+    "updateReady": MessageLookupByLibrary.simpleMessage("検証済み・インストール可能"),
     "updateSubscription": MessageLookupByLibrary.simpleMessage("サブスクリプションを更新"),
+    "updateVerifying": MessageLookupByLibrary.simpleMessage("アップデートを検証中…"),
     "upload": MessageLookupByLibrary.simpleMessage("アップロード"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("URL経由でプロファイルを取得"),

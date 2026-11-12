@@ -2,7 +2,7 @@
   "rule": "规则",
   "global": "全局",
   "direct": "直连",
-  "account": "账户",
+  "account": "账号",
   "dashboard": "仪表盘",
   "proxies": "代理",
   "profile": "配置",
@@ -110,7 +110,6 @@
   "compatible": "兼容模式",
   "notSelectedTip": "当前代理组无法选中",
   "tip": "提示",
-  "account": "账号",
   "emailAddress": "邮箱地址",
   "signIn": "登录",
   "signOut": "退出登录",
@@ -158,7 +157,16 @@
   "versionWithBuild": "v{version}（构建号 {build}）",
   "releaseNotes": "升级内容",
   "releaseNotesUnavailable": "暂无升级说明",
-  "@versionWithBuild": {"placeholders": {"version": {"type": "String"}, "build": {"type": "String"}}},
+  "@versionWithBuild": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
   "discoverNewVersion": "发现新版本",
   "checkUpdateError": "当前应用已经是最新版了",
   "goDownload": "前往下载",
@@ -598,5 +606,15 @@
   "geoSkipped": "{name} 已是最新版本",
   "geoUpdated": "{name} 已更新",
   "secondsCount": "{count} 秒",
-  "entriesCount": "{count} 个条目"
+  "entriesCount": "{count} 个条目",
+  "updateDownloading": "正在下载更新…",
+  "updateVerifying": "正在校验安装包…",
+  "updateReady": "安装包已校验，可以安装",
+  "updateInstalling": "正在等待系统安装…",
+  "updateAuthorizationRequired": "请在系统设置中允许安装，然后点击“立即安装”。",
+  "updateFailed": "更新未完成，请重试。",
+  "updateCancelled": "已取消下载，可重新更新。",
+  "updateInstalled": "更新已安装",
+  "updateInstallNow": "立即安装",
+  "updateLater": "稍后"
 }

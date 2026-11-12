@@ -40,7 +40,7 @@ SPEC CHECKSUMS:
   HotKey: 400beb7caa29054ea8d864c96f5ba7e5b4852277
   hotkey_manager_macos: a4317849af96d2430fa89944d3c58977ca089fbe
   rust_api: 112f3cfd993afe61c6662bdb30fd6e3509fb3bf8
-  setup: fbca4a83aba6efbe6510b5e268c8aea0bf192d00
+  setup: 38d82a520a9a5d5d1c2ac9968d5bc0d7861e7c49
 
 PODFILE CHECKSUM: b9facb167d6b7e90fef40306c3fe521e010924ac
 

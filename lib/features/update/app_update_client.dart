@@ -71,6 +71,9 @@ class AppUpdateClient {
       'body': latest['release_notes']?.toString() ?? '',
       'download_url': download.toString(),
       'sha256': latest['sha256']?.toString(),
+      'file_size': latest['file_size'],
+      'platform': latest['platform'] ?? _platform,
+      'arch': latest['arch'] ?? (_arch == 'ia32' ? 'x86' : _arch),
     };
   }
 }

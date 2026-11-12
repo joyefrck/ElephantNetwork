@@ -66,6 +66,29 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
+            "prepareUpdate", "installUpdate", "recoverUpdate" -> {
+                val arguments = call.arguments as? Map<*, *>
+                if (arguments == null) {
+                    result.error("INVALID_ARGUMENT", "Invalid update task", null)
+                    return
+                }
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        val value = when (call.method) {
+                            "prepareUpdate" -> {
+                                SelfUpdater.validate(GlobalState.application, arguments)
+                                "ready"
+                            }
+                            "recoverUpdate" -> SelfUpdater.recover(GlobalState.application, arguments["id"] as String)
+                            else -> SelfUpdater.install(GlobalState.application, activity, arguments)
+                        }
+                        result.success(value)
+                    } catch (error: Exception) {
+                        result.error("UPDATE_FAILED", error.message, null)
+                    }
+                }
+            }
+
             "moveTaskToBack" -> {
                 activity?.moveTaskToBack(true)
                 result.success(true)
@@ -191,7 +214,6 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
     @SuppressLint("BatteryLife")
     private fun openBatteryOptimizationSettings(): Boolean {
-        // VPN continuity is the user-requested core function, so the direct exemption is intentional.
         val activity = activity ?: return false
         return try {
             val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {

@@ -1107,9 +1107,33 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unnamed": MessageLookupByLibrary.simpleMessage("Unnamed"),
     "update": MessageLookupByLibrary.simpleMessage("Update"),
+    "updateAuthorizationRequired": MessageLookupByLibrary.simpleMessage(
+      "Allow app installation in system settings, then tap Install now.",
+    ),
+    "updateCancelled": MessageLookupByLibrary.simpleMessage(
+      "Download cancelled. You can try again.",
+    ),
+    "updateDownloading": MessageLookupByLibrary.simpleMessage(
+      "Downloading update…",
+    ),
+    "updateFailed": MessageLookupByLibrary.simpleMessage(
+      "Update failed. Please try again.",
+    ),
+    "updateInstallNow": MessageLookupByLibrary.simpleMessage("Install now"),
+    "updateInstalled": MessageLookupByLibrary.simpleMessage("Update installed"),
+    "updateInstalling": MessageLookupByLibrary.simpleMessage(
+      "Waiting for the system installer…",
+    ),
+    "updateLater": MessageLookupByLibrary.simpleMessage("Later"),
     "updateNow": MessageLookupByLibrary.simpleMessage("Update now"),
+    "updateReady": MessageLookupByLibrary.simpleMessage(
+      "Update verified and ready to install",
+    ),
     "updateSubscription": MessageLookupByLibrary.simpleMessage(
       "Update subscription",
+    ),
+    "updateVerifying": MessageLookupByLibrary.simpleMessage(
+      "Verifying update…",
     ),
     "upload": MessageLookupByLibrary.simpleMessage("Upload"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),

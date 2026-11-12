@@ -6,6 +6,8 @@ import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/providers/update.dart';
+import 'package:fl_clash/features/update/update_controller.dart';
 import 'package:fl_clash/views/access.dart';
 import 'package:fl_clash/views/application_setting.dart';
 import 'package:fl_clash/views/backup_and_restore.dart';
@@ -306,12 +308,28 @@ class _CheckUpdateItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ListItem(
-      leading: const Icon(Icons.system_update_alt),
-      title: Text(context.appLocalizations.checkUpdate),
-      onTap: () async {
-        await ref.read(commonActionProvider.notifier).checkUpdate();
-      },
+    final controller = ref.watch(updateTaskProvider);
+    return ValueListenableBuilder<UpdateSnapshot>(
+      valueListenable: controller,
+      builder: (context, snapshot, _) => ListItem(
+        leading: const Icon(Icons.system_update_alt),
+        title: Text(context.appLocalizations.checkUpdate),
+        subtitle: snapshot.release == null
+            ? null
+            : Text(
+                snapshot.phase == UpdatePhase.ready
+                    ? context.appLocalizations.updateReady
+                    : snapshot.busy
+                    ? context.appLocalizations.updateDownloading
+                    : context.appLocalizations.versionWithBuild(
+                        snapshot.release!.version,
+                        '${snapshot.release!.build}',
+                      ),
+              ),
+        onTap: () async {
+          await ref.read(commonActionProvider.notifier).checkUpdate();
+        },
+      ),
     );
   }
 }
