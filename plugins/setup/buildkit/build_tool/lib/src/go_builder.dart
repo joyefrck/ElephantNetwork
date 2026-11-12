@@ -5,7 +5,6 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 
 import 'build_cache.dart';
-import 'environment.dart';
 import 'error.dart';
 import 'fingerprint.dart';
 import 'logging.dart';
@@ -14,21 +13,6 @@ import 'target.dart';
 import 'util.dart';
 
 final _log = Logger('go_builder');
-
-String _resolveCc(Target target) {
-  final ndk = Environment.androidNdk;
-  final prebuiltDir = Directory(
-    p.join(ndk, 'toolchains', 'llvm', 'prebuilt'),
-  );
-  final entries = prebuiltDir
-      .listSync()
-      .where((e) => !p.basename(e.path).startsWith('.'))
-      .toList();
-  if (entries.isEmpty) {
-    throw BuildException('No NDK prebuilt toolchain found in $prebuiltDir');
-  }
-  return p.join(entries.first.path, 'bin', target.ndkCcName);
-}
 
 class GoBuilder {
   final String rootDir;
@@ -47,16 +31,13 @@ class GoBuilder {
   String get _outputPath => p.join(rootDir, config.outputDir);
 
   Future<BuildExecution> build(Target target, {bool force = false}) async {
-    // Desktop: output directly to libclash/{platform}/
-    // Android: output to libclash/android/{abi}/
-    final outDir = target.isLib
-        ? p.join(_outputPath, target.platformDir, target.abi!)
-        : p.join(_outputPath, target.platformDir);
+    if (target.isLib) {
+      throw BuildException(
+          'Android Core must be built by the gomobile Gradle task');
+    }
+    final outDir = p.join(_outputPath, target.platformDir);
     ensureDir(outDir);
-
-    final fileName = target.isLib
-        ? '${config.libName}${target.dynamicLibExtension}'
-        : '${config.coreName}${target.executableExtension}';
+    final fileName = '${config.coreName}${target.executableExtension}';
     final outFile = p.join(outDir, fileName);
 
     return cache.run(
@@ -71,8 +52,7 @@ class GoBuilder {
 
         _log.info(kDoubleSeparator);
         _log.info(
-          'Building Go core: $target '
-          '${target.isLib ? "(CGO, c-shared)" : "(standalone)"}',
+          'Building Go core: $target',
         );
         _log.info(kSeparator);
 
@@ -84,18 +64,6 @@ class GoBuilder {
         );
 
         final outputs = <String>[outFile];
-        if (target.isLib && target.abi != null) {
-          outputs.addAll(
-            await _adjustAndroidOutput(
-              outDir: p.join(_outputPath, target.platformDir),
-              abiDir: target.abi!,
-              archName: target.abi!,
-              libPath: outFile,
-              libName: fileName,
-            ),
-          );
-        }
-
         _log.info('Built: $outFile');
         return outputs;
       },
@@ -112,28 +80,18 @@ class GoBuilder {
     return results;
   }
 
-  Map<String, String> _buildEnvironment(Target target) {
-    final env = <String, String>{
-      'GOOS': target.goos,
-      'GOARCH': target.goarch,
-    };
-    if (target.isLib) {
-      env
-        ..['CGO_ENABLED'] = '1'
-        ..['CC'] = _resolveCc(target)
-        ..['CFLAGS'] = '-O3 -Werror';
-    } else {
-      env['CGO_ENABLED'] = '0';
-    }
-    return env;
-  }
+  Map<String, String> _buildEnvironment(Target target) => {
+        'GOOS': target.goos,
+        'GOARCH': target.goarch,
+        'CGO_ENABLED': '0',
+      };
 
   List<String> _buildArguments(Target target, {String? outFile}) => [
         'build',
         '-ldflags=${config.goLdflags}',
         '-tags=${config.tags}',
-        if (target.isLib) '-buildmode=c-shared',
         if (outFile != null) ...['-o', outFile],
+        './cmd/core',
       ];
 
   Future<String> _calculateFingerprint(Target target) async {
@@ -197,18 +155,6 @@ class GoBuilder {
     }
     inputs.addAll(collectBuildToolInputs(rootDir));
 
-    if (target.isLib) {
-      final compiler = env['CC']!;
-      final compilerVersion = runCommand(compiler, ['--version']);
-      builder.addValue(
-        'android_compiler',
-        '${(compilerVersion.stdout as String).trim()}\n'
-            '${(compilerVersion.stderr as String).trim()}',
-      );
-      final ndkProperties = p.join(Environment.androidNdk, 'source.properties');
-      if (File(ndkProperties).existsSync()) inputs.add(ndkProperties);
-    }
-
     builder.addFiles(inputs);
     return builder.finish();
   }
@@ -218,7 +164,7 @@ class GoBuilder {
         r'''{{range .GoFiles}}{{$.Dir}}/{{.}}{{"\n"}}{{end}}{{range .CgoFiles}}{{$.Dir}}/{{.}}{{"\n"}}{{end}}{{range .CFiles}}{{$.Dir}}/{{.}}{{"\n"}}{{end}}{{range .CXXFiles}}{{$.Dir}}/{{.}}{{"\n"}}{{end}}{{range .MFiles}}{{$.Dir}}/{{.}}{{"\n"}}{{end}}{{range .HFiles}}{{$.Dir}}/{{.}}{{"\n"}}{{end}}{{range .FFiles}}{{$.Dir}}/{{.}}{{"\n"}}{{end}}{{range .SFiles}}{{$.Dir}}/{{.}}{{"\n"}}{{end}}{{range .SwigFiles}}{{$.Dir}}/{{.}}{{"\n"}}{{end}}{{range .SwigCXXFiles}}{{$.Dir}}/{{.}}{{"\n"}}{{end}}{{range .SysoFiles}}{{$.Dir}}/{{.}}{{"\n"}}{{end}}{{range .EmbedFiles}}{{$.Dir}}/{{.}}{{"\n"}}{{end}}{{with .Module}}{{if .GoMod}}{{.GoMod}}{{"\n"}}{{end}}{{end}}''';
     final result = runCommand(
       'go',
-      ['list', '-deps', '-tags=${config.tags}', '-f', template, '.'],
+      ['list', '-deps', '-tags=${config.tags}', '-f', template, './cmd/core'],
       workingDirectory: _corePath,
       environment: environment,
     );
@@ -246,74 +192,5 @@ class GoBuilder {
       if (File(filePath).existsSync()) inputs.add(filePath);
     }
     return inputs;
-  }
-
-  Future<List<String>> _adjustAndroidOutput({
-    required String outDir,
-    required String abiDir,
-    required String archName,
-    required String libPath,
-    required String libName,
-  }) async {
-    final includesPath = p.join(outDir, 'includes', archName);
-    final androidCoreMainPath =
-        p.join(rootDir, 'android', 'core', 'src', 'main');
-    final jniLibsPath = p.join(androidCoreMainPath, 'jniLibs', abiDir);
-    final cppIncludesPath =
-        p.join(androidCoreMainPath, 'cpp', 'includes', archName);
-    final outputs = <String>[];
-
-    ensureDir(jniLibsPath);
-    ensureDir(includesPath);
-    _clearDirectory(includesPath);
-    ensureDir(cppIncludesPath);
-    _clearDirectory(cppIncludesPath);
-
-    _deleteIfExists(p.join(jniLibsPath, libName));
-    final jniLibPath = p.join(jniLibsPath, libName);
-    File(libPath).copySync(jniLibPath);
-    outputs.add(jniLibPath);
-
-    final abiDirPath = p.join(outDir, abiDir);
-    final headerFiles = [
-      ...Directory(abiDirPath).listSync(),
-      ...Directory(_corePath).listSync(),
-    ];
-    for (final file in headerFiles) {
-      if (!file.path.endsWith('.h')) continue;
-      final fileName = p.basename(file.path);
-      final source = File(file.path);
-      final includePath = p.join(includesPath, fileName);
-      final cppIncludePath = p.join(cppIncludesPath, fileName);
-      source.copySync(includePath);
-      source.copySync(cppIncludePath);
-      outputs
-        ..add(includePath)
-        ..add(cppIncludePath);
-      if (file.path.startsWith(abiDirPath)) {
-        source.deleteSync();
-      }
-    }
-    return outputs;
-  }
-
-  void _clearDirectory(String dirPath) {
-    final dir = Directory(dirPath);
-    if (!dir.existsSync()) return;
-
-    for (final entity in dir.listSync()) {
-      if (entity is File || entity is Link) {
-        entity.deleteSync();
-      } else if (entity is Directory) {
-        entity.deleteSync(recursive: true);
-      }
-    }
-  }
-
-  void _deleteIfExists(String filePath) {
-    final file = File(filePath);
-    if (file.existsSync()) {
-      file.deleteSync();
-    }
   }
 }

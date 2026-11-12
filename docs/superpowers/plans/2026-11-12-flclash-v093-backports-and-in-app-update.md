@@ -324,3 +324,11 @@ Windows runner 另跑 Helper 的 `windows-service` 测试；Android 用 JDK 17 �
 - R3 本地提交 `67333da8`，未推送 GitHub。
 - C1 已统一 Dart/Go 的 `area.verb` 方法名和对象参数，命令响应为 null、失败使用结构化错误。Dart 对超时明确抛错，Android 检查响应请求 ID；保留调用侧已有返回类型以兼容业务流程。配置解析失败不再切换成默认配置，也不改变已生效的测速设置；无法编码的返回值会生成错误响应。
 - C1 已通过 970 项全量 Flutter 测试、12 项协议/Android 通道专项测试、无静态检查问题、Go 测试与 vet，以及 Android core/service/app Kotlin 编译。独立构建的 Core 通过真实 TCP IPC 验证初始化、查询、参数错误、配置拒绝、旧方法名拒绝和正常关闭。C2 尚未替换 JNI 桥接。
+
+- C1 本地提交 `05103a0c`，未推送 GitHub。
+- C2 已将 Core 拆为共享 Go 包、`cmd/core` 桌面入口和 `mobile` Android 生成桥接入口；手写 JNI/C++ 与头文件复制链路已移除。Gradle 统一生成绑定、选择 ABI、提供 classes/JNI 产物；`make core-android` 复用同一个任务。回调接口显式返回 error，Java 异常不会污染后续 JNI 调用；TUN 保护回调不再与初始化全量锁相互等待。
+- 使用 FlClash v0.9.3 固定的 gomobile 修订；其最低要求为 Go 1.26.0，验证编译器继续使用 Go 1.26.4。随工具依赖必要升级了 x/crypto、x/net、x/sys 等依赖；VLESS/Encryption 与 XHTTP 相关测试通过。
+- 更正兼容性记录：Core 库仍按 API 23 构建，三 ABI 的 AAR manifest 已核实；App 原有入口继承 Flutter 默认值，Flutter 3.44.4 实际为 API 24。本批未改变 App 的最低版本声明；实际安装的私有调试包为 minSdk=24，不能宣称完整支持 Android 6。
+- C2 已通过 armv7/arm64/x86_64 联编、Android core/service/app Kotlin 编译，以及 Android 16 arm64 模拟器的 3 项真实 JNI 测试：结构化响应/Unicode、连续 Java 回调异常、事件监听器断开重连。安装的完整私有调试包 2.1.0+22102 使用生成的 libclash.so，不再包含旧 libcore.so。
+- 完整调试包启动发现并修复未连接时触发日志 RPC 的未处理异常。日志订阅现在等待连接、按最新开关收敛、处理失败和重连，旧请求不会阻塞新连接；流量重置也等待并处理响应。最新 975 项根包测试与静态检查通过，27 项构建工具测试、Go 测试/vet、Windows/Linux Core 交叉编译和 macOS 独立 Core 的真实 IPC 测试通过。Android 私有包在模拟器重启后未再出现该启动异常。
+- C2 的 VPN 授权、系统撤销、Always-on、TV 遥控器和全部平台真实安装升级仍有实机验收缺项。未发布或推送 GitHub。

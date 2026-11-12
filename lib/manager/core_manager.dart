@@ -25,6 +25,47 @@ class CoreManager extends ConsumerStatefulWidget {
 
 class _CoreContainerState extends ConsumerState<CoreManager>
     with CoreEventListener {
+  Object? _logWorker;
+  int _logRevision = 0;
+
+  void _requestLogSync() {
+    _logRevision++;
+    if (ref.read(coreStatusProvider) != CoreStatus.connected) {
+      _logWorker = null;
+      return;
+    }
+    if (_logWorker != null) return;
+    final token = Object();
+    _logWorker = token;
+    unawaited(_syncLogs(token));
+  }
+
+  Future<void> _syncLogs(Object token) async {
+    try {
+      while (mounted &&
+          identical(_logWorker, token) &&
+          ref.read(coreStatusProvider) == CoreStatus.connected) {
+        final revision = _logRevision;
+        final enabled = ref.read(appSettingProvider).openLogs;
+        try {
+          if (enabled) {
+            await widget.controller.startLog();
+          } else {
+            await widget.controller.stopLog();
+          }
+        } catch (error) {
+          commonPrint.log(
+            'Core log subscription: $error',
+            logLevel: coreFailureLogLevel(error),
+          );
+        }
+        if (revision == _logRevision) return;
+      }
+    } finally {
+      if (identical(_logWorker, token)) _logWorker = null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return widget.child;
@@ -98,20 +139,20 @@ class _CoreContainerState extends ConsumerState<CoreManager>
             .applyProfileDebounce(silence: true);
       }
     });
-    ref.listenManual(appSettingProvider.select((state) => state.openLogs), (
-      prev,
-      next,
-    ) {
-      if (next) {
-        widget.controller.startLog();
-      } else {
-        widget.controller.stopLog();
-      }
-    }, fireImmediately: true);
+    ref.listenManual(
+      appSettingProvider.select((state) => state.openLogs),
+      (_, _) => _requestLogSync(),
+    );
+    ref.listenManual(
+      coreStatusProvider,
+      (_, _) => _requestLogSync(),
+      fireImmediately: true,
+    );
   }
 
   @override
   void dispose() {
+    _logWorker = null;
     coreEventManager.removeListener(this);
     super.dispose();
   }

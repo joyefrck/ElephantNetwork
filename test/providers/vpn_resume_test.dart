@@ -31,7 +31,7 @@ class _ResumeSetupAction extends SetupAction {
   }
 
   @override
-  void resetCoreTraffic() {}
+  Future<void> resetCoreTraffic() async {}
 }
 
 class _QuietCommonAction extends CommonAction {

@@ -81,34 +81,25 @@ class BuildAndroidCommand extends BuildCommand {
   final name = 'android';
 
   @override
-  final description = 'Build Android Go core (c-shared library)';
+  final description = 'Build Android Go Core with gomobile';
 
   @override
   Future<void> runBuildCommand() async {
-    final archName = argResults?['arch'] as String?;
-    final flutterTargetPlatforms = argResults?['target-platform'] as String?;
-    final config = BuildConfig.load(rootDir: _rootDir);
-
     final targets = Target.resolveAndroidTargets(
-      archName: archName,
-      flutterTargetPlatforms: flutterTargetPlatforms,
+      archName: argResults?['arch'] as String?,
+      flutterTargetPlatforms: argResults?['target-platform'] as String?,
     );
-
-    final cache = BuildCache(rootDir: _rootDir);
-    final notice = BuildNotice();
-    final builder = GoBuilder(
-      rootDir: _rootDir,
-      config: config,
-      cache: cache,
-      notice: notice,
+    final gradle = p.join(
+        _rootDir, 'android', Platform.isWindows ? 'gradlew.bat' : 'gradlew');
+    await runCommandStream(
+      gradle,
+      [
+        ':core:bindCore',
+        '-Ptarget-platform=${targets.map((target) => target.flutterPlatform).join(',')}',
+        if (force) '--rerun-tasks',
+      ],
+      workingDirectory: p.join(_rootDir, 'android'),
     );
-    final results = await builder.buildAll(targets, force: force);
-
-    if (results.any((result) => result.rebuilt)) {
-      _log.info(
-        'Build complete: ${results.map((result) => result.primaryOutput)}',
-      );
-    }
   }
 }
 

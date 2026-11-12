@@ -1,11 +1,10 @@
-package main
+package core
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"runtime"
-	"unsafe"
 )
 
 type MethodCall struct {
@@ -43,11 +42,11 @@ type MethodError struct {
 }
 
 type MethodResponse struct {
-	File     string       `json:"file,omitempty"`
-	ID       string       `json:"id,omitempty"`
-	Result   any          `json:"result"`
-	Error    *MethodError `json:"error,omitempty"`
-	callback unsafe.Pointer
+	File   string       `json:"file,omitempty"`
+	ID     string       `json:"id,omitempty"`
+	Result any          `json:"result"`
+	Error  *MethodError `json:"error,omitempty"`
+	reply  func([]byte)
 }
 
 func (response MethodResponse) JSON() ([]byte, error) {
@@ -58,6 +57,17 @@ func (response MethodResponse) JSON() ([]byte, error) {
 	return json.Marshal(MethodResponse{ID: response.ID, Error: &MethodError{
 		Code: "internal_error", Message: "Cannot encode Core response: " + err.Error(),
 	}})
+}
+
+func (response MethodResponse) send() {
+	data, err := response.JSON()
+	if err != nil {
+		logError("Cannot encode Core response: %v", err)
+		return
+	}
+	if response.reply != nil {
+		response.reply(spillResponse(response.ID, data))
+	}
 }
 
 func (response MethodResponse) success(result any) {

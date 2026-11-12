@@ -1,6 +1,6 @@
-//go:build !cgo
+//go:build !android
 
-package main
+package core
 
 import (
 	"bytes"
@@ -24,7 +24,7 @@ func protocolResponse(t *testing.T, method CoreMethod, arguments string) MethodR
 	connection := &protocolConnection{}
 	conn = connection
 	defer func() { conn = previous }()
-	handleMethodCall(&MethodCall{ID: "request", Method: method, Arguments: json.RawMessage(arguments)}, MethodResponse{ID: "request"})
+	handleMethodCall(&MethodCall{ID: "request", Method: method, Arguments: json.RawMessage(arguments)}, MethodResponse{ID: "request", reply: send})
 	data, err := readFrame(connection)
 	if err != nil {
 		t.Fatal(err)

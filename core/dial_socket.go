@@ -1,6 +1,6 @@
-//go:build !cgo && !windows
+//go:build !android && !windows
 
-package main
+package core
 
 import (
 	"fmt"

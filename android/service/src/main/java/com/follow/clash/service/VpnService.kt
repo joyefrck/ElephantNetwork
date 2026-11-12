@@ -145,14 +145,14 @@ class VpnService : SystemVpnService(), ManagedService {
         synchronized(tunLock) {
             tunRunning = true
             try {
-                Core.startTun(
+                check(Core.startTun(
                     fd = fd,
                     protect = this::protect,
                     resolverProcess = this::resolverProcess,
                     stack = options.stack,
                     address = options.tunAddress,
                     dns = options.tunDns,
-                )
+                )) { "Core could not start TUN" }
             } catch (error: Exception) {
                 stopTunLocked()
                 throw error

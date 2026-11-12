@@ -117,8 +117,8 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          go test .
-          go vet .
+          go test . ./mobile ./cmd/core
+          go vet . ./mobile ./cmd/core
 
       - name: Validate Rust components
         run: |

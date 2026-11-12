@@ -154,7 +154,15 @@ class SetupAction extends _$SetupAction {
     if (!_isCurrent(request)) {
       return;
     }
-    resetCoreTraffic();
+    try {
+      await resetCoreTraffic();
+    } catch (error) {
+      commonPrint.log(
+        'Reset Core traffic: $error',
+        logLevel: coreFailureLogLevel(error),
+      );
+    }
+    if (!_isCurrent(request)) return;
     ref.read(trafficsProvider.notifier).clear();
     ref.read(totalTrafficProvider.notifier).value = const Traffic();
     ref.read(checkIpNumProvider.notifier).add();
@@ -186,9 +194,7 @@ class SetupAction extends _$SetupAction {
   }
 
   @protected
-  void resetCoreTraffic() {
-    coreController.resetTraffic();
-  }
+  Future<void> resetCoreTraffic() => coreController.resetTraffic();
 
   @visibleForTesting
   Future<void> updateConfig() async {

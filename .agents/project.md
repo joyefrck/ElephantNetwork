@@ -26,3 +26,7 @@ macOS:
 ```bash
 npm install -g appdmg
 ```
+
+## Android Core Toolchain
+
+The shared Core module requires Go 1.26.0; validation remains pinned to Go 1.26.4. Android uses the gomobile/gobind revision recorded in `core/go.mod`, not an unpinned global installation. The Core library's API level is 23. The App entry point still inherits Flutter's default, which is API 24 in Flutter 3.44.4; do not infer complete Android 6 support from the library setting or silently raise compatibility requirements in unrelated work.

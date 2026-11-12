@@ -1,6 +1,6 @@
-//go:build !cgo
+//go:build !android
 
-package main
+package core
 
 import (
 	"encoding/binary"
@@ -16,15 +16,6 @@ var (
 )
 
 const maxIPCFrameSize = 64 * 1024 * 1024
-
-func (response MethodResponse) send() {
-	data, err := response.JSON()
-	if err != nil {
-		logError("MethodResponse marshal error: id=%s err=%v", response.ID, err)
-		return
-	}
-	send(spillResponse(response.ID, data))
-}
 
 func sendMessageBatch(messages []Message) {
 	arguments, err := json.Marshal(messages)
@@ -127,7 +118,8 @@ func startServer(arg string) {
 		}
 
 		response := MethodResponse{
-			ID: call.ID,
+			ID:    call.ID,
+			reply: send,
 		}
 
 		go handleMethodCall(call, response)

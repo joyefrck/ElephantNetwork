@@ -16,7 +16,6 @@ class Target {
     this.flutterPlatform,
   });
 
-  // --- Android (c-shared library) ---
   static const androidArm = Target(
     goos: 'android',
     goarch: 'arm',
@@ -39,15 +38,12 @@ class Target {
     flutterPlatform: 'android-x64',
   );
 
-  // --- macOS (executable) ---
   static const macosArm64 = Target(goos: 'darwin', goarch: 'arm64');
   static const macosAmd64 = Target(goos: 'darwin', goarch: 'amd64');
 
-  // --- Linux (executable) ---
   static const linuxArm64 = Target(goos: 'linux', goarch: 'arm64');
   static const linuxAmd64 = Target(goos: 'linux', goarch: 'amd64');
 
-  // --- Windows (executable) ---
   static const windowsAmd64 = Target(goos: 'windows', goarch: 'amd64');
   static const windowsArm64 = Target(goos: 'windows', goarch: 'arm64');
 

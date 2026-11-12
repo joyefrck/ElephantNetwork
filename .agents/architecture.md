@@ -41,16 +41,16 @@ The Go proxy core in `core/` operates in two modes.
 
 Android lib mode:
 
-- Go core is compiled as a C shared library, `libclash.so`, through `go build -buildmode=c-shared` with CGO.
+- Gradle builds `core/mobile` with pinned gomobile/gobind tools into an AAR, patched classes jar and generated `libclash.so`. The bridge is generated rather than handwritten JNI.
 - The Android `:core` module owns JNI access to the in-process library. Flutter crosses the `${packageName}/service`
-  MethodChannel through `lib/plugins/service.dart` and Android's `ServicePlugin` rather than talking to JNI directly.
+  MethodChannel through `lib/plugins/service.dart` and Android's `ServicePlugin` rather than invoking generated bindings directly.
 - `lib/core/lib.dart` (`CoreLib`) implements the shared Core interface, gates method calls on its connection completer,
   initializes and synchronizes Android shared state, and closes the native service path exactly once.
 - Because Core is in the application process on Android, application RSS already includes Core memory.
 
 Desktop core mode:
 
-- Go core runs as a separate process with `CGO_ENABLED=0`.
+- Go core runs from `core/cmd/core` as a separate process with `CGO_ENABLED=0`; the root package is shared with Android.
 - `rust_api` provides the native local-IPC primitives: a Unix domain socket on macOS/Linux and a named pipe on Windows.
   Dart now owns the transport state, RPC correlation, process ownership, and lifecycle convergence above those primitives.
 - `lib/core/service.dart` (`CoreService`) is the composition root. It wires the IPC transport, launcher selection,
@@ -303,11 +303,9 @@ must not import or call it.
 
 Responsibilities are deliberately split:
 
-- CocoaPods, Gradle, and CMake hooks schedule a lightweight check on every native build. They do not decide which Go or
-  Rust files are stale.
+- Desktop CocoaPods and CMake hooks use setup input fingerprints. Android Gradle owns gomobile task inputs and generated artifacts.
 - `buildkit/build_tool/` owns target resolution, input fingerprinting, compilation, output copying, and cache validation.
-- `core/` and `services/helper/` remain source owners; `libclash/` and Android `jniLibs`/header directories are generated
-  output locations.
+- `core/` and `services/helper/` remain source owners; desktop `libclash/` and Android `build/core/gomobile/` are generated output locations.
 - `setup.dart` remains the release/package orchestrator and does not pre-build
   platform artifacts or use `dart-define` for Core integrity data. The Windows
   build tool writes the runtime `manifest.json` beside the Core output, and the
@@ -315,7 +313,7 @@ Responsibilities are deliberately split:
 
 Platform outputs remain explicit:
 
-- Android builds the Go core as `c-shared`, then copies `libclash.so` and generated headers into the `:core` Android module.
+- Android `:core:bindCore` owns gomobile inputs, architecture selection, API level and AAR outputs. Kotlin compilation and JNI packaging depend on that task; stale handwritten JNI libraries and headers are excluded. `make core-android` delegates to the same Gradle task.
 - macOS and Linux build a standalone `FlClashCore` process used by the desktop socket integration.
 - Windows builds `FlClashCore.exe`, the Rust `ElephantNetworkHelperService.exe` privileged helper, and a
   `manifest.json` containing only `coreSha256`.

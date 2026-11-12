@@ -1,6 +1,6 @@
-//go:build !cgo
+//go:build !android
 
-package main
+package core
 
 import (
 	"fmt"
@@ -33,4 +33,10 @@ func exitOnTermination() {
 	<-signals
 	releaseOnExit()
 	os.Exit(0)
+}
+
+func Run(endpoint string) {
+	go exitOnTermination()
+	defer releaseOnExit()
+	startServer(endpoint)
 }

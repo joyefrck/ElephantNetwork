@@ -1,8 +1,7 @@
-//go:build android && cgo
+//go:build android
 
 package tun
 
-import "C"
 import (
 	"github.com/metacubex/mihomo/constant"
 	LC "github.com/metacubex/mihomo/listener/config"

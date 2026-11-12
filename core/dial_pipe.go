@@ -1,6 +1,6 @@
 //go:build windows && !cgo
 
-package main
+package core
 
 import (
 	"io"

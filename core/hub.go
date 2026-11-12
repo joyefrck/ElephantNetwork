@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"cmp"
@@ -58,7 +58,7 @@ func handleStartListener() bool {
 	if isExiting.Load() {
 		return false
 	}
-	isRunning = true
+	isRunning.Store(true)
 	updateListeners()
 	resolver.ResetConnection()
 	return true
@@ -67,7 +67,7 @@ func handleStartListener() bool {
 func handleStopListener() bool {
 	runLock.Lock()
 	defer runLock.Unlock()
-	isRunning = false
+	isRunning.Store(false)
 	listener.StopListener()
 	resolver.ResetConnection()
 	return true

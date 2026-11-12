@@ -36,5 +36,3 @@ android {
         minSdkVersion 23
     }
 }
-
-apply from: "${project.projectDir}/../buildkit/gradle/plugin.gradle"

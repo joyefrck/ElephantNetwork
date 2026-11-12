@@ -817,7 +817,7 @@ class _RaceSetupAction extends SetupAction {
   }
 
   @override
-  void resetCoreTraffic() {
+  Future<void> resetCoreTraffic() async {
     resetCoreTrafficCount++;
   }
 }

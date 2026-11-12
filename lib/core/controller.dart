@@ -226,16 +226,16 @@ class CoreController {
     return _interface.getMemory();
   }
 
-  void resetTraffic() {
-    _interface.resetTraffic();
+  Future<void> resetTraffic() async {
+    await _interface.resetTraffic();
   }
 
-  void startLog() {
-    _interface.startLog();
+  Future<void> startLog() async {
+    await _interface.startLog();
   }
 
-  void stopLog() {
-    _interface.stopLog();
+  Future<void> stopLog() async {
+    await _interface.stopLog();
   }
 
   Future<void> requestGc() async {
