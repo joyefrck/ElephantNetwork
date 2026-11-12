@@ -1,7 +1,17 @@
 part of '../action.dart';
 
 @Riverpod(keepAlive: true)
+AppUpdateClient appUpdateClient(Ref ref) {
+  return AppUpdateClient(
+    dio: request.dio,
+    resolveBaseUrl: xboardDomainResolver.resolve,
+  );
+}
+
+@Riverpod(keepAlive: true)
 class CommonAction extends _$CommonAction {
+  Future<void>? _pendingUpdateCheck;
+
   @override
   void build() {}
 
@@ -44,63 +54,86 @@ class CommonAction extends _$CommonAction {
     }
   }
 
-  Future<void> autoCheckUpdate() async {
-    if (!ref.read(appSettingProvider).autoCheckUpdate) return;
-    final res = await request.checkForUpdate();
-    checkUpdateResultHandle(data: res);
+  Future<void> autoCheckUpdate() => _checkUpdate(isUser: false);
+
+  Future<void> checkUpdate() => _checkUpdate(isUser: true);
+
+  Future<void> _checkUpdate({required bool isUser}) {
+    return _pendingUpdateCheck ??= _fetchUpdate(isUser: isUser).whenComplete(
+      () {
+        _pendingUpdateCheck = null;
+      },
+    );
   }
 
-  Future<void> checkUpdate() async {
-    final data = await globalState.safeRun<Map<String, dynamic>?>(
-      request.checkForUpdate,
-      title: currentAppLocalizations.checkUpdate,
-    );
-    await checkUpdateResultHandle(data: data, isUser: true);
+  Future<void> _fetchUpdate({required bool isUser}) async {
+    try {
+      final data = await ref
+          .read(appUpdateClientProvider)
+          .check(
+            version: globalState.packageInfo.version,
+            build: globalState.packageInfo.buildNumber,
+          );
+      if (!ref.mounted) return;
+      await checkUpdateResultHandle(data: data, isUser: isUser);
+    } catch (error) {
+      commonPrint.log(
+        'checkForUpdate failed: $error',
+        logLevel: LogLevel.warning,
+      );
+      if (isUser &&
+          ref.mounted &&
+          globalState.navigatorKey.currentContext?.mounted == true) {
+        await globalState.showMessage(
+          title: currentAppLocalizations.checkUpdate,
+          message: TextSpan(text: currentAppLocalizations.networkException),
+        );
+      }
+    }
   }
 
   Future<void> checkUpdateResultHandle({
     Map<String, dynamic>? data,
     bool isUser = false,
   }) async {
+    final context = globalState.navigatorKey.currentContext;
+    if (context == null || !context.mounted) return;
     if (data != null) {
-      final tagName = data['tag_name'];
-      final body = data['body'];
-      final force = data['force'] == true;
-      final submits = utils.parseReleaseBody(body);
-      final context = globalState.navigatorKey.currentContext!;
+      final tagName = data['tag_name']?.toString() ?? '';
+      final version = tagName.startsWith('v') ? tagName.substring(1) : tagName;
+      final build = data['build_number']?.toString() ?? '';
+      final body = data['body']?.toString().trim() ?? '';
+      final l10n = context.appLocalizations;
       final textTheme = context.textTheme;
       final res = await globalState.showMessage(
-        title: currentAppLocalizations.discoverNewVersion,
+        title: l10n.discoverNewVersion,
         message: TextSpan(
-          text: '$tagName \n',
+          text: '${l10n.versionWithBuild(version, build)}\n\n',
           style: textTheme.headlineSmall,
           children: [
-            TextSpan(text: '\n', style: textTheme.bodyMedium),
-            for (final submit in submits)
-              TextSpan(text: '- $submit \n', style: textTheme.bodyMedium),
+            TextSpan(
+              text: '${l10n.releaseNotes}\n',
+              style: textTheme.titleSmall,
+            ),
+            TextSpan(
+              text: body.isEmpty ? l10n.releaseNotesUnavailable : body,
+              style: textTheme.bodyMedium,
+            ),
           ],
         ),
-        confirmText: currentAppLocalizations.goDownload,
-        cancelText: isUser || force
-            ? null
-            : currentAppLocalizations.noLongerRemind,
-        cancelable: !force,
-        dismissible: !force,
+        confirmText: l10n.update,
+        cancelText: l10n.cancel,
       );
       if (res == true) {
         final downloadUri = Uri.tryParse(
           data['download_url']?.toString() ?? '',
         );
         if (downloadUri != null && downloadUri.scheme == 'https') {
-          launchUrl(downloadUri, mode: LaunchMode.externalApplication);
+          await launchUrl(downloadUri, mode: LaunchMode.externalApplication);
         }
-      } else if (!isUser && res == false) {
-        ref
-            .read(appSettingProvider.notifier)
-            .update((state) => state.copyWith(autoCheckUpdate: false));
       }
     } else if (isUser) {
-      globalState.showMessage(
+      await globalState.showMessage(
         title: currentAppLocalizations.checkUpdate,
         message: TextSpan(text: currentAppLocalizations.checkUpdateError),
       );

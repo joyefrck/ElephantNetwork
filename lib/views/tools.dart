@@ -291,7 +291,12 @@ class _VersionItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListItem(
       leading: const Icon(Icons.info_outline),
-      title: Text('v${globalState.packageInfo.version}'),
+      title: Text(
+        context.appLocalizations.versionWithBuild(
+          globalState.packageInfo.version,
+          globalState.packageInfo.buildNumber,
+        ),
+      ),
     );
   }
 }

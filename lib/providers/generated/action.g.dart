@@ -9,6 +9,48 @@ part of '../action.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(appUpdateClient)
+final appUpdateClientProvider = AppUpdateClientProvider._();
+
+final class AppUpdateClientProvider
+    extends
+        $FunctionalProvider<AppUpdateClient, AppUpdateClient, AppUpdateClient>
+    with $Provider<AppUpdateClient> {
+  AppUpdateClientProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'appUpdateClientProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$appUpdateClientHash();
+
+  @$internal
+  @override
+  $ProviderElement<AppUpdateClient> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AppUpdateClient create(Ref ref) {
+    return appUpdateClient(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AppUpdateClient value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AppUpdateClient>(value),
+    );
+  }
+}
+
+String _$appUpdateClientHash() => r'4979fec74f7bbc7f37e2e0593b7c30919422d652';
+
 @ProviderFor(CommonAction)
 final commonActionProvider = CommonActionProvider._();
 
@@ -40,7 +82,7 @@ final class CommonActionProvider extends $NotifierProvider<CommonAction, void> {
   }
 }
 
-String _$commonActionHash() => r'a27f7d9d7cc478e98f33e8b2afc373a28bbf25c7';
+String _$commonActionHash() => r'b47ae9e99434349eddd89d60039d2bd5687b6af8';
 
 abstract class _$CommonAction extends $Notifier<void> {
   void build();

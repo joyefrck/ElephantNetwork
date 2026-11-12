@@ -82,7 +82,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m26(label) => "${label} must be a url";
 
-  static String m27(count) =>
+  static String m27(version, build) => "v${version} (Build ${build})";
+
+  static String m28(count) =>
       "${Intl.plural(count, one: '1 year ago', other: '${count} years ago')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -779,6 +781,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "rainbowScheme": MessageLookupByLibrary.simpleMessage("Rainbow"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redir Port"),
     "redo": MessageLookupByLibrary.simpleMessage("redo"),
+    "releaseNotes": MessageLookupByLibrary.simpleMessage("What\'s new"),
+    "releaseNotesUnavailable": MessageLookupByLibrary.simpleMessage(
+      "No release notes provided",
+    ),
     "remaining": MessageLookupByLibrary.simpleMessage("Remaining"),
     "remote": MessageLookupByLibrary.simpleMessage("Remote"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage(
@@ -1112,6 +1118,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "used": MessageLookupByLibrary.simpleMessage("Used"),
     "userAgent": MessageLookupByLibrary.simpleMessage("User-Agent"),
     "value": MessageLookupByLibrary.simpleMessage("Value"),
+    "versionWithBuild": m27,
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("Vibrant"),
     "view": MessageLookupByLibrary.simpleMessage("View"),
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
@@ -1130,7 +1137,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Embedded browser is unavailable. Opened in your system browser.",
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
-    "yearsAgo": m27,
+    "yearsAgo": m28,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
 }

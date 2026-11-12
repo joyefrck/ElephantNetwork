@@ -75,7 +75,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m26(label) => "${label}はURLである必要があります";
 
-  static String m27(count) => "${count}年前";
+  static String m27(version, build) => "v${version}（ビルド ${build}）";
+
+  static String m28(count) => "${count}年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -627,6 +629,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "rainbowScheme": MessageLookupByLibrary.simpleMessage("レインボー"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redirポート"),
     "redo": MessageLookupByLibrary.simpleMessage("やり直す"),
+    "releaseNotes": MessageLookupByLibrary.simpleMessage("更新内容"),
+    "releaseNotesUnavailable": MessageLookupByLibrary.simpleMessage(
+      "更新内容はありません",
+    ),
     "remaining": MessageLookupByLibrary.simpleMessage("残り"),
     "remote": MessageLookupByLibrary.simpleMessage("リモート"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage(
@@ -904,6 +910,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "used": MessageLookupByLibrary.simpleMessage("使用済み"),
     "userAgent": MessageLookupByLibrary.simpleMessage("ユーザーエージェント"),
     "value": MessageLookupByLibrary.simpleMessage("値"),
+    "versionWithBuild": m27,
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("ビブラント"),
     "view": MessageLookupByLibrary.simpleMessage("表示"),
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
@@ -918,7 +925,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "内蔵ブラウザを利用できないため、システムブラウザで開きました。",
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("ホワイトリストモード"),
-    "yearsAgo": m27,
+    "yearsAgo": m28,
     "zh_CN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };
 }

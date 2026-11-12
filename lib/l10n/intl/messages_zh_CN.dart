@@ -75,7 +75,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m26(label) => "${label}必须为URL";
 
-  static String m27(count) => "${count} 年前";
+  static String m27(version, build) => "v${version}（构建号 ${build}）";
+
+  static String m28(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -549,6 +551,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "rainbowScheme": MessageLookupByLibrary.simpleMessage("彩虹"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redir端口"),
     "redo": MessageLookupByLibrary.simpleMessage("重做"),
+    "releaseNotes": MessageLookupByLibrary.simpleMessage("升级内容"),
+    "releaseNotesUnavailable": MessageLookupByLibrary.simpleMessage("暂无升级说明"),
     "remaining": MessageLookupByLibrary.simpleMessage("剩余"),
     "remote": MessageLookupByLibrary.simpleMessage("远程"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage("备份数据到WebDAV"),
@@ -784,6 +788,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "used": MessageLookupByLibrary.simpleMessage("已用"),
     "userAgent": MessageLookupByLibrary.simpleMessage("用户代理"),
     "value": MessageLookupByLibrary.simpleMessage("值"),
+    "versionWithBuild": m27,
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("活力"),
     "view": MessageLookupByLibrary.simpleMessage("查看"),
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
@@ -798,7 +803,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "内置浏览器不可用，已改用系统浏览器打开。",
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("白名单模式"),
-    "yearsAgo": m27,
+    "yearsAgo": m28,
     "zh_CN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };
 }

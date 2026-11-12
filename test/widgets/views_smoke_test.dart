@@ -148,42 +148,43 @@ void main() {
     });
   }
 
-  testWidgets('tools shows version and update without disclaimer or about', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1400, 1000);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'tools shows version, build and update without disclaimer or about',
+    (tester) async {
+      tester.view.physicalSize = const Size(1400, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    final container = ProviderContainer(
-      overrides: [profilesProvider.overrideWith(_TestProfiles.new)],
-    );
-    addTearDown(container.dispose);
-    globalState.container = container;
+      final container = ProviderContainer(
+        overrides: [profilesProvider.overrideWith(_TestProfiles.new)],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
 
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const _TestApp(child: ToolsView()),
-      ),
-    );
-    await tester.pump();
-
-    for (
-      var index = 0;
-      index < 8 && find.text('v2.0.0').evaluate().isEmpty;
-      index++
-    ) {
-      await tester.drag(find.byType(Scrollable).first, const Offset(0, -700));
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _TestApp(child: ToolsView()),
+        ),
+      );
       await tester.pump();
-    }
 
-    expect(find.text('v2.0.0'), findsOneWidget);
-    expect(find.text('Check for updates'), findsOneWidget);
-    expect(find.text('Disclaimer'), findsNothing);
-    expect(find.text('About'), findsNothing);
-  });
+      for (
+        var index = 0;
+        index < 8 && find.text('v2.0.0 (Build 20000)').evaluate().isEmpty;
+        index++
+      ) {
+        await tester.drag(find.byType(Scrollable).first, const Offset(0, -700));
+        await tester.pump();
+      }
+
+      expect(find.text('v2.0.0 (Build 20000)'), findsOneWidget);
+      expect(find.text('Check for updates'), findsOneWidget);
+      expect(find.text('Disclaimer'), findsNothing);
+      expect(find.text('About'), findsNothing);
+    },
+  );
 
   testWidgets('user agent dialog applies a preset', (tester) async {
     tester.view.physicalSize = const Size(1000, 800);

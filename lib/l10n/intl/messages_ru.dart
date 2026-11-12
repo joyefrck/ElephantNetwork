@@ -81,7 +81,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m26(label) => "${label} должен быть URL";
 
-  static String m27(count) =>
+  static String m27(version, build) => "v${version} (сборка ${build})";
+
+  static String m28(count) =>
       "${Intl.plural(count, one: '${count} год назад', few: '${count} года назад', many: '${count} лет назад', other: '${count} года назад')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -818,6 +820,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "rainbowScheme": MessageLookupByLibrary.simpleMessage("Радужные"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redir-порт"),
     "redo": MessageLookupByLibrary.simpleMessage("Повторить"),
+    "releaseNotes": MessageLookupByLibrary.simpleMessage("Что нового"),
+    "releaseNotesUnavailable": MessageLookupByLibrary.simpleMessage(
+      "Описание обновления отсутствует",
+    ),
     "remaining": MessageLookupByLibrary.simpleMessage("Осталось"),
     "remote": MessageLookupByLibrary.simpleMessage("Удаленный"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage(
@@ -1181,6 +1187,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "used": MessageLookupByLibrary.simpleMessage("Использовано"),
     "userAgent": MessageLookupByLibrary.simpleMessage("User-Agent"),
     "value": MessageLookupByLibrary.simpleMessage("Значение"),
+    "versionWithBuild": m27,
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("Яркие"),
     "view": MessageLookupByLibrary.simpleMessage("Просмотр"),
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
@@ -1201,7 +1208,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "whitelistMode": MessageLookupByLibrary.simpleMessage(
       "Режим белого списка",
     ),
-    "yearsAgo": m27,
+    "yearsAgo": m28,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Упрощенный китайский"),
   };
 }

@@ -1224,6 +1224,36 @@ class AppLocalizations {
     );
   }
 
+  /// `v{version} (Build {build})`
+  String versionWithBuild(String version, String build) {
+    return Intl.message(
+      'v$version (Build $build)',
+      name: 'versionWithBuild',
+      desc: '',
+      args: [version, build],
+    );
+  }
+
+  /// `What's new`
+  String get releaseNotes {
+    return Intl.message(
+      'What\'s new',
+      name: 'releaseNotes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No release notes provided`
+  String get releaseNotesUnavailable {
+    return Intl.message(
+      'No release notes provided',
+      name: 'releaseNotesUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Discover the new version`
   String get discoverNewVersion {
     return Intl.message(

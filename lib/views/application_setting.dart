@@ -202,28 +202,6 @@ class OpenLogsItem extends ConsumerWidget {
   }
 }
 
-class AutoCheckUpdateItem extends ConsumerWidget {
-  const AutoCheckUpdateItem({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final appLocalizations = context.appLocalizations;
-    final autoCheckUpdate = ref.watch(
-      appSettingProvider.select((state) => state.autoCheckUpdate),
-    );
-    return ListItem.toggle(
-      title: Text(appLocalizations.autoCheckUpdate),
-      subtitle: Text(appLocalizations.autoCheckUpdateDesc),
-      value: autoCheckUpdate,
-      onChanged: (bool value) {
-        ref
-            .read(appSettingProvider.notifier)
-            .update((state) => state.copyWith(autoCheckUpdate: value));
-      },
-    );
-  }
-}
-
 class ApplicationSettingView extends StatelessWidget {
   const ApplicationSettingView({super.key});
 
@@ -241,7 +219,6 @@ class ApplicationSettingView extends StatelessWidget {
       const OpenLogsItem(),
       const CloseConnectionsItem(),
       const UsageItem(),
-      const AutoCheckUpdateItem(),
     ];
     return BaseScaffold(
       title: context.appLocalizations.application,
