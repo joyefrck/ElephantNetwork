@@ -51,6 +51,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     private var requestNotificationCallback: ((Boolean) -> Unit)? = null
 
     private var isRequestingNotificationPermission = false
+    private var installedAppsPermissionCallback: ((Boolean) -> Unit)? = null
 
     private val gson = Gson()
 
@@ -88,7 +89,29 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
             "getPackages" -> {
                 scope.launch(Dispatchers.IO) {
+                    packageResolver.invalidate()
                     result.success(gson.toJson(packageResolver.installedPackages))
+                }
+            }
+
+            "isInstalledAppsPermissionGranted" -> {
+                result.success(packageResolver.hasInstalledAppsPermission())
+            }
+
+            "requestInstalledAppsPermission" -> {
+                resolveInstalledAppsPermission(false)
+                installedAppsPermissionCallback = { granted -> result.success(granted) }
+                val currentActivity = activity
+                if (packageResolver.hasInstalledAppsPermission()) {
+                    resolveInstalledAppsPermission(true)
+                } else if (currentActivity == null) {
+                    resolveInstalledAppsPermission(false)
+                } else {
+                    ActivityCompat.requestPermissions(
+                        currentActivity,
+                        arrayOf(PackageResolver.GET_INSTALLED_APPS),
+                        INSTALLED_APPS_PERMISSION_REQUEST_CODE,
+                    )
                 }
             }
 
@@ -273,6 +296,13 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         vpnPrepareCallback = null
     }
 
+    private fun resolveInstalledAppsPermission(granted: Boolean) {
+        val callback = installedAppsPermissionCallback
+        installedAppsPermissionCallback = null
+        if (granted) packageResolver.invalidate()
+        callback?.invoke(granted)
+    }
+
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         channel =
@@ -285,6 +315,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         scope.cancel()
         invokeVpnPrepareCallback(false)
         invokeRequestNotificationCallback(false)
+        resolveInstalledAppsPermission(false)
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -310,6 +341,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         activity = null
         invokeVpnPrepareCallback(false)
         invokeRequestNotificationCallback(false)
+        resolveInstalledAppsPermission(false)
     }
 
     private fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
@@ -325,6 +357,10 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         permissions: Array<String>,
         grantResults: IntArray,
     ): Boolean {
+        if (requestCode == INSTALLED_APPS_PERMISSION_REQUEST_CODE) {
+            resolveInstalledAppsPermission(packageResolver.hasInstalledAppsPermission())
+            return true
+        }
         if (requestCode != NOTIFICATION_PERMISSION_REQUEST_CODE) {
             return false
         }
@@ -336,5 +372,6 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     private companion object {
         const val VPN_PERMISSION_REQUEST_CODE = 1001
         const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1002
+        const val INSTALLED_APPS_PERMISSION_REQUEST_CODE = 1003
     }
 }

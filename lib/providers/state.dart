@@ -66,6 +66,9 @@ NavigationItemsState currentNavigationItemsState(Ref ref) {
 
 @riverpod
 UpdateParams updateParams(Ref ref) {
+  final timeout = ref.watch(
+    appSettingProvider.select((state) => state.testTimeout),
+  );
   final managedDns = ref.watch(
     currentProfileProvider.select(
       (profile) => profile?.source == ProfileSource.xboard,
@@ -93,6 +96,7 @@ UpdateParams updateParams(Ref ref) {
         mixedPort: state.mixedPort,
         geoAutoUpdate: state.geoAutoUpdate,
         geoUpdateInterval: state.geoUpdateInterval,
+        delayTestTimeout: timeout,
       ),
     ),
   );
@@ -600,7 +604,13 @@ SharedState sharedState(Ref ref) {
     crashlytics: crashlytics,
     stopTip: currentAppLocalizations.stopVpn,
     startTip: currentAppLocalizations.startVpn,
-    setupParams: SetupParams(selectedMap: selectedMap, testUrl: testUrl),
+    setupParams: SetupParams(
+      selectedMap: selectedMap,
+      testUrl: testUrl,
+      delayTestTimeout: ref.watch(
+        appSettingProvider.select((state) => state.testTimeout),
+      ),
+    ),
     vpnOptions: VpnOptions(
       enable: vpnSetting.enable,
       stack: stack,

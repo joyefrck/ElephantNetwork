@@ -28,7 +28,6 @@ import (
 	"runtime/debug"
 	"strconv"
 	"sync/atomic"
-	"time"
 )
 
 var (
@@ -223,7 +222,11 @@ func handleAsyncTestDelay(params *TestDelayParams, fn func(*Delay)) {
 			return false, nil
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(params.Timeout))
+		timeout, configured := configuredTestTimeout(params.ProxyName, testUrl)
+		if !configured {
+			timeout = hostDelayTimeout(params.Timeout)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
 		proxies := tunnel.AllProxies()

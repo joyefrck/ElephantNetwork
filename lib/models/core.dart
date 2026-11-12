@@ -10,6 +10,7 @@ abstract class SetupParams with _$SetupParams {
   const factory SetupParams({
     @JsonKey(name: 'selected-map') required Map<String, String> selectedMap,
     @JsonKey(name: 'test-url') required String testUrl,
+    @Default(5000) @JsonKey(name: 'delay-test-timeout') int delayTestTimeout,
   }) = _SetupParams;
 
   factory SetupParams.fromJson(Map<String, dynamic> json) =>
@@ -33,6 +34,7 @@ abstract class UpdateParams with _$UpdateParams {
     @JsonKey(name: 'unified-delay') required bool unifiedDelay,
     @Default(false) @JsonKey(name: 'geo-auto-update') bool geoAutoUpdate,
     @Default(24) @JsonKey(name: 'geo-update-interval') int geoUpdateInterval,
+    @Default(5000) @JsonKey(name: 'delay-test-timeout') int delayTestTimeout,
   }) = _UpdateParams;
 
   factory UpdateParams.fromJson(Map<String, dynamic> json) =>

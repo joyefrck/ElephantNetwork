@@ -10,6 +10,7 @@ import "C"
 import (
 	"context"
 	"core/platform"
+	_ "core/timezone"
 	t "core/tun"
 	"encoding/json"
 	"errors"

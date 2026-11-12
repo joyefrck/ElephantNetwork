@@ -7,6 +7,24 @@ class SystemAction extends _$SystemAction {
   @override
   void build() {}
 
+  Future<List<String>> getChinaPackageNames() async {
+    return await app?.getChinaPackageNames() ?? [];
+  }
+
+  Future<bool> isInstalledAppsPermissionGranted() async {
+    return await app?.isInstalledAppsPermissionGranted() ?? true;
+  }
+
+  Future<bool> requestInstalledAppsPermission() async {
+    return await app?.requestInstalledAppsPermission() ?? false;
+  }
+
+  Future<List<Package>> refreshPackages() async {
+    final packages = await app?.getPackages();
+    if (packages != null) ref.read(packagesProvider.notifier).value = packages;
+    return ref.read(packagesProvider);
+  }
+
   Future<List<Package>> getPackages() async {
     if (ref.read(isMobileViewProvider)) {
       await Future.delayed(commonDuration);

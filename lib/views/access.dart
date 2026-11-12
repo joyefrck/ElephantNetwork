@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/access_control.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
-import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
@@ -18,11 +18,13 @@ class AccessView extends ConsumerStatefulWidget {
   ConsumerState<AccessView> createState() => _AccessViewState();
 }
 
-class _AccessViewState extends ConsumerState<AccessView> {
+class _AccessViewState extends ConsumerState<AccessView>
+    with WidgetsBindingObserver {
   final GlobalKey<CommonScaffoldState> _scaffoldKey = GlobalKey();
   late ScrollController _controller;
   List<String>? _pinedList;
   bool _isInit = false;
+  bool _appsPermissionGranted = true;
   AccessControlMode? _lastMode;
 
   final _completer = Completer();
@@ -30,8 +32,9 @@ class _AccessViewState extends ConsumerState<AccessView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller = ScrollController();
-    _completer.complete(ref.read(systemActionProvider.notifier).getPackages());
+    _completer.complete(_loadPackages());
     final accessControl = ref
         .read(vpnSettingProvider.select((state) => state.accessControlProps))
         .copyWith();
@@ -43,8 +46,34 @@ class _AccessViewState extends ConsumerState<AccessView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadPackages() async {
+    final action = ref.read(systemActionProvider.notifier);
+    final granted = await action.isInstalledAppsPermissionGranted();
+    await action.refreshPackages();
+    if (mounted) setState(() => _appsPermissionGranted = granted);
+  }
+
+  Future<void> _authorizePackages() async {
+    await ref
+        .read(systemActionProvider.notifier)
+        .requestInstalledAppsPermission();
+    if (mounted) await _loadPackages();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(
+        _loadPackages().catchError((Object error) {
+          commonPrint.log('Reloading installed apps failed: $error');
+        }),
+      );
+    }
   }
 
   Widget _buildSelectedAllButton({
@@ -85,28 +114,23 @@ class _AccessViewState extends ConsumerState<AccessView> {
   }
 
   Future<void> _intelligentSelected() async {
-    final packageNames = ref.read(
-      packagesProvider.select((state) => state.map((item) => item.packageName)),
-    );
-    if (packageNames.isEmpty) {
+    final packages = ref.read(packagesProvider);
+    if (packages.isEmpty) {
       return;
     }
-    final selectedPackageNames =
-        (await globalState.loadingRun<List<String>>(() async {
-          return await app?.getChinaPackageNames() ?? [];
-        }, tag: LoadingTag.access))?.toSet() ??
-        {};
-    final acceptList = packageNames
-        .where((item) => !selectedPackageNames.contains(item))
-        .toList();
-    final rejectList = packageNames
-        .where((item) => selectedPackageNames.contains(item))
-        .toList();
+    final selectedPackageNames = await globalState.loadingRun<List<String>>(
+      () => ref.read(systemActionProvider.notifier).getChinaPackageNames(),
+      tag: LoadingTag.access,
+    );
+    if (selectedPackageNames == null || !mounted) return;
     ref
         .read(accessControlStateProvider.notifier)
         .update(
-          (state) =>
-              state.copyWith(acceptList: acceptList, rejectList: rejectList),
+          (state) => selectVisibleApplications(
+            state,
+            packages,
+            selectedPackageNames.toSet(),
+          ),
         );
   }
 
@@ -159,25 +183,7 @@ class _AccessViewState extends ConsumerState<AccessView> {
   AccessControlProps _getRealAccessControlProps(
     AccessControlProps accessControl,
   ) {
-    final packages = ref.read(packagesProvider);
-    if (packages.isEmpty) {
-      return accessControl;
-    }
-    final viewPackageNames = packages
-        .getViewList(
-          pinedList: [],
-          sortType: accessControl.sort,
-          isFilterSystemApp: accessControl.isFilterSystemApp,
-          isFilterNonInternetApp: accessControl.isFilterNonInternetApp,
-        )
-        .map((item) => item.packageName)
-        .toSet();
-    return accessControl.copyWithNewList(
-      accessControl.currentList
-          .where((item) => viewPackageNames.contains(item))
-          .toList()
-        ..sort(),
-    );
+    return sortedAccessControl(accessControl);
   }
 
   void _handleSave() {
@@ -234,11 +240,13 @@ class _AccessViewState extends ConsumerState<AccessView> {
   }
 
   Future<void> _importFormClipboard() async {
+    final invalidPackages = context.appLocalizations.clipboardNoPackageNames;
     await globalState.safeRun(() async {
       final data = await Clipboard.getData('text/plain');
       final text = data?.text;
       if (text == null) return;
-      final list = text.split('\n');
+      final list = parseAccessPackageNames(text);
+      if (list.isEmpty) throw invalidPackages;
       ref
           .read(accessControlStateProvider.notifier)
           .update((state) => state.copyWithNewList(list.toSet().toList()));
@@ -420,7 +428,27 @@ class _AccessViewState extends ConsumerState<AccessView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildBannerBar(mode, valueList.length),
+            if (!_appsPermissionGranted)
+              MaterialBanner(
+                content: Text(
+                  context.appLocalizations.installedAppsPermissionRequired,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: _authorizePackages,
+                    child: Text(context.appLocalizations.authorize),
+                  ),
+                ],
+              ),
+            _buildBannerBar(
+              mode,
+              currentList
+                  .toSet()
+                  .intersection(
+                    packages.map((item) => item.packageName).toSet(),
+                  )
+                  .length,
+            ),
             const SizedBox(height: 8),
             Expanded(
               child: _buildContent(

@@ -9,12 +9,14 @@ part of '../core.dart';
 _SetupParams _$SetupParamsFromJson(Map<String, dynamic> json) => _SetupParams(
   selectedMap: Map<String, String>.from(json['selected-map'] as Map),
   testUrl: json['test-url'] as String,
+  delayTestTimeout: (json['delay-test-timeout'] as num?)?.toInt() ?? 5000,
 );
 
 Map<String, dynamic> _$SetupParamsToJson(_SetupParams instance) =>
     <String, dynamic>{
       'selected-map': instance.selectedMap,
       'test-url': instance.testUrl,
+      'delay-test-timeout': instance.delayTestTimeout,
     };
 
 _UpdateParams _$UpdateParamsFromJson(Map<String, dynamic> json) =>
@@ -37,6 +39,7 @@ _UpdateParams _$UpdateParamsFromJson(Map<String, dynamic> json) =>
       unifiedDelay: json['unified-delay'] as bool,
       geoAutoUpdate: json['geo-auto-update'] as bool? ?? false,
       geoUpdateInterval: (json['geo-update-interval'] as num?)?.toInt() ?? 24,
+      delayTestTimeout: (json['delay-test-timeout'] as num?)?.toInt() ?? 5000,
     );
 
 Map<String, dynamic> _$UpdateParamsToJson(_UpdateParams instance) =>
@@ -54,6 +57,7 @@ Map<String, dynamic> _$UpdateParamsToJson(_UpdateParams instance) =>
       'unified-delay': instance.unifiedDelay,
       'geo-auto-update': instance.geoAutoUpdate,
       'geo-update-interval': instance.geoUpdateInterval,
+      'delay-test-timeout': instance.delayTestTimeout,
     };
 
 const _$FindProcessModeEnumMap = {

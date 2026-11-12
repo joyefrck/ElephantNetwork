@@ -5,6 +5,8 @@ import java.net.InetSocketAddress
 import java.net.URI
 
 object Core {
+    fun load() = Unit
+
     private external fun startTun(
         fd: Int,
         cb: TunInterface,

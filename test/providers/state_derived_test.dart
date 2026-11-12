@@ -13,6 +13,32 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
 
 void main() {
+  test('delay timeout reaches live updates and Android shared setup', () async {
+    await AppLocalizations.load(const Locale('en'));
+    final settings = ProviderContainer(
+      overrides: [
+        profilesProvider.overrideWith(_TestProfiles.new),
+        appSettingProvider.overrideWithBuild(
+          (_, _) => const AppSettingProps(testTimeout: 8000),
+        ),
+      ],
+    );
+    addTearDown(settings.dispose);
+    expect(settings.read(updateParamsProvider).delayTestTimeout, 8000);
+    expect(
+      settings.read(sharedStateProvider).setupParams?.delayTestTimeout,
+      8000,
+    );
+    settings
+        .read(appSettingProvider.notifier)
+        .update((value) => value.copyWith(testTimeout: 1000));
+    expect(settings.read(updateParamsProvider).delayTestTimeout, 1000);
+    expect(
+      settings.read(sharedStateProvider).setupParams?.delayTestTimeout,
+      1000,
+    );
+  });
+
   late ProviderContainer container;
 
   setUp(() {

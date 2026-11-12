@@ -162,6 +162,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "applicationDesc": MessageLookupByLibrary.simpleMessage(
       "Modify application related settings",
     ),
+    "authorize": MessageLookupByLibrary.simpleMessage("Authorize"),
     "authorized": MessageLookupByLibrary.simpleMessage("Authorized"),
     "auto": MessageLookupByLibrary.simpleMessage("Auto"),
     "autoCheckUpdate": MessageLookupByLibrary.simpleMessage(
@@ -232,6 +233,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "clearData": MessageLookupByLibrary.simpleMessage("Clear Data"),
     "clipboardExport": MessageLookupByLibrary.simpleMessage("Export clipboard"),
     "clipboardImport": MessageLookupByLibrary.simpleMessage("Clipboard import"),
+    "clipboardNoPackageNames": MessageLookupByLibrary.simpleMessage(
+      "No valid Android package names found in the clipboard",
+    ),
     "color": MessageLookupByLibrary.simpleMessage("Color"),
     "colorSchemes": MessageLookupByLibrary.simpleMessage("Color schemes"),
     "columns": MessageLookupByLibrary.simpleMessage("Columns"),
@@ -507,6 +511,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Input rule content",
+    ),
+    "installedAppsPermissionRequired": MessageLookupByLibrary.simpleMessage(
+      "Allow installed-app access to manage VPN applications",
     ),
     "intelligentSelected": MessageLookupByLibrary.simpleMessage(
       "Intelligent selection",

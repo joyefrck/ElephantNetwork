@@ -1749,6 +1749,31 @@ class AppLocalizations {
     );
   }
 
+  /// `Authorize`
+  String get authorize {
+    return Intl.message('Authorize', name: 'authorize', desc: '', args: []);
+  }
+
+  /// `Allow installed-app access to manage VPN applications`
+  String get installedAppsPermissionRequired {
+    return Intl.message(
+      'Allow installed-app access to manage VPN applications',
+      name: 'installedAppsPermissionRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No valid Android package names found in the clipboard`
+  String get clipboardNoPackageNames {
+    return Intl.message(
+      'No valid Android package names found in the clipboard',
+      name: 'clipboardNoPackageNames',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Clipboard import`
   String get clipboardImport {
     return Intl.message(

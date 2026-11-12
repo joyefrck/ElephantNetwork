@@ -130,6 +130,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "application": MessageLookupByLibrary.simpleMessage("アプリケーション"),
     "applicationDesc": MessageLookupByLibrary.simpleMessage("アプリ関連設定を変更"),
+    "authorize": MessageLookupByLibrary.simpleMessage("許可"),
     "authorized": MessageLookupByLibrary.simpleMessage("許可済み"),
     "auto": MessageLookupByLibrary.simpleMessage("自動"),
     "autoCheckUpdate": MessageLookupByLibrary.simpleMessage("自動更新チェック"),
@@ -178,6 +179,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "clearData": MessageLookupByLibrary.simpleMessage("データを消去"),
     "clipboardExport": MessageLookupByLibrary.simpleMessage("クリップボードにエクスポート"),
     "clipboardImport": MessageLookupByLibrary.simpleMessage("クリップボードからインポート"),
+    "clipboardNoPackageNames": MessageLookupByLibrary.simpleMessage(
+      "クリップボードに有効なアプリのパッケージ名がありません",
+    ),
     "color": MessageLookupByLibrary.simpleMessage("カラー"),
     "colorSchemes": MessageLookupByLibrary.simpleMessage("カラースキーム"),
     "columns": MessageLookupByLibrary.simpleMessage("列"),
@@ -404,6 +408,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputCorrectHotkey": MessageLookupByLibrary.simpleMessage("正しいホットキーを入力"),
     "inputProxyGroupName": MessageLookupByLibrary.simpleMessage("プロキシグループ名を入力"),
     "inputRuleContent": MessageLookupByLibrary.simpleMessage("ルール内容を入力"),
+    "installedAppsPermissionRequired": MessageLookupByLibrary.simpleMessage(
+      "VPNアプリを管理するため、インストール済みアプリへのアクセスを許可してください",
+    ),
     "intelligentSelected": MessageLookupByLibrary.simpleMessage("インテリジェント選択"),
     "internet": MessageLookupByLibrary.simpleMessage("インターネット"),
     "interval": MessageLookupByLibrary.simpleMessage("インターバル"),

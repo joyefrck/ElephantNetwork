@@ -124,6 +124,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "appendSystemDnsTip": MessageLookupByLibrary.simpleMessage("强制为配置附加系统DNS"),
     "application": MessageLookupByLibrary.simpleMessage("应用程序"),
     "applicationDesc": MessageLookupByLibrary.simpleMessage("修改应用程序相关设置"),
+    "authorize": MessageLookupByLibrary.simpleMessage("授权"),
     "authorized": MessageLookupByLibrary.simpleMessage("已授权"),
     "auto": MessageLookupByLibrary.simpleMessage("自动"),
     "autoCheckUpdate": MessageLookupByLibrary.simpleMessage("自动检查更新"),
@@ -168,6 +169,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "clearData": MessageLookupByLibrary.simpleMessage("清除数据"),
     "clipboardExport": MessageLookupByLibrary.simpleMessage("导出剪贴板"),
     "clipboardImport": MessageLookupByLibrary.simpleMessage("剪贴板导入"),
+    "clipboardNoPackageNames": MessageLookupByLibrary.simpleMessage(
+      "剪贴板中没有有效的应用包名",
+    ),
     "color": MessageLookupByLibrary.simpleMessage("颜色"),
     "colorSchemes": MessageLookupByLibrary.simpleMessage("配色方案"),
     "columns": MessageLookupByLibrary.simpleMessage("列数"),
@@ -360,6 +364,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputCorrectHotkey": MessageLookupByLibrary.simpleMessage("请输入正确的快捷键"),
     "inputProxyGroupName": MessageLookupByLibrary.simpleMessage("输入策略组名称"),
     "inputRuleContent": MessageLookupByLibrary.simpleMessage("输入规则内容"),
+    "installedAppsPermissionRequired": MessageLookupByLibrary.simpleMessage(
+      "请授权读取应用列表，以管理分应用代理",
+    ),
     "intelligentSelected": MessageLookupByLibrary.simpleMessage("智能选择"),
     "internet": MessageLookupByLibrary.simpleMessage("互联网"),
     "interval": MessageLookupByLibrary.simpleMessage("间隔"),

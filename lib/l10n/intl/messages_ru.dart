@@ -161,6 +161,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "applicationDesc": MessageLookupByLibrary.simpleMessage(
       "Изменение настроек, связанных с приложением",
     ),
+    "authorize": MessageLookupByLibrary.simpleMessage("Разрешить"),
     "authorized": MessageLookupByLibrary.simpleMessage("Разрешено"),
     "auto": MessageLookupByLibrary.simpleMessage("Авто"),
     "autoCheckUpdate": MessageLookupByLibrary.simpleMessage(
@@ -238,6 +239,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "clipboardImport": MessageLookupByLibrary.simpleMessage(
       "Импорт из буфера обмена",
+    ),
+    "clipboardNoPackageNames": MessageLookupByLibrary.simpleMessage(
+      "В буфере обмена нет допустимых имён пакетов Android",
     ),
     "color": MessageLookupByLibrary.simpleMessage("Цвет"),
     "colorSchemes": MessageLookupByLibrary.simpleMessage("Цветовые схемы"),
@@ -526,6 +530,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "inputRuleContent": MessageLookupByLibrary.simpleMessage(
       "Введите содержимое правила",
+    ),
+    "installedAppsPermissionRequired": MessageLookupByLibrary.simpleMessage(
+      "Разрешите доступ к списку приложений для настройки VPN",
     ),
     "intelligentSelected": MessageLookupByLibrary.simpleMessage(
       "Интеллектуальный выбор",

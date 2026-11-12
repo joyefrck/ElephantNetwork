@@ -164,8 +164,9 @@ func patchSelectGroup(mapping map[string]string) {
 
 func defaultSetupParams() *SetupParams {
 	return &SetupParams{
-		TestURL:     "https://www.gstatic.com/generate_204",
-		SelectedMap: map[string]string{},
+		TestURL:          "https://www.gstatic.com/generate_204",
+		DelayTestTimeout: 5000,
+		SelectedMap:      map[string]string{},
 	}
 }
 
@@ -188,6 +189,9 @@ func updateConfig(params *UpdateParams) {
 		return
 	}
 	general := currentConfig.General
+	if params.DelayTestTimeout != nil {
+		provider.SetDefaultTestTimeout(hostDelayTimeout(*params.DelayTestTimeout))
+	}
 	if params.AllowLan != nil {
 		general.AllowLan = *params.AllowLan
 	}
@@ -318,10 +322,12 @@ func applyConfig(params *SetupParams) error {
 	defer runLock.Unlock()
 	var err error
 	constant.DefaultTestURL = params.TestURL
+	provider.SetDefaultTestTimeout(hostDelayTimeout(params.DelayTestTimeout))
 	currentConfig, err = executor.ParseWithPath(filepath.Join(constant.Path.HomeDir(), "config.yaml"))
 	if err != nil {
 		currentConfig, _ = config.ParseRawConfig(config.DefaultRawConfig())
 	}
+	applyPlatformLimits(currentConfig, features.Android)
 	hub.ApplyConfig(currentConfig)
 	patchSelectGroup(params.SelectedMap)
 	updateListeners()
@@ -329,6 +335,12 @@ func applyConfig(params *SetupParams) error {
 		updater.RegisterGeoUpdaterWithCancel()
 	}
 	return err
+}
+
+func applyPlatformLimits(cfg *config.Config, android bool) {
+	if android {
+		cfg.NTP.WriteToSystem = false
+	}
 }
 
 func UnmarshalJson(data []byte, v any) error {

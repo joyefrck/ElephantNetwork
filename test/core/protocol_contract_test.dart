@@ -151,7 +151,7 @@ void main() {
       );
       expect(
         handler.timeouts[CoreMethod.asyncTestDelay],
-        const Duration(seconds: 14),
+        const Duration(minutes: 4, seconds: 2),
       );
     },
   );

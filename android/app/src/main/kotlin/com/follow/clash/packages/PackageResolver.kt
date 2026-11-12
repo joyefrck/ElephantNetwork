@@ -14,9 +14,20 @@ internal class PackageResolver(
     private val packageManager: PackageManager,
     private val appPackageName: String,
 ) {
-    val installedPackages: List<InstalledPackage> by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        loadPackages()
-    }
+    @Volatile
+    private var cachedPackages: List<InstalledPackage>? = null
+
+    val installedPackages: List<InstalledPackage>
+        get() = cachedPackages ?: synchronized(this) {
+            cachedPackages ?: loadPackages().also { cachedPackages = it }
+        }
+
+    fun invalidate() = synchronized(this) { cachedPackages = null }
+
+    fun hasInstalledAppsPermission(): Boolean =
+        runCatching { packageManager.getPermissionInfo(GET_INSTALLED_APPS, 0) }.isFailure ||
+            packageManager.checkPermission(GET_INSTALLED_APPS, appPackageName) ==
+            PackageManager.PERMISSION_GRANTED
 
     fun getChinaPackageNames(): List<String> = installedPackages
         .map { it.packageName }
@@ -109,7 +120,8 @@ internal class PackageResolver(
             }
     }
 
-    private companion object {
+    companion object {
+        const val GET_INSTALLED_APPS = "com.android.permission.GET_INSTALLED_APPS"
         const val ANDROID_PACKAGE_NAME = "android"
         const val MAX_DEX_SIZE_BYTES = 15_000_000L
 

@@ -88,9 +88,7 @@ func handleUpdateRuntimeConfig(sections map[string]any) string {
 		currentConfig.DNS = parsed.DNS
 	}
 	if _, ok := sections["ntp"]; ok {
-		if features.Android {
-			parsed.NTP.WriteToSystem = false
-		}
+		applyPlatformLimits(parsed, features.Android)
 		applyRuntimeNTP(parsed.NTP)
 		currentConfig.NTP = parsed.NTP
 	}

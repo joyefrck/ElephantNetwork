@@ -12,6 +12,18 @@ import 'package:fl_clash/widgets/input.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 
+Future<T?> loadPlatformDeviceInfo<T>({
+  required Future<T> Function() read,
+  required bool windows,
+}) async {
+  try {
+    return await read();
+  } on RangeError {
+    if (windows) return null;
+    rethrow;
+  }
+}
+
 class System {
   static System? _instance;
   bool _isTV = false;
@@ -36,7 +48,11 @@ class System {
   bool get isTV => _isTV;
 
   Future<int> init() async {
-    final deviceInfo = await DeviceInfoPlugin().deviceInfo;
+    final deviceInfo = await loadPlatformDeviceInfo(
+      read: () => DeviceInfoPlugin().deviceInfo,
+      windows: isWindows,
+    );
+    if (deviceInfo == null) return 0;
     _isTV = switch (deviceInfo) {
       AndroidDeviceInfo(:final systemFeatures) => systemFeatures.any(
         const {

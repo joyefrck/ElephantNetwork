@@ -17,8 +17,9 @@ type InitParams struct {
 }
 
 type SetupParams struct {
-	SelectedMap map[string]string `json:"selected-map"`
-	TestURL     string            `json:"test-url"`
+	SelectedMap      map[string]string `json:"selected-map"`
+	TestURL          string            `json:"test-url"`
+	DelayTestTimeout int64             `json:"delay-test-timeout"`
 }
 
 type UpdateParams struct {
@@ -36,6 +37,7 @@ type UpdateParams struct {
 	UnifiedDelay       *bool              `json:"unified-delay"`
 	GeoAutoUpdate      *bool              `json:"geo-auto-update"`
 	GeoUpdateInterval  *int               `json:"geo-update-interval"`
+	DelayTestTimeout   *int64             `json:"delay-test-timeout"`
 }
 
 type tunSchema struct {

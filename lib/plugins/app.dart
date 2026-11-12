@@ -52,6 +52,20 @@ class App {
     return packageNamesRaw.map((e) => e.toString()).toList();
   }
 
+  Future<bool> isInstalledAppsPermissionGranted() async {
+    return await methodChannel.invokeMethod<bool>(
+          'isInstalledAppsPermissionGranted',
+        ) ??
+        true;
+  }
+
+  Future<bool> requestInstalledAppsPermission() async {
+    return await methodChannel.invokeMethod<bool>(
+          'requestInstalledAppsPermission',
+        ) ??
+        false;
+  }
+
   Future<bool?> requestNotificationsPermission() async {
     return methodChannel.invokeMethod<bool>('requestNotificationsPermission');
   }

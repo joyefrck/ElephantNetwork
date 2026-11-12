@@ -3,6 +3,8 @@ package com.follow.clash.plugins
 import com.follow.clash.ServiceController
 import com.follow.clash.ServiceState
 import com.follow.clash.common.Components
+import com.follow.clash.common.GlobalState
+import com.follow.clash.core.Core
 import com.follow.clash.service.NetworkObserver
 import com.follow.clash.models.SharedState
 import com.google.gson.Gson
@@ -23,6 +25,10 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        scope.launch {
+            runCatching { Core.load() }
+                .onFailure { GlobalState.log("Unable to preload Core: $it") }
+        }
         channel = MethodChannel(binding.binaryMessenger, "${Components.PACKAGE_NAME}/service")
         channel.setMethodCallHandler(this)
         coreChannel = MethodChannel(
@@ -94,14 +100,14 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
 
     private fun syncState(call: MethodCall, result: MethodChannel.Result) {
         val data = call.arguments as? String
-        val state = runCatching {
-            gson.fromJson(data, SharedState::class.java)
-        }.getOrNull()
-        if (state == null) {
-            result.success("Invalid shared state")
-            return
-        }
         scope.launch {
+            val state = runCatching {
+                gson.fromJson(data, SharedState::class.java)
+            }.getOrNull()
+            if (state == null) {
+                result.success("Invalid shared state")
+                return@launch
+            }
             ServiceState.syncSharedState(state)
             result.success("")
         }
