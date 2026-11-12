@@ -320,3 +320,7 @@ Windows runner 另跑 Helper 的 `windows-service` 测试；Android 用 JDK 17 �
 - R3 已实现控制接口随机密钥生成/持久化和备份恢复修复；订阅中的替代 TLS/Unix/pipe 控制入口被清除。可选 HTTP/SOCKS 本地认证已接通完整配置、运行时与 App 自身 HTTP 请求，回环地址不豁免。Android 开启认证后不声明无法携带凭据的系统 HTTP 代理，保留 VPN 转发。
 - R3 已移除全局 HTTP 客户端接受无效证书的行为，加入真实本地 TLS 拒绝测试；Core 调用日志不再记录含密钥和密码的参数。`SAFE_MODE=true` 独立构建禁用外部控制接口。
 - R3 已通过 969 项全量 Flutter 测试、30 项相关专项测试、5 项安全模式测试、无静态检查问题、Go 测试与 vet、macOS 私有 Debug 构建。原生 Android VPN 声明与跨平台实际代理认证交互仍待实机验证；未发布、未推送。
+
+- R3 本地提交 `67333da8`，未推送 GitHub。
+- C1 已统一 Dart/Go 的 `area.verb` 方法名和对象参数，命令响应为 null、失败使用结构化错误。Dart 对超时明确抛错，Android 检查响应请求 ID；保留调用侧已有返回类型以兼容业务流程。配置解析失败不再切换成默认配置，也不改变已生效的测速设置；无法编码的返回值会生成错误响应。
+- C1 已通过 970 项全量 Flutter 测试、12 项协议/Android 通道专项测试、无静态检查问题、Go 测试与 vet，以及 Android core/service/app Kotlin 编译。独立构建的 Core 通过真实 TCP IPC 验证初始化、查询、参数错误、配置拒绝、旧方法名拒绝和正常关闭。C2 尚未替换 JNI 桥接。

@@ -97,9 +97,7 @@ abstract class CoreHandlerInterface with CoreInterface {
   }) async {
     return await utils.handleWatch(
       onStart: () {
-        commonPrint.log(
-          'Invoke method ${method.name} ${DateTime.now()}',
-        );
+        commonPrint.log('Invoke method ${method.name} ${DateTime.now()}');
       },
       function: () async {
         return invokeMethod<T>(
@@ -116,6 +114,22 @@ abstract class CoreHandlerInterface with CoreInterface {
     );
   }
 
+  Future<void> _invokeCommand({
+    required CoreMethod method,
+    Object? arguments,
+  }) async {
+    final result = await _invokeMethod<Object?>(
+      method: method,
+      arguments: arguments,
+    );
+    if (result != null) {
+      throw CoreMethodException(
+        code: 'protocol_error',
+        message: 'Command ${method.wireName} returned a non-null result',
+      );
+    }
+  }
+
   Future<T?> invokeMethod<T>({
     required CoreMethod method,
     Object? arguments,
@@ -123,63 +137,70 @@ abstract class CoreHandlerInterface with CoreInterface {
   });
 
   @override
-  Future<bool> clearDnsCache() async =>
-      await _invokeMethod<bool>(method: CoreMethod.clearDnsCache) ?? false;
+  Future<bool> clearDnsCache() async {
+    await _invokeCommand(method: CoreMethod.dnsClearCache);
+    return true;
+  }
 
   @override
-  Future<bool> resetNetwork() async =>
-      await _invokeMethod<bool>(method: CoreMethod.resetNetwork) ?? false;
+  Future<bool> resetNetwork() async {
+    await _invokeCommand(method: CoreMethod.networkChanged);
+    return true;
+  }
 
   @override
-  Future<String> updateRuntimeConfig(Map<String, dynamic> config) async =>
-      await _invokeMethod<String>(
-        method: CoreMethod.updateRuntimeConfig,
-        arguments: config,
-      ) ??
-      'Core runtime update did not complete';
+  Future<String> updateRuntimeConfig(Map<String, dynamic> config) async {
+    await _invokeCommand(
+      method: CoreMethod.configUpdateRuntime,
+      arguments: config,
+    );
+    return '';
+  }
 
   @override
   Future<bool> init(InitParams params) async {
-    return await _invokeMethod<bool>(
-          method: CoreMethod.initClash,
-          arguments: params.toJson(),
-        ) ??
-        false;
+    await _invokeCommand(
+      method: CoreMethod.coreInit,
+      arguments: params.toJson(),
+    );
+    return true;
   }
 
   @override
   Future<bool> get isInit async {
-    return await _invokeMethod<bool>(method: CoreMethod.getIsInit) ?? false;
+    return await _invokeMethod<bool>(method: CoreMethod.coreInitialized) ??
+        false;
   }
 
   @override
   Future<bool> forceGc() async {
-    return await _invokeMethod<bool>(method: CoreMethod.forceGc) ?? false;
+    await _invokeCommand(method: CoreMethod.coreGc);
+    return true;
   }
 
   @override
   Future<String> validateConfig(String path) async {
-    return await _invokeMethod<String>(
-          method: CoreMethod.validateConfig,
-          arguments: path,
-        ) ??
-        '';
+    await _invokeCommand(
+      method: CoreMethod.configValidate,
+      arguments: {'path': path},
+    );
+    return '';
   }
 
   @override
   Future<String> updateConfig(UpdateParams updateParams) async {
-    return await _invokeMethod<String>(
-          method: CoreMethod.updateConfig,
-          arguments: updateParams.toJson(),
-        ) ??
-        '';
+    await _invokeCommand(
+      method: CoreMethod.configUpdate,
+      arguments: updateParams.toJson(),
+    );
+    return '';
   }
 
   @override
   Future<Map<String, dynamic>> getConfig(String path) async {
     final result = await _invokeMethod<Map<String, dynamic>>(
-      method: CoreMethod.getConfig,
-      arguments: path,
+      method: CoreMethod.configRead,
+      arguments: {'path': path},
     );
     if (result == null) {
       throw const CoreMethodException(
@@ -192,22 +213,22 @@ abstract class CoreHandlerInterface with CoreInterface {
 
   @override
   Future<String> setupConfig(SetupParams setupParams) async {
-    return await _invokeMethod<String>(
-          method: CoreMethod.setupConfig,
-          arguments: setupParams.toJson(),
-        ) ??
-        '';
+    await _invokeCommand(
+      method: CoreMethod.configSetup,
+      arguments: setupParams.toJson(),
+    );
+    return '';
   }
 
   @override
   Future<bool> crash() async {
-    return await _invokeMethod<bool>(method: CoreMethod.crash) ?? false;
+    return await _invokeMethod<bool>(method: CoreMethod.coreCrash) ?? false;
   }
 
   @override
   Future<ProxiesData> getProxies() async {
     final data = await _invokeMethod<Map<String, dynamic>>(
-      method: CoreMethod.getProxies,
+      method: CoreMethod.proxyList,
     );
     return data != null
         ? ProxiesData.fromJson(data)
@@ -216,17 +237,17 @@ abstract class CoreHandlerInterface with CoreInterface {
 
   @override
   Future<String> changeProxy(ChangeProxyParams changeProxyParams) async {
-    return await _invokeMethod<String>(
-          method: CoreMethod.changeProxy,
-          arguments: changeProxyParams.toJson(),
-        ) ??
-        '';
+    await _invokeCommand(
+      method: CoreMethod.proxySelect,
+      arguments: changeProxyParams.toJson(),
+    );
+    return '';
   }
 
   @override
   Future<List<ExternalProvider>> getExternalProviders() async {
     final data = await _invokeMethod<List<dynamic>>(
-      method: CoreMethod.getExternalProviders,
+      method: CoreMethod.providerList,
     );
     return data
             ?.whereType<Map>()
@@ -243,19 +264,19 @@ abstract class CoreHandlerInterface with CoreInterface {
     String externalProviderName,
   ) async {
     final data = await _invokeMethod<Map<String, dynamic>>(
-      method: CoreMethod.getExternalProvider,
-      arguments: externalProviderName,
+      method: CoreMethod.providerGet,
+      arguments: {'name': externalProviderName},
     );
     return data == null ? null : ExternalProvider.fromJson(data);
   }
 
   @override
   Future<String> updateGeoData(String type) async {
-    return await _invokeMethod<String>(
-          method: CoreMethod.updateGeoData,
-          arguments: type,
-        ) ??
-        '';
+    await _invokeCommand(
+      method: CoreMethod.geoUpdate,
+      arguments: {'type': type},
+    );
+    return '';
   }
 
   @override
@@ -263,26 +284,26 @@ abstract class CoreHandlerInterface with CoreInterface {
     required String providerName,
     required String data,
   }) async {
-    return await _invokeMethod<String>(
-          method: CoreMethod.sideLoadExternalProvider,
-          arguments: {'providerName': providerName, 'data': data},
-        ) ??
-        '';
+    await _invokeCommand(
+      method: CoreMethod.providerSideLoad,
+      arguments: {'name': providerName, 'data': data},
+    );
+    return '';
   }
 
   @override
   Future<String> updateExternalProvider(String providerName) async {
-    return await _invokeMethod<String>(
-          method: CoreMethod.updateExternalProvider,
-          arguments: providerName,
-        ) ??
-        '';
+    await _invokeCommand(
+      method: CoreMethod.providerUpdate,
+      arguments: {'name': providerName},
+    );
+    return '';
   }
 
   @override
   Future<List<TrackerInfo>> getConnections() async {
     final data = await _invokeMethod<Map<String, dynamic>>(
-      method: CoreMethod.getConnections,
+      method: CoreMethod.connectionList,
     );
     final connections = data?['connections'];
     if (connections is! List) {
@@ -296,30 +317,30 @@ abstract class CoreHandlerInterface with CoreInterface {
 
   @override
   Future<bool> closeConnections() async {
-    return await _invokeMethod<bool>(method: CoreMethod.closeConnections) ??
-        false;
+    await _invokeCommand(method: CoreMethod.connectionCloseAll);
+    return true;
   }
 
   @override
   Future<bool> resetConnections() async {
-    return await _invokeMethod<bool>(method: CoreMethod.resetConnections) ??
-        false;
+    await _invokeCommand(method: CoreMethod.connectionReset);
+    return true;
   }
 
   @override
   Future<bool> closeConnection(String id) async {
-    return await _invokeMethod<bool>(
-          method: CoreMethod.closeConnection,
-          arguments: id,
-        ) ??
-        false;
+    await _invokeCommand(
+      method: CoreMethod.connectionClose,
+      arguments: {'id': id},
+    );
+    return true;
   }
 
   @override
   Future<Traffic> getTotalTraffic(bool onlyStatisticsProxy) async {
     final data = await _invokeMethod<Map<String, dynamic>>(
-      method: CoreMethod.getTotalTraffic,
-      arguments: onlyStatisticsProxy,
+      method: CoreMethod.trafficTotal,
+      arguments: {'only-statistics-proxy': onlyStatisticsProxy},
     );
     return data == null ? const Traffic() : Traffic.fromJson(data);
   }
@@ -327,44 +348,46 @@ abstract class CoreHandlerInterface with CoreInterface {
   @override
   Future<Traffic> getTraffic(bool onlyStatisticsProxy) async {
     final data = await _invokeMethod<Map<String, dynamic>>(
-      method: CoreMethod.getTraffic,
-      arguments: onlyStatisticsProxy,
+      method: CoreMethod.trafficCurrent,
+      arguments: {'only-statistics-proxy': onlyStatisticsProxy},
     );
     return data == null ? const Traffic() : Traffic.fromJson(data);
   }
 
   @override
   Future<String> clearEffect(int profileId) async {
-    return await _invokeMethod<String>(
-          method: CoreMethod.clearEffect,
-          arguments: profileId,
-        ) ??
-        '';
+    await _invokeCommand(
+      method: CoreMethod.profileClearEffect,
+      arguments: {'profile-id': profileId},
+    );
+    return '';
   }
 
   @override
   FutureOr<void> resetTraffic() {
-    _invokeMethod(method: CoreMethod.resetTraffic);
+    return _invokeCommand(method: CoreMethod.trafficReset);
   }
 
   @override
   FutureOr<void> startLog() {
-    _invokeMethod(method: CoreMethod.startLog);
+    return _invokeCommand(method: CoreMethod.logStart);
   }
 
   @override
   FutureOr<void> stopLog() {
-    _invokeMethod<bool>(method: CoreMethod.stopLog);
+    return _invokeCommand(method: CoreMethod.logStop);
   }
 
   @override
   Future<bool> startListener() async {
-    return await _invokeMethod<bool>(method: CoreMethod.startListener) ?? false;
+    await _invokeCommand(method: CoreMethod.listenerStart);
+    return true;
   }
 
   @override
   Future<bool> stopListener() async {
-    return await _invokeMethod<bool>(method: CoreMethod.stopListener) ?? false;
+    await _invokeCommand(method: CoreMethod.listenerStop);
+    return true;
   }
 
   @override
@@ -385,7 +408,7 @@ abstract class CoreHandlerInterface with CoreInterface {
       'test-url': url,
     };
     final data = await _invokeMethod<Map<String, dynamic>>(
-      method: CoreMethod.asyncTestDelay,
+      method: CoreMethod.proxyTestDelay,
       arguments: delayParams,
       timeout: const Duration(minutes: 4, seconds: 2),
     );
@@ -397,14 +420,14 @@ abstract class CoreHandlerInterface with CoreInterface {
   @override
   Future<String> getCountryCode(String ip) async {
     return await _invokeMethod<String>(
-          method: CoreMethod.getCountryCode,
-          arguments: ip,
+          method: CoreMethod.geoCountryCode,
+          arguments: {'ip': ip},
         ) ??
         '';
   }
 
   @override
   Future<int> getMemory() async {
-    return await _invokeMethod<int>(method: CoreMethod.getMemory) ?? 0;
+    return await _invokeMethod<int>(method: CoreMethod.coreMemory) ?? 0;
   }
 }

@@ -1,7 +1,7 @@
 {
   "methodCall": {
     "id": "updateConfig#contract",
-    "method": "updateConfig",
+    "method": "config.update",
     "arguments": {
       "mixed-port": 7890,
       "allow-lan": true,
@@ -29,7 +29,7 @@
   },
   "successResponse": {
     "id": "updateConfig#contract",
-    "result": ""
+    "result": null
   },
   "structuredResponse": {
     "id": "getTraffic#contract",

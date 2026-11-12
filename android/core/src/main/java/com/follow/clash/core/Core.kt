@@ -127,7 +127,7 @@ object Core {
     )
 
     fun resetNetwork() {
-        invokeMethod("""{"method":"resetNetwork","arguments":null}""") {}
+        invokeMethod("""{"method":"network.changed","arguments":null}""") {}
     }
 
     external fun stopTun()

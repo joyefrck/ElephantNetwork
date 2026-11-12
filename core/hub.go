@@ -102,6 +102,9 @@ func handleValidateConfig(path string) string {
 	defer config.SetProxyNameList(names)
 
 	buf, err := readFile(path)
+	if err != nil {
+		return err.Error()
+	}
 	_, err = config.UnmarshalRawConfig(buf)
 	if err != nil {
 		return err.Error()
@@ -488,11 +491,11 @@ func handleUpdateConfig(params *UpdateParams) string {
 func handleClearEffect(profileId int64, response MethodResponse) {
 	go func() {
 		if !isInit.Load() {
-			response.success("not initialized")
+			response.command("not initialized")
 			return
 		}
 		if profileId <= 0 {
-			response.success("invalid profile id")
+			response.command("invalid profile id")
 			return
 		}
 		providersRoot := filepath.Join(
@@ -505,11 +508,11 @@ func handleClearEffect(profileId int64, response MethodResponse) {
 			strconv.FormatInt(profileId, 10),
 		)
 		if err := os.RemoveAll(providersPath); err != nil {
-			response.success(err.Error())
+			response.command(err.Error())
 			return
 		}
 		_ = os.Remove(providersRoot)
-		response.success("")
+		response.command("")
 	}()
 }
 

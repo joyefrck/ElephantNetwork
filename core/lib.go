@@ -189,13 +189,15 @@ func (response MethodResponse) send() {
 
 func handlePlatformMethodCall(call *MethodCall, response MethodResponse) bool {
 	switch call.Method {
-	case updateDnsMethod:
-		value := ""
-		if !decodeMethodArguments(call, response, &value) {
+	case dnsUpdateSystemMethod:
+		params := struct {
+			Value string `json:"value"`
+		}{}
+		if !decodeMethodArguments(call, response, &params) {
 			return true
 		}
-		handleUpdateDns(value)
-		response.success(true)
+		handleUpdateDns(params.Value)
+		response.success(nil)
 		return true
 	}
 	return false

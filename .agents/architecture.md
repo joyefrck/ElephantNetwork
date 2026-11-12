@@ -430,3 +430,7 @@ Restore stages and validates archives before changing active data. SQLite transa
 ## Local Controller And Proxy Credentials
 
 The app owns controller endpoints and credentials. Enabled controllers require a persisted random secret; subscription TLS/Unix/pipe controller endpoints cannot override the app. Optional proxy authentication is disabled by default, applies to loopback too, and must reach full configuration, live updates and the app HTTP client together. Android must omit its system HTTP proxy declaration while credentials are required because ProxyInfo cannot carry them. `SAFE_MODE=true` disables the external controller without changing normal-mode routing settings. HTTP clients retain platform certificate validation; do not log Core arguments containing secrets.
+
+## Core Wire Contract
+
+Dart `CoreMethod.wireName` and Go method constants share `area.verb` names. Arguments are objects or absent, command success is a null result, and failures use the error envelope. App-facing convenience methods may return their existing bool/string success values after validating the null command response. RPC timeouts throw `CoreMethodException`; they must not become successful configuration changes. Android validates response IDs and both transports clean scoped spilled responses. Invalid setup must retain the active configuration. Old wire names are intentionally rejected, so package the Dart and Core changes together.

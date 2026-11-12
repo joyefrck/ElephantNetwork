@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"runtime"
@@ -16,6 +17,9 @@ type MethodCall struct {
 func (call MethodCall) decodeArguments(target any) error {
 	if len(call.Arguments) == 0 || string(call.Arguments) == "null" {
 		return fmt.Errorf("missing arguments")
+	}
+	if raw := bytes.TrimSpace(call.Arguments); len(raw) == 0 || raw[0] != '{' {
+		return fmt.Errorf("arguments must be an object")
 	}
 	return json.Unmarshal(call.Arguments, target)
 }
@@ -47,7 +51,13 @@ type MethodResponse struct {
 }
 
 func (response MethodResponse) JSON() ([]byte, error) {
-	return json.Marshal(response)
+	data, err := json.Marshal(response)
+	if err == nil {
+		return data, nil
+	}
+	return json.Marshal(MethodResponse{ID: response.ID, Error: &MethodError{
+		Code: "internal_error", Message: "Cannot encode Core response: " + err.Error(),
+	}})
 }
 
 func (response MethodResponse) success(result any) {
@@ -66,6 +76,22 @@ func (response MethodResponse) failure(code, message string, details any) {
 	response.send()
 }
 
+func (response MethodResponse) command(message string) {
+	if message != "" {
+		response.failure("core_error", message, nil)
+		return
+	}
+	response.success(nil)
+}
+
+func (response MethodResponse) action(applied bool) {
+	if !applied {
+		response.failure("core_error", "Core command was not applied", nil)
+		return
+	}
+	response.success(nil)
+}
+
 func (response MethodResponse) notImplemented(method CoreMethod) {
 	response.failure(
 		"not_implemented",
@@ -75,10 +101,7 @@ func (response MethodResponse) notImplemented(method CoreMethod) {
 }
 
 func handleMethodCall(call *MethodCall, response MethodResponse) {
-	// The crash method is a developer-only fatal-path test. It must bypass the
-	// recovery below so the core process terminates; on Android this also
-	// terminates the in-process application.
-	if call.Method == crashMethod {
+	if call.Method == coreCrashMethod {
 		handleCrash()
 		return
 	}
@@ -91,89 +114,89 @@ func handleMethodCall(call *MethodCall, response MethodResponse) {
 		}
 	}()
 	switch call.Method {
-	case updateRuntimeConfigMethod:
+	case configUpdateRuntimeMethod:
 		var sections map[string]any
 		if !decodeMethodArguments(call, response, &sections) {
 			return
 		}
-		response.success(handleUpdateRuntimeConfig(sections))
+		response.command(handleUpdateRuntimeConfig(sections))
 		return
-	case clearDnsCacheMethod:
+	case dnsClearCacheMethod:
 		handleClearDnsCache()
-		response.success(true)
-	case resetNetworkMethod:
+		response.success(nil)
+	case networkChangedMethod:
 		handleResetNetwork()
-		response.success(true)
+		response.success(nil)
 
-	case initClashMethod:
+	case coreInitMethod:
 		params := InitParams{}
 		if !decodeMethodArguments(call, response, &params) {
 			return
 		}
-		response.success(handleInitClash(&params))
+		response.action(handleInitClash(&params))
 		return
-	case getIsInitMethod:
+	case coreInitializedMethod:
 		response.success(handleGetIsInit())
 		return
-	case forceGcMethod:
+	case coreGcMethod:
 		handleForceGC()
-		response.success(true)
+		response.success(nil)
 		return
-	case shutdownMethod:
-		response.success(handleShutdown())
+	case coreShutdownMethod:
+		response.action(handleShutdown())
 		return
-	case validateConfigMethod:
-		path := ""
+	case configValidateMethod:
+		path := PathParams{}
 		if !decodeMethodArguments(call, response, &path) {
 			return
 		}
-		response.success(handleValidateConfig(path))
+		response.command(handleValidateConfig(path.Path))
 		return
-	case updateConfigMethod:
+	case configUpdateMethod:
 		params := UpdateParams{}
 		if !decodeMethodArguments(call, response, &params) {
 			return
 		}
-		response.success(handleUpdateConfig(&params))
+		response.command(handleUpdateConfig(&params))
 		return
-	case setupConfigMethod:
+	case configSetupMethod:
 		params := defaultSetupParams()
 		if !decodeMethodArguments(call, response, params) {
 			return
 		}
-		response.success(handleSetupConfig(params))
+		response.command(handleSetupConfig(params))
 		return
-	case getProxiesMethod:
+	case proxyListMethod:
 		response.success(handleGetProxies())
 		return
-	case changeProxyMethod:
+	case proxySelectMethod:
 		params := ChangeProxyParams{}
 		if !decodeMethodArguments(call, response, &params) {
 			return
 		}
 		handleChangeProxy(&params, func(value string) {
-			response.success(value)
+			response.command(value)
 		})
 		return
-	case getTrafficMethod:
-		onlyStatisticsProxy := false
-		if !decodeMethodArguments(call, response, &onlyStatisticsProxy) {
+	case trafficCurrentMethod:
+		params := TrafficParams{}
+		if !decodeMethodArguments(call, response, &params) {
 			return
 		}
-		response.success(handleGetTraffic(onlyStatisticsProxy))
+		response.success(handleGetTraffic(params.OnlyStatisticsProxy))
 		return
-	case getTotalTrafficMethod:
-		onlyStatisticsProxy := false
-		if !decodeMethodArguments(call, response, &onlyStatisticsProxy) {
+	case trafficTotalMethod:
+		params := TrafficParams{}
+		if !decodeMethodArguments(call, response, &params) {
 			return
 		}
-		response.success(handleGetTotalTraffic(onlyStatisticsProxy))
+		response.success(handleGetTotalTraffic(params.OnlyStatisticsProxy))
 		return
-	case resetTrafficMethod:
+	case trafficResetMethod:
 		handleResetTraffic()
-		response.success(true)
+		response.success(nil)
 		return
-	case asyncTestDelayMethod:
+	case proxyTestDelayMethod:
 		params := TestDelayParams{}
 		if !decodeMethodArguments(call, response, &params) {
 			return
@@ -182,106 +205,106 @@ func handleMethodCall(call *MethodCall, response MethodResponse) {
 			response.success(value)
 		})
 		return
-	case getConnectionsMethod:
+	case connectionListMethod:
 		response.success(handleGetConnections())
 		return
-	case closeConnectionsMethod:
-		response.success(handleCloseConnections())
+	case connectionCloseAllMethod:
+		response.action(handleCloseConnections())
 		return
-	case resetConnectionsMethod:
-		response.success(handleResetConnections())
+	case connectionResetMethod:
+		response.action(handleResetConnections())
 		return
-	case getConfigMethod:
-		path := ""
+	case configReadMethod:
+		path := PathParams{}
 		if !decodeMethodArguments(call, response, &path) {
 			return
 		}
-		config, err := handleGetConfig(path)
+		config, err := handleGetConfig(path.Path)
 		if err != nil {
 			response.failure("core_error", err.Error(), nil)
 			return
 		}
 		response.success(config)
 		return
-	case closeConnectionMethod:
-		id := ""
+	case connectionCloseMethod:
+		id := ConnectionParams{}
 		if !decodeMethodArguments(call, response, &id) {
 			return
 		}
-		response.success(handleCloseConnection(id))
+		response.action(handleCloseConnection(id.ID))
 		return
-	case getExternalProvidersMethod:
+	case providerListMethod:
 		response.success(handleGetExternalProviders())
 		return
-	case getExternalProviderMethod:
-		externalProviderName := ""
+	case providerGetMethod:
+		externalProviderName := NameParams{}
 		if !decodeMethodArguments(call, response, &externalProviderName) {
 			return
 		}
-		response.success(handleGetExternalProvider(externalProviderName))
+		response.success(handleGetExternalProvider(externalProviderName.Name))
 		return
-	case updateGeoDataMethod:
-		geoType := ""
+	case geoUpdateMethod:
+		geoType := GeoParams{}
 		if !decodeMethodArguments(call, response, &geoType) {
 			return
 		}
-		handleUpdateGeoData(geoType)
-		response.success("")
+		handleUpdateGeoData(geoType.Type)
+		response.success(nil)
 		return
-	case updateExternalProviderMethod:
-		providerName := ""
+	case providerUpdateMethod:
+		providerName := NameParams{}
 		if !decodeMethodArguments(call, response, &providerName) {
 			return
 		}
-		handleUpdateExternalProvider(providerName, func(value string) {
-			response.success(value)
+		handleUpdateExternalProvider(providerName.Name, func(value string) {
+			response.command(value)
 		})
 		return
-	case sideLoadExternalProviderMethod:
+	case providerSideLoadMethod:
 		params := map[string]string{}
 		if !decodeMethodArguments(call, response, &params) {
 			return
 		}
-		providerName := params["providerName"]
+		providerName := params["name"]
 		data := params["data"]
 		handleSideLoadExternalProvider(providerName, []byte(data), func(value string) {
-			response.success(value)
+			response.command(value)
 		})
 		return
-	case startLogMethod:
+	case logStartMethod:
 		handleStartLog()
-		response.success(true)
+		response.success(nil)
 		return
-	case stopLogMethod:
+	case logStopMethod:
 		handleStopLog()
-		response.success(true)
+		response.success(nil)
 		return
-	case startListenerMethod:
-		response.success(handleStartListener())
+	case listenerStartMethod:
+		response.action(handleStartListener())
 		return
-	case stopListenerMethod:
-		response.success(handleStopListener())
+	case listenerStopMethod:
+		response.action(handleStopListener())
 		return
-	case getCountryCodeMethod:
-		ip := ""
+	case geoCountryCodeMethod:
+		ip := CountryParams{}
 		if !decodeMethodArguments(call, response, &ip) {
 			return
 		}
-		handleGetCountryCode(ip, func(value string) {
+		handleGetCountryCode(ip.IP, func(value string) {
 			response.success(value)
 		})
 		return
-	case getMemoryMethod:
+	case coreMemoryMethod:
 		handleGetMemory(func(value uint64) {
 			response.success(value)
 		})
 		return
-	case clearEffectMethod:
-		var profileId int64
-		if !decodeMethodArguments(call, response, &profileId) {
+	case profileClearEffectMethod:
+		var params ProfileEffectParams
+		if !decodeMethodArguments(call, response, &params) {
 			return
 		}
-		handleClearEffect(profileId, response)
+		handleClearEffect(params.ProfileID, response)
 		return
 	default:
 		if !handlePlatformMethodCall(call, response) {

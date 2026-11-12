@@ -37,17 +37,14 @@ class _RecordingCoreHandler extends CoreHandlerInterface {
     calls[method] = arguments;
     timeouts[method] = timeout;
     final result = switch (method) {
-      CoreMethod.initClash ||
-      CoreMethod.clearDnsCache ||
-      CoreMethod.resetNetwork => true as T,
-      CoreMethod.getTraffic ||
-      CoreMethod.getTotalTraffic => {'up': 12, 'down': 34},
-      CoreMethod.asyncTestDelay => {
+      CoreMethod.trafficCurrent ||
+      CoreMethod.trafficTotal => {'up': 12, 'down': 34},
+      CoreMethod.proxyTestDelay => {
         'name': 'DIRECT',
         'url': 'https://example.com',
         'value': 42,
       },
-      CoreMethod.getConnections => {
+      CoreMethod.connectionList => {
         'connections': [
           {
             'id': 'connection-1',
@@ -61,7 +58,7 @@ class _RecordingCoreHandler extends CoreHandlerInterface {
           },
         ],
       },
-      CoreMethod.getExternalProviders => [
+      CoreMethod.providerList => [
         {
           'name': 'provider-1',
           'type': 'Proxy',
@@ -70,21 +67,21 @@ class _RecordingCoreHandler extends CoreHandlerInterface {
           'update-at': '2024-01-01T00:00:00.000Z',
         },
       ],
-      CoreMethod.getExternalProvider => {
+      CoreMethod.providerGet => {
         'name': 'provider-1',
         'type': 'Proxy',
         'count': 1,
         'vehicle-type': 'HTTP',
         'update-at': '2024-01-01T00:00:00.000Z',
       },
-      CoreMethod.getConfig => {
+      CoreMethod.configRead => {
         'mode': 'rule',
         'rule': ['MATCH,DIRECT'],
       },
-      CoreMethod.getMemory => 2048,
-      _ => '',
+      CoreMethod.coreMemory => 2048,
+      _ => null,
     };
-    return result as T;
+    return result as T?;
   }
 }
 
@@ -95,7 +92,7 @@ class _FailingConfigCoreHandler extends _RecordingCoreHandler {
     Object? arguments,
     Duration? timeout,
   }) async {
-    if (method == CoreMethod.getConfig) {
+    if (method == CoreMethod.configRead) {
       throw const CoreMethodException(
         code: 'core_error',
         message: 'config not found',
@@ -117,7 +114,7 @@ class _EmptyConfigCoreHandler extends _RecordingCoreHandler {
     Object? arguments,
     Duration? timeout,
   }) async {
-    if (method == CoreMethod.getConfig) {
+    if (method == CoreMethod.configRead) {
       return null;
     }
     return super.invokeMethod(
@@ -139,20 +136,36 @@ void main() {
         'dns': {'enable': true, 'cache-max-size': 8192},
       };
       expect(await handler.updateRuntimeConfig(patch), '');
-      expect(handler.calls[CoreMethod.updateRuntimeConfig], patch);
+      expect(handler.calls[CoreMethod.configUpdateRuntime], patch);
       await handler.asyncTestDelay(
         'https://example.com',
         'DIRECT',
         const Duration(seconds: 12),
       );
       expect(
-        (handler.calls[CoreMethod.asyncTestDelay] as Map)['timeout'],
+        (handler.calls[CoreMethod.proxyTestDelay] as Map)['timeout'],
         12000,
       );
       expect(
-        handler.timeouts[CoreMethod.asyncTestDelay],
+        handler.timeouts[CoreMethod.proxyTestDelay],
         const Duration(minutes: 4, seconds: 2),
       );
+    },
+  );
+
+  test(
+    'wire methods exactly match the Go protocol and reject legacy names',
+    () async {
+      final source = await File('core/constant.go').readAsString();
+      final names = RegExp(
+        r'CoreMethod\s*=\s*"([^"]+)"',
+      ).allMatches(source).map((match) => match[1]).toSet();
+      expect(CoreMethod.values.map((method) => method.wireName).toSet(), names);
+      expect(
+        () => CoreMethod.fromWireName('updateConfig'),
+        throwsFormatException,
+      );
+      expect(CoreMethod.fromWireName('config.update'), CoreMethod.configUpdate);
     },
   );
 
@@ -166,7 +179,7 @@ void main() {
       Map<String, Object?>.from(fixture['methodCall'] as Map),
     );
 
-    expect(call.method, CoreMethod.updateConfig);
+    expect(call.method, CoreMethod.configUpdate);
     expect(call.arguments, isA<Map<String, dynamic>>());
     expect((call.arguments as Map)['mixed-port'], 7890);
     expect(call.toJson(), containsPair('arguments', call.arguments));
@@ -188,15 +201,15 @@ void main() {
     await handler.clearEffect(42);
 
     for (final method in [
-      CoreMethod.initClash,
-      CoreMethod.setupConfig,
-      CoreMethod.changeProxy,
-      CoreMethod.sideLoadExternalProvider,
-      CoreMethod.asyncTestDelay,
+      CoreMethod.coreInit,
+      CoreMethod.configSetup,
+      CoreMethod.proxySelect,
+      CoreMethod.providerSideLoad,
+      CoreMethod.proxyTestDelay,
     ]) {
       expect(handler.calls[method], isA<Map>());
     }
-    expect(handler.calls[CoreMethod.clearEffect], 42);
+    expect(handler.calls[CoreMethod.profileClearEffect], {'profile-id': 42});
   });
 
   test('event contract accepts batches and legacy single events', () async {
@@ -299,8 +312,8 @@ void main() {
       Map<String, Object?>.from(fixture['errorResponse'] as Map),
     );
 
-    expect(success.unwrap<String>(), '');
-    expect(success.toJson(), containsPair('result', ''));
+    expect(success.unwrap<Object?>(), isNull);
+    expect(success.toJson(), containsPair('result', null));
     expect(structured.result, isA<Map>());
     expect(structured.result, isNot(isA<String>()));
     expect(structured.unwrap<Map<String, dynamic>>()?['up'], 12);

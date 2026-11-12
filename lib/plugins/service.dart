@@ -67,7 +67,15 @@ class Service {
       return null;
     }
     final dataJson = await data.commonToJSON<dynamic>();
-    return coreSpillStore.resolve(CoreMethodResponse.fromJson(dataJson));
+    final response = CoreMethodResponse.fromJson(dataJson);
+    if (response.id != call.id) {
+      await coreSpillStore.discard(response);
+      throw const CoreMethodException(
+        code: 'protocol_error',
+        message: 'Android Core response ID does not match request',
+      );
+    }
+    return coreSpillStore.resolve(response);
   }
 
   Future<bool> start() async {

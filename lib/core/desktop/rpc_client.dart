@@ -111,7 +111,10 @@ final class CoreRpcClient implements CoreRpcChannel {
         logLevel: LogLevel.warning,
       );
       _removePending(id, completer);
-      return null;
+      throw CoreMethodException(
+        code: 'timeout',
+        message: 'Core method ${method.wireName} timed out',
+      );
     } on CoreMethodException {
       _pending.remove(id);
       rethrow;

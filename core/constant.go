@@ -98,42 +98,42 @@ type ProxiesData struct {
 }
 
 const (
-	messageMethod                  CoreMethod = "message"
-	initClashMethod                CoreMethod = "initClash"
-	getIsInitMethod                CoreMethod = "getIsInit"
-	forceGcMethod                  CoreMethod = "forceGc"
-	shutdownMethod                 CoreMethod = "shutdown"
-	validateConfigMethod           CoreMethod = "validateConfig"
-	updateConfigMethod             CoreMethod = "updateConfig"
-	getProxiesMethod               CoreMethod = "getProxies"
-	changeProxyMethod              CoreMethod = "changeProxy"
-	getTrafficMethod               CoreMethod = "getTraffic"
-	getTotalTrafficMethod          CoreMethod = "getTotalTraffic"
-	resetTrafficMethod             CoreMethod = "resetTraffic"
-	asyncTestDelayMethod           CoreMethod = "asyncTestDelay"
-	getConnectionsMethod           CoreMethod = "getConnections"
-	closeConnectionsMethod         CoreMethod = "closeConnections"
-	resetConnectionsMethod         CoreMethod = "resetConnections"
-	clearDnsCacheMethod            CoreMethod = "clearDnsCache"
-	resetNetworkMethod             CoreMethod = "resetNetwork"
-	updateRuntimeConfigMethod      CoreMethod = "updateRuntimeConfig"
-	closeConnectionMethod          CoreMethod = "closeConnection"
-	getExternalProvidersMethod     CoreMethod = "getExternalProviders"
-	getExternalProviderMethod      CoreMethod = "getExternalProvider"
-	getCountryCodeMethod           CoreMethod = "getCountryCode"
-	getMemoryMethod                CoreMethod = "getMemory"
-	updateGeoDataMethod            CoreMethod = "updateGeoData"
-	updateExternalProviderMethod   CoreMethod = "updateExternalProvider"
-	sideLoadExternalProviderMethod CoreMethod = "sideLoadExternalProvider"
-	startLogMethod                 CoreMethod = "startLog"
-	stopLogMethod                  CoreMethod = "stopLog"
-	startListenerMethod            CoreMethod = "startListener"
-	stopListenerMethod             CoreMethod = "stopListener"
-	updateDnsMethod                CoreMethod = "updateDns"
-	crashMethod                    CoreMethod = "crash"
-	setupConfigMethod              CoreMethod = "setupConfig"
-	getConfigMethod                CoreMethod = "getConfig"
-	clearEffectMethod              CoreMethod = "clearEffect"
+	messageMethod             CoreMethod = "message"
+	coreInitMethod            CoreMethod = "core.init"
+	coreInitializedMethod     CoreMethod = "core.initialized"
+	coreGcMethod              CoreMethod = "core.gc"
+	coreShutdownMethod        CoreMethod = "core.shutdown"
+	configValidateMethod      CoreMethod = "config.validate"
+	configUpdateMethod        CoreMethod = "config.update"
+	proxyListMethod           CoreMethod = "proxy.list"
+	proxySelectMethod         CoreMethod = "proxy.select"
+	trafficCurrentMethod      CoreMethod = "traffic.current"
+	trafficTotalMethod        CoreMethod = "traffic.total"
+	trafficResetMethod        CoreMethod = "traffic.reset"
+	proxyTestDelayMethod      CoreMethod = "proxy.testDelay"
+	connectionListMethod      CoreMethod = "connection.list"
+	connectionCloseAllMethod  CoreMethod = "connection.closeAll"
+	connectionResetMethod     CoreMethod = "connection.reset"
+	dnsClearCacheMethod       CoreMethod = "dns.clearCache"
+	networkChangedMethod      CoreMethod = "network.changed"
+	configUpdateRuntimeMethod CoreMethod = "config.updateRuntime"
+	connectionCloseMethod     CoreMethod = "connection.close"
+	providerListMethod        CoreMethod = "provider.list"
+	providerGetMethod         CoreMethod = "provider.get"
+	geoCountryCodeMethod      CoreMethod = "geo.countryCode"
+	coreMemoryMethod          CoreMethod = "core.memory"
+	geoUpdateMethod           CoreMethod = "geo.update"
+	providerUpdateMethod      CoreMethod = "provider.update"
+	providerSideLoadMethod    CoreMethod = "provider.sideLoad"
+	logStartMethod            CoreMethod = "log.start"
+	logStopMethod             CoreMethod = "log.stop"
+	listenerStartMethod       CoreMethod = "listener.start"
+	listenerStopMethod        CoreMethod = "listener.stop"
+	dnsUpdateSystemMethod     CoreMethod = "dns.updateSystem"
+	coreCrashMethod           CoreMethod = "core.crash"
+	configSetupMethod         CoreMethod = "config.setup"
+	configReadMethod          CoreMethod = "config.read"
+	profileClearEffectMethod  CoreMethod = "profile.clearEffect"
 )
 
 type CoreMethod string
@@ -169,4 +169,26 @@ type GeoUpdateStatus struct {
 func (message *Message) Json() (string, error) {
 	data, err := json.Marshal(message)
 	return string(data), err
+}
+
+type PathParams struct {
+	Path string `json:"path"`
+}
+type NameParams struct {
+	Name string `json:"name"`
+}
+type ConnectionParams struct {
+	ID string `json:"id"`
+}
+type CountryParams struct {
+	IP string `json:"ip"`
+}
+type GeoParams struct {
+	Type string `json:"type"`
+}
+type ProfileEffectParams struct {
+	ProfileID int64 `json:"profile-id"`
+}
+type TrafficParams struct {
+	OnlyStatisticsProxy bool `json:"only-statistics-proxy"`
 }

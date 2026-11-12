@@ -126,7 +126,11 @@ class CoreLib extends CoreHandlerInterface {
         'Invoke method ${method.name} before connection timed out: $error',
         logLevel: coreFailureLogLevel(error),
       );
-      return null;
+      throw CoreMethodException(
+        code: 'core_unavailable',
+        message: 'Android Core connection timed out',
+        details: error.toString(),
+      );
     }
     final id = '${++_methodCallId}';
     final response = await service
@@ -135,7 +139,10 @@ class CoreLib extends CoreHandlerInterface {
         )
         .withTimeout(timeout: timeout, onTimeout: () => null);
     if (response == null) {
-      return null;
+      throw CoreMethodException(
+        code: 'timeout',
+        message: 'Android Core method ${method.wireName} did not respond',
+      );
     }
     return response.unwrap<T>();
   }

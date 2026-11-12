@@ -40,7 +40,7 @@ void main() {
         await directory.delete(recursive: true);
       });
       final invocation = client.invoke<Map>(
-        method: CoreMethod.getConfig,
+        method: CoreMethod.configRead,
         timeout: const Duration(milliseconds: 50),
       );
       await pumpEventQueue();
@@ -52,13 +52,22 @@ void main() {
         }),
       );
       transport.addJson({'id': request['id'], 'file': file.path});
-      expect(await invocation, isNull);
+      await expectLater(
+        invocation,
+        throwsA(
+          isA<CoreMethodException>().having(
+            (error) => error.code,
+            'code',
+            'timeout',
+          ),
+        ),
+      );
       gate.complete(directory.path);
       await store.resolved.future;
       expect(await file.exists(), false);
       expect(client.pendingCount, 0);
 
-      final next = client.invoke<Map>(method: CoreMethod.getConfig);
+      final next = client.invoke<Map>(method: CoreMethod.configRead);
       await pumpEventQueue();
       final nextRequest = jsonDecode(transport.sentMessages.last) as Map;
       await file.writeAsString(

@@ -62,14 +62,14 @@ void main() {
   test('delegates Core method calls to the RPC channel', () async {
     when(
       () => rpcClient.invoke<bool>(
-        method: CoreMethod.getIsInit,
+        method: CoreMethod.coreInitialized,
         arguments: null,
         timeout: null,
       ),
     ).thenAnswer((_) async => true);
 
     expect(
-      await service.invokeMethod<bool>(method: CoreMethod.getIsInit),
+      await service.invokeMethod<bool>(method: CoreMethod.coreInitialized),
       isTrue,
     );
   });

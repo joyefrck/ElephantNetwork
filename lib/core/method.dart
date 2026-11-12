@@ -3,42 +3,51 @@ import 'dart:async';
 import 'package:fl_clash/enum/enum.dart';
 
 enum CoreMethod {
-  message,
-  initClash,
-  getIsInit,
-  forceGc,
-  shutdown,
-  validateConfig,
-  updateConfig,
-  getConfig,
-  getProxies,
-  changeProxy,
-  getTraffic,
-  getTotalTraffic,
-  resetTraffic,
-  asyncTestDelay,
-  getConnections,
-  closeConnections,
-  resetConnections,
-  clearDnsCache,
-  resetNetwork,
-  updateRuntimeConfig,
-  closeConnection,
-  getExternalProviders,
-  getExternalProvider,
-  updateGeoData,
-  updateExternalProvider,
-  sideLoadExternalProvider,
-  startLog,
-  stopLog,
-  startListener,
-  stopListener,
-  getCountryCode,
-  getMemory,
-  crash,
-  setupConfig,
-  clearEffect,
-  updateDns,
+  message('message'),
+  coreInit('core.init'),
+  coreInitialized('core.initialized'),
+  coreGc('core.gc'),
+  coreShutdown('core.shutdown'),
+  configValidate('config.validate'),
+  configUpdate('config.update'),
+  configRead('config.read'),
+  proxyList('proxy.list'),
+  proxySelect('proxy.select'),
+  trafficCurrent('traffic.current'),
+  trafficTotal('traffic.total'),
+  trafficReset('traffic.reset'),
+  proxyTestDelay('proxy.testDelay'),
+  connectionList('connection.list'),
+  connectionCloseAll('connection.closeAll'),
+  connectionReset('connection.reset'),
+  dnsClearCache('dns.clearCache'),
+  networkChanged('network.changed'),
+  configUpdateRuntime('config.updateRuntime'),
+  connectionClose('connection.close'),
+  providerList('provider.list'),
+  providerGet('provider.get'),
+  geoUpdate('geo.update'),
+  providerUpdate('provider.update'),
+  providerSideLoad('provider.sideLoad'),
+  logStart('log.start'),
+  logStop('log.stop'),
+  listenerStart('listener.start'),
+  listenerStop('listener.stop'),
+  geoCountryCode('geo.countryCode'),
+  coreMemory('core.memory'),
+  coreCrash('core.crash'),
+  configSetup('config.setup'),
+  profileClearEffect('profile.clearEffect'),
+  dnsUpdateSystem('dns.updateSystem');
+
+  final String wireName;
+
+  const CoreMethod(this.wireName);
+
+  static CoreMethod fromWireName(String value) => values.firstWhere(
+    (method) => method.wireName == value,
+    orElse: () => throw FormatException('Unknown Core method: $value'),
+  );
 }
 
 class CoreMethodCall {
@@ -51,7 +60,7 @@ class CoreMethodCall {
   factory CoreMethodCall.fromJson(Map<String, Object?> json) {
     return CoreMethodCall(
       id: json['id'] as String?,
-      method: CoreMethod.values.byName(json['method'] as String),
+      method: CoreMethod.fromWireName(json['method'] as String),
       arguments: json['arguments'],
     );
   }
@@ -59,7 +68,7 @@ class CoreMethodCall {
   Map<String, Object?> toJson() {
     return {
       if (id != null) 'id': id,
-      'method': method.name,
+      'method': method.wireName,
       'arguments': arguments,
     };
   }
@@ -142,8 +151,11 @@ class CoreMethodException implements Exception {
     this.details,
   });
 
-  bool get isCoreUnavailable =>
-      const {'transport_disconnected', 'transport_error'}.contains(code);
+  bool get isCoreUnavailable => const {
+    'transport_disconnected',
+    'transport_error',
+    'core_unavailable',
+  }.contains(code);
 
   @override
   String toString() => 'CoreMethodException($code, $message, $details)';

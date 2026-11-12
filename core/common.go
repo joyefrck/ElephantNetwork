@@ -326,18 +326,21 @@ func applyConfig(params *SetupParams) error {
 	if isExiting.Load() {
 		return fmt.Errorf("Core is stopping")
 	}
-	var err error
-	constant.DefaultTestURL = params.TestURL
-	provider.SetDefaultTestTimeout(hostDelayTimeout(params.DelayTestTimeout))
-	currentConfig, err = executor.ParseWithPath(filepath.Join(constant.Path.HomeDir(), "config.yaml"))
+	names := config.GetProxyNameList()
+	next, err := executor.ParseWithPath(filepath.Join(constant.Path.HomeDir(), "config.yaml"))
 	if err != nil {
-		currentConfig, _ = config.ParseRawConfig(config.DefaultRawConfig())
+		config.SetProxyNameList(names)
+		return err
 	}
 	if isExiting.Load() {
+		config.SetProxyNameList(names)
 		return fmt.Errorf("Core is stopping")
 	}
-	applyPlatformLimits(currentConfig, features.Android)
-	hub.ApplyConfig(currentConfig)
+	constant.DefaultTestURL = params.TestURL
+	provider.SetDefaultTestTimeout(hostDelayTimeout(params.DelayTestTimeout))
+	applyPlatformLimits(next, features.Android)
+	hub.ApplyConfig(next)
+	currentConfig = next
 	patchSelectGroup(params.SelectedMap)
 	updateListeners()
 	if updater.GeoAutoUpdate() {
