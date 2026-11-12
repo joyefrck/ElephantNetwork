@@ -20,6 +20,7 @@ abstract class SetupParams with _$SetupParams {
 @freezed
 abstract class UpdateParams with _$UpdateParams {
   const factory UpdateParams({
+    @Default({}) @JsonKey(name: 'geox-url') Map<String, String> geoXUrl,
     required Tun tun,
     @JsonKey(name: 'mixed-port') required int mixedPort,
     @JsonKey(name: 'allow-lan') required bool allowLan,

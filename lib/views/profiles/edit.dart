@@ -1,8 +1,7 @@
-import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/editor_document.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -36,6 +35,7 @@ class _EditProfileViewState extends State<EditProfileView> {
   final _fileInfoNotifier = ValueNotifier<FileInfo?>(null);
   Uint8List? _fileData;
   bool _isSaving = false;
+  bool _openingEditor = false;
 
   @override
   void initState() {
@@ -59,7 +59,9 @@ class _EditProfileViewState extends State<EditProfileView> {
   }
 
   Future<void> _handleConfirm() async {
-    if (_isSaving || !_formKey.currentState!.validate()) return;
+    if (_isSaving || _openingEditor || !_formKey.currentState!.validate()) {
+      return;
+    }
     var profile = widget.profile.copyWith(
       url: _urlController.text,
       label: _labelController.text,
@@ -112,7 +114,8 @@ class _EditProfileViewState extends State<EditProfileView> {
       final message = await coreController.validateConfigWithData(data);
       return message;
     }, silence: false);
-    if (message?.isNotEmpty == true) {
+    if (message == null) return;
+    if (message.isNotEmpty) {
       globalState.showMessage(
         title: currentAppLocalizations.tip,
         message: TextSpan(text: message),
@@ -125,14 +128,21 @@ class _EditProfileViewState extends State<EditProfileView> {
   }
 
   Future<void> _editProfileFile() async {
+    if (_isSaving || _openingEditor) return;
+    setState(() => _openingEditor = true);
+    try {
+      await globalState.safeRun<void>(_openProfileEditor, silence: false);
+    } finally {
+      if (mounted) setState(() => _openingEditor = false);
+    }
+  }
+
+  Future<void> _openProfileEditor() async {
     if (_rawText == null) {
       final profilePath = await appPath.getProfilePath(
         widget.profile.id.toString(),
       );
-      final file = File(profilePath);
-      if (await file.exists()) {
-        _rawText = await file.readAsString();
-      }
+      _rawText = await readEditorFile(profilePath);
     }
     if (!mounted) return;
     final title = widget.profile.label.takeFirstValid([
@@ -141,9 +151,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     final editorPage = EditorPage(
       title: title,
       content: _rawText!,
-      onSave: (context, _, content) {
-        _handleSaveEdit(context, content);
-      },
+      onSave: (context, _, content) => _handleSaveEdit(context, content),
       onPop: (context, _, content) async {
         if (content == _rawText) {
           return true;
@@ -153,7 +161,7 @@ class _EditProfileViewState extends State<EditProfileView> {
           message: TextSpan(text: context.appLocalizations.hasCacheChange),
         );
         if (res == true && context.mounted) {
-          _handleSaveEdit(context, content);
+          await _handleSaveEdit(context, content);
         } else {
           return true;
         }
@@ -164,8 +172,10 @@ class _EditProfileViewState extends State<EditProfileView> {
     if (data == null) {
       return;
     }
+    final bytes = await encodeEditorText(data);
+    if (!mounted) return;
     _rawText = data;
-    _fileData = Uint8List.fromList(utf8.encode(data));
+    _fileData = bytes;
     _fileInfoNotifier.value = _fileInfoNotifier.value?.copyWith(
       size: _fileData?.length ?? 0,
       lastModified: DateTime.now(),
@@ -340,15 +350,15 @@ class _EditProfileViewState extends State<EditProfileView> {
           child: FloatLayout(
             floatingWidget: FloatWrapper(
               child: CommonFloatingActionButton(
-                onPressed: _isSaving ? null : _handleConfirm,
+                onPressed: _isSaving || _openingEditor ? null : _handleConfirm,
                 icon: const Icon(Icons.save),
                 label: appLocalizations.save,
               ),
             ),
             child: AbsorbPointer(
-              absorbing: _isSaving,
+              absorbing: _isSaving || _openingEditor,
               child: ExcludeFocus(
-                excluding: _isSaving,
+                excluding: _isSaving || _openingEditor,
                 child: Form(
                   key: _formKey,
                   child: Padding(

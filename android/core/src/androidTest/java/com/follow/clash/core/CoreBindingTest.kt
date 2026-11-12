@@ -58,6 +58,8 @@ class CoreBindingTest {
         assertFalse(invoke("route.watch", JSONObject().put("watch", false)).has("error"))
         assertEquals("invalid_arguments", invoke("config.update", true).getJSONObject("error").getString("code"))
         assertEquals("not_implemented", invoke("updateConfig", JSONObject()).getJSONObject("error").getString("code"))
+        assertEquals("core_error", invoke("geo.update", JSONObject().put("type", "unknown")).getJSONObject("error").getString("code"))
+        assertEquals("core_error", invoke("geo.update", JSONObject().put("type", "MMDB").put("geox-url", JSONObject().put("mmdb", "file:///tmp/foreign"))).getJSONObject("error").getString("code"))
         val candidate = File(root, "candidate.yaml")
         candidate.writeText("proxies: []\nproxy-groups: []\nrules:\n  - MATCH,DIRECT\nfuture-feature: {enabled: true}\n")
         val raw = invoke("config.read", JSONObject().put("path", candidate.path)).getJSONObject("result")

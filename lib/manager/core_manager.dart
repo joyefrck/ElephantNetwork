@@ -7,6 +7,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/action.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
+import 'package:fl_clash/providers/geo_resource.dart';
 import 'package:fl_clash/providers/state.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
@@ -106,7 +107,6 @@ class _CoreContainerState extends ConsumerState<CoreManager>
           value.globalUa,
           value.keepAliveInterval,
           value.geodataLoader,
-          value.geoXUrl,
           value.tun.dnsMode,
           value.tun.mtu,
           value.tun.strictRoute,
@@ -213,15 +213,15 @@ class _CoreContainerState extends ConsumerState<CoreManager>
     final l10n = currentAppLocalizations;
     if (updating) {
       globalState.showNotifier(l10n.geoUpdating(geoResource.name));
+    } else if (error != null && error.isNotEmpty) {
+      globalState.showNotifier(error);
     } else if (skipped) {
       globalState.showNotifier(l10n.geoSkipped(geoResource.name));
     } else {
       globalState.showNotifier(l10n.geoUpdated(geoResource.name));
     }
     ref.read(isUpdatingProvider(key).notifier).value = updating;
-    if (!updating && error != null && error.isNotEmpty) {
-      globalState.showNotifier(error);
-    }
+    if (!updating) ref.invalidate(geoFileInfoProvider(geoResource));
     super.onGeoUpdate(geoType, updating, skipped, error);
   }
 }

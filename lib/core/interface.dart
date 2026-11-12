@@ -54,7 +54,7 @@ mixin CoreInterface {
 
   Future<ExternalProvider?> getExternalProvider(String externalProviderName);
 
-  Future<String> updateGeoData(String type);
+  Future<String> updateGeoData(String type, {Map<String, String>? urls});
 
   Future<String> sideLoadExternalProvider({
     required String providerName,
@@ -336,10 +336,10 @@ abstract class CoreHandlerInterface with CoreInterface {
   }
 
   @override
-  Future<String> updateGeoData(String type) async {
+  Future<String> updateGeoData(String type, {Map<String, String>? urls}) async {
     await _invokeCommand(
       method: CoreMethod.geoUpdate,
-      arguments: {'type': type},
+      arguments: {'type': type, 'geox-url': ?urls},
     );
     return '';
   }

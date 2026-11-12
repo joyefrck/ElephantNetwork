@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -10,7 +8,7 @@ import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path/path.dart' hide context;
+import 'package:fl_clash/providers/geo_resource.dart';
 
 class ResourcesView extends StatelessWidget {
   const ResourcesView({super.key});
@@ -110,15 +108,6 @@ class _GeoResourceListItem extends ConsumerStatefulWidget {
 }
 
 class _GeoResourceListItemState extends ConsumerState<_GeoResourceListItem> {
-  String get fileName {
-    return switch (widget.type) {
-      GeoResource.MMDB => MMDB,
-      GeoResource.ASN => ASN,
-      GeoResource.GEOIP => GEOIP,
-      GeoResource.GEOSITE => GEOSITE,
-    };
-  }
-
   Future<void> _updateUrl(String url) async {
     final newUrl = await globalState.showCommonDialog<String>(
       child: UpdateGeoUrlFormDialog(
@@ -141,12 +130,6 @@ class _GeoResourceListItemState extends ConsumerState<_GeoResourceListItem> {
     }
   }
 
-  Future<FileInfo?> _getGeoFileInfo(String fileName) async {
-    final homePath = await appPath.homeDirPath;
-    final file = File(join(homePath, fileName));
-    return file.getFileInfo();
-  }
-
   Future<void> _handleUpdateGeoDataItem() async {
     await globalState.safeRun<void>(() async {
       await ref
@@ -159,6 +142,7 @@ class _GeoResourceListItemState extends ConsumerState<_GeoResourceListItem> {
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
     final isUpdating = ref.watch(isUpdatingProvider(widget.type.updatingKey));
+    final info = ref.watch(geoFileInfoProvider(widget.type)).asData?.value;
     final url = ref.watch(
       patchClashConfigProvider.select((state) => state.geoXUrl[widget.type]),
     );
@@ -171,20 +155,14 @@ class _GeoResourceListItemState extends ConsumerState<_GeoResourceListItem> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 6),
-                FutureBuilder<FileInfo?>(
-                  future: _getGeoFileInfo(fileName),
-                  builder: (_, snapshot) {
-                    final height = globalState.measure.bodyMediumHeight;
-                    return SizedBox(
-                      height: height,
-                      child: snapshot.data == null
-                          ? SizedBox(width: height, height: height)
-                          : Text(
-                              snapshot.data!.getDesc(context),
-                              style: context.textTheme.bodyMedium,
-                            ),
-                    );
-                  },
+                SizedBox(
+                  height: globalState.measure.bodyMediumHeight,
+                  child: info == null
+                      ? const SizedBox()
+                      : Text(
+                          info.getDesc(context),
+                          style: context.textTheme.bodyMedium,
+                        ),
                 ),
                 const SizedBox(height: 4),
                 Text(url, style: context.textTheme.bodyMedium?.toLight),

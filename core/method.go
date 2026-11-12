@@ -303,8 +303,7 @@ func handleMethodCall(call *MethodCall, response MethodResponse) {
 		if !decodeMethodArguments(call, response, &geoType) {
 			return
 		}
-		handleUpdateGeoData(geoType.Type)
-		response.success(nil)
+		response.command(handleUpdateGeoData(&geoType))
 		return
 	case providerUpdateMethod:
 		providerName := NameParams{}

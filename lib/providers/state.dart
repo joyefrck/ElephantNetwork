@@ -102,6 +102,7 @@ UpdateParams updateParams(Ref ref) {
         mixedPort: state.mixedPort,
         geoAutoUpdate: state.geoAutoUpdate,
         geoUpdateInterval: state.geoUpdateInterval,
+        geoXUrl: state.geoXUrl.raw,
         delayTestTimeout: timeout,
       ),
     ),

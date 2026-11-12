@@ -151,7 +151,7 @@ class _ScriptsViewState extends ConsumerState<ScriptsView> {
       message: TextSpan(text: appLocalizations.saveChanges),
     );
     if (res == true && mounted) {
-      _handleEditorSave(context, title, content, script: script);
+      await _handleEditorSave(context, title, content, script: script);
     } else {
       return true;
     }
@@ -172,7 +172,7 @@ class _ScriptsViewState extends ConsumerState<ScriptsView> {
         title: title,
         supportRemoteDownload: true,
         onSave: (context, title, content) {
-          _handleEditorSave(context, title, content, script: script);
+          return _handleEditorSave(context, title, content, script: script);
         },
         onPop: (context, title, content) {
           return _handleEditorPop(context, title, content, raw, script: script);

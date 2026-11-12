@@ -185,12 +185,16 @@ func updateConfig(params *UpdateParams) error {
 	if currentConfig == nil {
 		return errors.New("config is not applied")
 	}
+	if err := validateGeoURLs(params.GeoXURL); err != nil {
+		return err
+	}
 	if params.Authentication != nil {
 		if err := applyAuthentication(currentConfig, *params.Authentication); err != nil {
 			return err
 		}
 	}
 	general := currentConfig.General
+	applyGeoURLs(params.GeoXURL)
 	if params.DelayTestTimeout != nil {
 		provider.SetDefaultTestTimeout(hostDelayTimeout(*params.DelayTestTimeout))
 	}

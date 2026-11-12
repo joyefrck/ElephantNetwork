@@ -23,6 +23,7 @@ type SetupParams struct {
 }
 
 type UpdateParams struct {
+	GeoXURL            map[string]string  `json:"geox-url"`
 	Secret             *string            `json:"secret"`
 	Authentication     *[]string          `json:"authentication"`
 	Tun                *tunSchema         `json:"tun"`
@@ -202,7 +203,8 @@ type CountryParams struct {
 	IP string `json:"ip"`
 }
 type GeoParams struct {
-	Type string `json:"type"`
+	Type string            `json:"type"`
+	URLs map[string]string `json:"geox-url"`
 }
 type ProfileEffectParams struct {
 	ProfileID int64 `json:"profile-id"`

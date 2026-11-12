@@ -21,6 +21,11 @@ Map<String, dynamic> _$SetupParamsToJson(_SetupParams instance) =>
 
 _UpdateParams _$UpdateParamsFromJson(Map<String, dynamic> json) =>
     _UpdateParams(
+      geoXUrl:
+          (json['geox-url'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, e as String),
+          ) ??
+          const {},
       tun: Tun.fromJson(json['tun'] as Map<String, dynamic>),
       mixedPort: (json['mixed-port'] as num).toInt(),
       allowLan: json['allow-lan'] as bool,
@@ -50,6 +55,7 @@ _UpdateParams _$UpdateParamsFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$UpdateParamsToJson(_UpdateParams instance) =>
     <String, dynamic>{
+      'geox-url': instance.geoXUrl,
       'tun': instance.tun,
       'mixed-port': instance.mixedPort,
       'allow-lan': instance.allowLan,

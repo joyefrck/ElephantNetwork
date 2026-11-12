@@ -176,8 +176,10 @@ class CoreController implements DiagnosticsCore {
     return _interface.getExternalProvider(externalProviderName);
   }
 
-  Future<String> updateGeoData(String type) {
-    return _interface.updateGeoData(type);
+  Future<String> updateGeoData(String type, {Map<String, String>? urls}) {
+    return urls == null
+        ? _interface.updateGeoData(type)
+        : _interface.updateGeoData(type, urls: urls);
   }
 
   Future<String> sideLoadExternalProvider({

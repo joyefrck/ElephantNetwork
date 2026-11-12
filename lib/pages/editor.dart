@@ -1,4 +1,5 @@
-import 'dart:convert';
+import 'dart:async';
+import 'package:fl_clash/common/editor_document.dart';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
@@ -24,7 +25,12 @@ class EditorPage extends ConsumerStatefulWidget {
   final List<Language> languages;
   final bool supportRemoteDownload;
   final bool titleEditable;
-  final Function(BuildContext context, String title, String content)? onSave;
+  final FutureOr<void> Function(
+    BuildContext context,
+    String title,
+    String content,
+  )?
+  onSave;
   final Future<bool> Function(
     BuildContext context,
     String title,
@@ -53,6 +59,9 @@ class _EditorPageState extends ConsumerState<EditorPage> {
   late TextEditingController _titleController;
   late FocusNode _focusNode;
   late bool readOnly = false;
+  bool _loading = true;
+  bool _saving = false;
+  int _loadGeneration = 0;
   late final SelectionToolbarController _toolbarController;
 
   @override
@@ -61,7 +70,9 @@ class _EditorPageState extends ConsumerState<EditorPage> {
     readOnly = widget.onSave == null;
     _toolbarController = ContextMenuControllerImpl(readOnly);
     _focusNode = FocusNode();
-    _controller = CodeLineEditingController.fromText(widget.content);
+    _controller = CodeLineEditingController();
+    final content = widget.content;
+    if (content != null) unawaited(_loadContent(content, resetHistory: true));
     _findController = CodeFindController(_controller);
     _titleController = TextEditingController(text: widget.title);
     if (system.isDesktop) {
@@ -92,21 +103,76 @@ class _EditorPageState extends ConsumerState<EditorPage> {
   }
 
   @override
-  void didUpdateWidget(covariant oldWidget) {
+  void didUpdateWidget(covariant EditorPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final content = widget.content;
-      if (content != null && oldWidget.content != content) {
-        _controller.text = content;
+    if (oldWidget.content != widget.content && widget.content != null) {
+      final content = widget.content!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && content == widget.content) {
+          unawaited(_loadContent(content, resetHistory: true));
+        }
+      });
+    }
+  }
+
+  Future<void> _loadContent(String content, {bool resetHistory = false}) async {
+    final generation = ++_loadGeneration;
+    if (mounted) setState(() => _loading = true);
+    try {
+      final lines = await parseEditorText(content);
+      if (!mounted || generation != _loadGeneration) return;
+      if (resetHistory) {
+        _controller.value = CodeLineEditingValue(codeLines: lines);
         _controller.clearHistory();
+      } else {
+        _controller.runRevocableOp(
+          () => _controller.value = CodeLineEditingValue(codeLines: lines),
+        );
       }
-    });
+    } catch (error) {
+      if (mounted && generation == _loadGeneration) {
+        globalState.showNotifier(error.toString());
+      }
+    } finally {
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  Future<void> _handleSave() async {
+    if (_saving || _loading || widget.onSave == null) return;
+    setState(() => _saving = true);
+    try {
+      final content = await readEditorLines(_controller.codeLines);
+      if (!mounted) return;
+      await globalState.safeRun<void>(() async {
+        await widget.onSave!(context, _titleController.text, content);
+      }, silence: false);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<bool> _handlePop(BuildContext context) async {
+    if (_saving) return false;
+    if (_loading || widget.onPop == null) return true;
+    setState(() => _saving = true);
+    try {
+      final content = await readEditorLines(_controller.codeLines);
+      if (!context.mounted) return false;
+      return await widget.onPop!(context, _titleController.text, content);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
   void dispose() {
+    _loadGeneration++;
     _toolbarController.hide(context);
     _findController.dispose();
+    _titleController.dispose();
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -139,8 +205,8 @@ class _EditorPageState extends ConsumerState<EditorPage> {
     if (file == null) {
       return;
     }
-    final res = utf8.decode(await file.readBytes());
-    _controller.text = res;
+    final res = await decodeEditorBytes(await file.readBytes());
+    if (mounted) await _loadContent(res);
   }
 
   Future<void> _handleImportFormUrl() async {
@@ -166,7 +232,7 @@ class _EditorPageState extends ConsumerState<EditorPage> {
       return;
     }
     final res = await request.getTextResponseForUrl(url);
-    _controller.text = res.data ?? '';
+    if (mounted) await _loadContent(res.data ?? '');
   }
 
   @override
@@ -174,25 +240,12 @@ class _EditorPageState extends ConsumerState<EditorPage> {
     final appLocalizations = context.appLocalizations;
     final isMobileView = ref.watch(isMobileViewProvider);
     return CommonPopScope(
-      onPop: (context) async {
-        if (widget.onPop == null) {
-          return true;
-        }
-        final res = await widget.onPop!(
-          context,
-          _titleController.text,
-          _controller.text,
-        );
-        if (res && context.mounted) {
-          return true;
-        }
-        return false;
-      },
+      onPop: _handlePop,
       child: CommonScaffold(
         appBar: AppBar(
           title: TextField(
             maxLength: 20,
-            enabled: widget.titleEditable,
+            enabled: widget.titleEditable && !_loading && !_saving,
             controller: _titleController,
             decoration: InputDecoration(
               border: const NoInputBorder(),
@@ -208,15 +261,11 @@ class _EditorPageState extends ConsumerState<EditorPage> {
                 (value) => _wrapTitleController(
                   (value) => IconButton(
                     onPressed:
-                        _controller.text != widget.content ||
-                            _titleController.text != widget.title
-                        ? () {
-                            widget.onSave!(
-                              context,
-                              _titleController.text,
-                              _controller.text,
-                            );
-                          }
+                        !_loading &&
+                            !_saving &&
+                            (_controller.canUndo ||
+                                _titleController.text != widget.title)
+                        ? _handleSave
                         : null,
                     icon: const Icon(Icons.save),
                   ),
@@ -226,10 +275,12 @@ class _EditorPageState extends ConsumerState<EditorPage> {
               (value) => CommonPopupBox(
                 targetBuilder: (open) {
                   return IconButton(
-                    onPressed: () {
-                      final isMobile = ref.read(isMobileViewProvider);
-                      open(offset: Offset(0, isMobile ? 0 : 20));
-                    },
+                    onPressed: _loading || _saving
+                        ? null
+                        : () {
+                            final isMobile = ref.read(isMobileViewProvider);
+                            open(offset: Offset(0, isMobile ? 0 : 20));
+                          },
                     icon: const Icon(Icons.more_vert),
                   );
                 },
@@ -274,7 +325,7 @@ class _EditorPageState extends ConsumerState<EditorPage> {
         body: Stack(
           children: [
             CodeEditor(
-              readOnly: readOnly,
+              readOnly: readOnly || _loading || _saving,
               autofocus: false,
               showCursorWhenReadOnly: false,
               findController: _findController,
@@ -331,7 +382,7 @@ class _EditorPageState extends ConsumerState<EditorPage> {
               ),
             ),
             FadeBox(
-              child: widget.content == null
+              child: _loading || _saving
                   ? Container(
                       color: context.colorScheme.surface,
                       alignment: Alignment.center,

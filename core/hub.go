@@ -364,25 +364,6 @@ func handleGetExternalProvider(externalProviderName string) *ExternalProvider {
 	return e
 }
 
-func handleUpdateGeoData(geoType string) {
-	go func() {
-		switch geoType {
-		case "MMDB":
-			updater.UpdateMMDB()
-			return
-		case "ASN":
-			updater.UpdateASN()
-			return
-		case "GEOIP":
-			updater.UpdateGeoIp()
-			return
-		case "GEOSITE":
-			updater.UpdateGeoSite()
-			return
-		}
-	}()
-}
-
 func handleUpdateExternalProvider(providerName string, fn func(value string)) {
 	go func() {
 		runLock.Lock()
