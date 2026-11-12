@@ -275,6 +275,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "controlGlobalAddedRules": MessageLookupByLibrary.simpleMessage(
       "Control global added rules",
     ),
+    "controllerSecret": MessageLookupByLibrary.simpleMessage(
+      "Controller access key",
+    ),
     "copy": MessageLookupByLibrary.simpleMessage("Copy"),
     "copyEnvVar": MessageLookupByLibrary.simpleMessage(
       "Copying environment variables",
@@ -529,6 +532,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "invalidPolicy": m14,
     "invalidProxy": m15,
+    "invalidProxyCredentials": MessageLookupByLibrary.simpleMessage(
+      "Enter a valid username and password. The username cannot contain spaces or colons.",
+    ),
     "invalidProxyProvider": m16,
     "invalidSubRule": m17,
     "ipcidr": MessageLookupByLibrary.simpleMessage("Ipcidr"),
@@ -554,6 +560,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "local": MessageLookupByLibrary.simpleMessage("Local"),
     "localBackupDesc": MessageLookupByLibrary.simpleMessage(
       "Backup local data to local",
+    ),
+    "localProxyAuthentication": MessageLookupByLibrary.simpleMessage(
+      "Local proxy authentication",
+    ),
+    "localProxyAuthenticationDesc": MessageLookupByLibrary.simpleMessage(
+      "Require credentials for HTTP and SOCKS proxy connections. Android system HTTP proxy is disabled when enabled.",
+    ),
+    "localProxyUsername": MessageLookupByLibrary.simpleMessage(
+      "Proxy username",
     ),
     "locationPermission": MessageLookupByLibrary.simpleMessage(
       "Location Permission",

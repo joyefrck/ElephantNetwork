@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:drift/native.dart';
 import 'package:fl_clash/common/backup.dart';
+import 'package:fl_clash/common/local_control.dart';
 import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -145,6 +146,43 @@ void main() {
   });
 
   test(
+    'restoring old settings repairs enabled local credentials before persistence',
+    () async {
+      final subscription = container.listen(
+        patchClashConfigProvider,
+        (_, _) {},
+      );
+      addTearDown(subscription.close);
+      const config = Config(
+        themeProps: ThemeProps(),
+        patchClashConfig: PatchClashConfig(
+          externalController: ExternalControllerStatus.open,
+        ),
+        networkProps: NetworkProps(
+          authentication: AuthenticationProps(enable: true),
+        ),
+      );
+      action.bundle = StagedRestore(
+        data: MigrationData(
+          profiles: [replacement],
+          configMap: jsonDecode(jsonEncode(config)),
+        ),
+        directory: staged.path,
+      );
+      await action.restore(RestoreOption.all);
+      expect(
+        isValidControllerSecret(action.persisted!.patchClashConfig.secret),
+        true,
+      );
+      expect(action.persisted!.networkProps.authentication.isValid, true);
+      expect(
+        container.read(patchClashConfigProvider).secret,
+        action.persisted!.patchClashConfig.secret,
+      );
+    },
+  );
+
+  test(
     'failed settings persistence retains committed data and blocks another restore until recovery',
     () async {
       final config =
@@ -205,10 +243,15 @@ class _RestoreAction extends BackupAction {
   int preparations = 0;
   final prepared = Completer<void>();
   bool canPersist = true;
+  Config? persisted;
   @override
   Future<Map<String, Object?>?> get restoreSettingsSnapshot async => null;
   @override
-  Future<bool> persistRestoredConfig(Config config) async => canPersist;
+  Future<bool> persistRestoredConfig(Config config) async {
+    persisted = config;
+    return canPersist;
+  }
+
   @override
   Future<StagedRestore> prepareRestore() async {
     preparations++;

@@ -616,5 +616,10 @@
   "updateCancelled": "ダウンロードをキャンセルしました。再試行できます。",
   "updateInstalled": "更新をインストールしました",
   "updateInstallNow": "今すぐインストール",
-  "updateLater": "後で"
+  "updateLater": "後で",
+  "controllerSecret": "コントローラーのアクセスキー",
+  "localProxyAuthentication": "ローカルプロキシ認証",
+  "localProxyAuthenticationDesc": "HTTP・SOCKS 接続に認証を要求します。有効時は Android のシステム HTTP プロキシを無効にします。",
+  "localProxyUsername": "プロキシのユーザー名",
+  "invalidProxyCredentials": "有効なユーザー名とパスワードを入力してください。ユーザー名に空白やコロンは使えません。"
 }

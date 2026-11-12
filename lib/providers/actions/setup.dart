@@ -395,6 +395,11 @@ class SetupAction extends _$SetupAction {
         realPatchConfig: realPatchConfig,
         overrideDns: overrideDns,
         appendSystemDns: appendSystemDns,
+        authentication: ref
+            .read(networkSettingProvider)
+            .authentication
+            .credentials,
+        safeMode: appSafeMode,
         profileSource: setupState.profileSource,
         addedRules: addedRules,
         defaultUA: defaultUA,

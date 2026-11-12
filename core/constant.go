@@ -23,6 +23,8 @@ type SetupParams struct {
 }
 
 type UpdateParams struct {
+	Secret             *string            `json:"secret"`
+	Authentication     *[]string          `json:"authentication"`
 	Tun                *tunSchema         `json:"tun"`
 	AllowLan           *bool              `json:"allow-lan"`
 	MixedPort          *int               `json:"mixed-port"`

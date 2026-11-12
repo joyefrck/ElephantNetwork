@@ -98,7 +98,7 @@ abstract class CoreHandlerInterface with CoreInterface {
     return await utils.handleWatch(
       onStart: () {
         commonPrint.log(
-          'Invoke method ${method.name} ${DateTime.now()} $arguments',
+          'Invoke method ${method.name} ${DateTime.now()}',
         );
       },
       function: () async {

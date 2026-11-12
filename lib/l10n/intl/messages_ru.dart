@@ -282,6 +282,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "controlGlobalAddedRules": MessageLookupByLibrary.simpleMessage(
       "Управление глобальными добавленными правилами",
     ),
+    "controllerSecret": MessageLookupByLibrary.simpleMessage(
+      "Ключ доступа к контроллеру",
+    ),
     "copy": MessageLookupByLibrary.simpleMessage("Копировать"),
     "copyEnvVar": MessageLookupByLibrary.simpleMessage(
       "Копирование переменных окружения",
@@ -548,6 +551,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "invalidPolicy": m14,
     "invalidProxy": m15,
+    "invalidProxyCredentials": MessageLookupByLibrary.simpleMessage(
+      "Введите допустимые имя и пароль. Имя не должно содержать пробелы или двоеточия.",
+    ),
     "invalidProxyProvider": m16,
     "invalidSubRule": m17,
     "ipcidr": MessageLookupByLibrary.simpleMessage("IPCIDR"),
@@ -573,6 +579,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "local": MessageLookupByLibrary.simpleMessage("Локальный"),
     "localBackupDesc": MessageLookupByLibrary.simpleMessage(
       "Резервное копирование локальных данных на локальный диск",
+    ),
+    "localProxyAuthentication": MessageLookupByLibrary.simpleMessage(
+      "Авторизация локального прокси",
+    ),
+    "localProxyAuthenticationDesc": MessageLookupByLibrary.simpleMessage(
+      "Требовать учётные данные для HTTP и SOCKS. При включении системный HTTP-прокси Android отключается.",
+    ),
+    "localProxyUsername": MessageLookupByLibrary.simpleMessage(
+      "Имя пользователя прокси",
     ),
     "locationPermission": MessageLookupByLibrary.simpleMessage(
       "Location Permission",

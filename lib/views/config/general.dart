@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+import 'package:fl_clash/common/local_control.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -594,9 +596,96 @@ class ExternalControllerItem extends ConsumerWidget {
                 externalController: value
                     ? ExternalControllerStatus.open
                     : ExternalControllerStatus.close,
+                secret: value && !isValidControllerSecret(state.secret)
+                    ? createLocalSecret()
+                    : state.secret,
               ),
             );
       },
+    );
+  }
+}
+
+class ControllerSecretItem extends ConsumerWidget {
+  const ControllerSecretItem({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final patch = ref.watch(patchClashConfigProvider);
+    if (patch.externalController != ExternalControllerStatus.open) {
+      return const SizedBox.shrink();
+    }
+    final l10n = context.appLocalizations;
+    return ListItem(
+      leading: const Icon(Icons.key_outlined),
+      title: Text(l10n.controllerSecret),
+      subtitle: Text(l10n.copy),
+      onTap: () async {
+        await Clipboard.setData(ClipboardData(text: patch.secret));
+        globalState.showNotifier(l10n.copySuccess);
+      },
+    );
+  }
+}
+
+class LocalProxyAuthenticationItem extends ConsumerWidget {
+  const LocalProxyAuthenticationItem({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.appLocalizations;
+    final auth = ref.watch(
+      networkSettingProvider.select((state) => state.authentication),
+    );
+    void update(AuthenticationProps value) {
+      ref
+          .read(networkSettingProvider.notifier)
+          .update((state) => state.copyWith(authentication: value));
+    }
+
+    return Column(
+      children: [
+        ListItem.toggle(
+          leading: const Icon(Icons.lock_outline),
+          title: Text(l10n.localProxyAuthentication),
+          subtitle: Text(l10n.localProxyAuthenticationDesc),
+          value: auth.enable,
+          onChanged: (value) => update(
+            value
+                ? auth.ensureCredentials().copyWith(enable: true)
+                : auth.copyWith(enable: false),
+          ),
+        ),
+        if (auth.enable) ...[
+          ListItem.input(
+            leading: const Icon(Icons.person_outline),
+            title: Text(l10n.localProxyUsername),
+            subtitle: Text(auth.username),
+            dialogTitle: l10n.localProxyUsername,
+            value: auth.username,
+            validator: (value) => isValidProxyUsername(value ?? '')
+                ? null
+                : l10n.invalidProxyCredentials,
+            onChanged: (value) {
+              if (value != null) update(auth.copyWith(username: value));
+            },
+          ),
+          ListItem.input(
+            leading: const Icon(Icons.password),
+            title: Text(l10n.password),
+            subtitle: const Text('••••••••'),
+            dialogTitle: l10n.password,
+            value: auth.password,
+            obscureText: true,
+            validator: (value) => isValidProxyPassword(value ?? '')
+                ? null
+                : l10n.invalidProxyCredentials,
+            onChanged: (value) {
+              if (value != null) update(auth.copyWith(password: value));
+            },
+          ),
+        ],
+      ],
     );
   }
 }
@@ -610,12 +699,14 @@ final generalItems = <Widget>[
   const HostsItem(),
   const Ipv6Item(),
   const AllowLanItem(),
+  const LocalProxyAuthenticationItem(),
   const UnifiedDelayItem(),
   const AppendSystemDNSItem(),
   const FindProcessItem(),
   const TcpConcurrentItem(),
   const GeodataLoaderItem(),
   const ExternalControllerItem(),
+  const ControllerSecretItem(),
 ].separated(const Divider(height: 0)).toList();
 
 class _PortDialog extends ConsumerStatefulWidget {

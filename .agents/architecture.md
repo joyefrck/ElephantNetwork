@@ -426,3 +426,7 @@ Linux packages ship the same hash-verified Helper contract over `/run/elephantne
 Windows binds each managed Core to a kill-on-close job. If confinement fails after spawn, the Helper confirms termination before releasing ownership and reports a post-spawn failure; it never silently drops an unconfirmed child.
 
 Restore stages and validates archives before changing active data. SQLite transactions include a restore commit ID, while `.restore-recovery/` keeps bounded file undo journals outside extracted archive contents. Startup recovers journals before loading configuration; desktop takes the data lock before migration or recovery. Uncommitted tasks roll files back, committed tasks finish settings persistence. Backup snapshots use SQLite `VACUUM INTO` so WAL data is included. Subscription and restore file mutations share the reentrant `DataMutationQueue`.
+
+## Local Controller And Proxy Credentials
+
+The app owns controller endpoints and credentials. Enabled controllers require a persisted random secret; subscription TLS/Unix/pipe controller endpoints cannot override the app. Optional proxy authentication is disabled by default, applies to loopback too, and must reach full configuration, live updates and the app HTTP client together. Android must omit its system HTTP proxy declaration while credentials are required because ProxyInfo cannot carry them. `SAFE_MODE=true` disables the external controller without changing normal-mode routing settings. HTTP clients retain platform certificate validation; do not log Core arguments containing secrets.

@@ -91,6 +91,7 @@ final class _InputAction extends _ListItemAction {
   final int? maxLength;
   final TextInputType? keyboardType;
   final String? resetValue;
+  final bool obscureText;
 
   const _InputAction({
     required this.title,
@@ -98,6 +99,7 @@ final class _InputAction extends _ListItemAction {
     this.suffixText,
     required this.onChanged,
     this.resetValue,
+    this.obscureText = false,
     this.validator,
     this.maxLength,
     this.keyboardType,
@@ -238,6 +240,7 @@ class ListItem<T> extends StatelessWidget {
     int? maxLength,
     TextInputType? keyboardType,
     String? resetValue,
+    bool obscureText = false,
     this.horizontalTitleGap,
     this.dense,
     this.titleTextStyle,
@@ -256,6 +259,7 @@ class ListItem<T> extends StatelessWidget {
          maxLength: maxLength,
          keyboardType: keyboardType,
          resetValue: resetValue,
+         obscureText: obscureText,
        ),
        onTap = null;
 
@@ -423,6 +427,7 @@ class ListItem<T> extends StatelessWidget {
               child: InputDialog(
                 title: inputDelegate.title,
                 value: inputDelegate.value,
+                obscureText: inputDelegate.obscureText,
                 suffixText: inputDelegate.suffixText,
                 resetValue: inputDelegate.resetValue,
                 inputFormatters: inputDelegate.maxLength == null

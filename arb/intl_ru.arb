@@ -616,5 +616,10 @@
   "updateCancelled": "Загрузка отменена. Можно повторить попытку.",
   "updateInstalled": "Обновление установлено",
   "updateInstallNow": "Установить сейчас",
-  "updateLater": "Позже"
+  "updateLater": "Позже",
+  "controllerSecret": "Ключ доступа к контроллеру",
+  "localProxyAuthentication": "Авторизация локального прокси",
+  "localProxyAuthenticationDesc": "Требовать учётные данные для HTTP и SOCKS. При включении системный HTTP-прокси Android отключается.",
+  "localProxyUsername": "Имя пользователя прокси",
+  "invalidProxyCredentials": "Введите допустимые имя и пароль. Имя не должно содержать пробелы или двоеточия."
 }

@@ -100,7 +100,9 @@ class BackupAction extends _$BackupAction {
       staged = await prepareRestore();
       final migrationData = staged.data;
       final configMap = migrationData.configMap;
-      final config = configMap == null ? null : Config.fromJson(configMap);
+      final config = configMap == null
+          ? null
+          : normalizeLocalControlConfig(Config.fromJson(configMap));
       files = RestoreFileTransaction(
         stagingRoot: staged.directory,
         activeRoot: await restoreRoot,

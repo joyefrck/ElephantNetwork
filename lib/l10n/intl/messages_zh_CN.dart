@@ -195,6 +195,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "contentNotEmpty": MessageLookupByLibrary.simpleMessage("内容不能为空"),
     "contentScheme": MessageLookupByLibrary.simpleMessage("内容主题"),
     "controlGlobalAddedRules": MessageLookupByLibrary.simpleMessage("控制全局附加规则"),
+    "controllerSecret": MessageLookupByLibrary.simpleMessage("控制接口密钥"),
     "copy": MessageLookupByLibrary.simpleMessage("复制"),
     "copyEnvVar": MessageLookupByLibrary.simpleMessage("复制环境变量"),
     "copyLink": MessageLookupByLibrary.simpleMessage("复制链接"),
@@ -375,6 +376,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidCredentials": MessageLookupByLibrary.simpleMessage("邮箱或密码错误"),
     "invalidPolicy": m14,
     "invalidProxy": m15,
+    "invalidProxyCredentials": MessageLookupByLibrary.simpleMessage(
+      "请输入有效的用户名和密码，用户名不能包含空格或冒号。",
+    ),
     "invalidProxyProvider": m16,
     "invalidSubRule": m17,
     "ipcidr": MessageLookupByLibrary.simpleMessage("IP/掩码"),
@@ -393,6 +397,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "loading": MessageLookupByLibrary.simpleMessage("加载中..."),
     "local": MessageLookupByLibrary.simpleMessage("本地"),
     "localBackupDesc": MessageLookupByLibrary.simpleMessage("备份数据到本地"),
+    "localProxyAuthentication": MessageLookupByLibrary.simpleMessage("本地代理认证"),
+    "localProxyAuthenticationDesc": MessageLookupByLibrary.simpleMessage(
+      "HTTP 和 SOCKS 代理连接需要用户名和密码。开启后 Android 不声明系统 HTTP 代理。",
+    ),
+    "localProxyUsername": MessageLookupByLibrary.simpleMessage("代理用户名"),
     "locationPermission": MessageLookupByLibrary.simpleMessage("位置权限"),
     "locationPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
       "位置权限已被拒绝，无法获取当前 Wi-Fi 名称。请前往系统设置手动开启位置权限。",

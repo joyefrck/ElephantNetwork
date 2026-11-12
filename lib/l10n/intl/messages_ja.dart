@@ -217,6 +217,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "controlGlobalAddedRules": MessageLookupByLibrary.simpleMessage(
       "グローバル追加ルールを制御",
     ),
+    "controllerSecret": MessageLookupByLibrary.simpleMessage("コントローラーのアクセスキー"),
     "copy": MessageLookupByLibrary.simpleMessage("コピー"),
     "copyEnvVar": MessageLookupByLibrary.simpleMessage("環境変数をコピー"),
     "copyLink": MessageLookupByLibrary.simpleMessage("リンクをコピー"),
@@ -421,6 +422,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "invalidPolicy": m14,
     "invalidProxy": m15,
+    "invalidProxyCredentials": MessageLookupByLibrary.simpleMessage(
+      "有効なユーザー名とパスワードを入力してください。ユーザー名に空白やコロンは使えません。",
+    ),
     "invalidProxyProvider": m16,
     "invalidSubRule": m17,
     "ipcidr": MessageLookupByLibrary.simpleMessage("IPCIDR"),
@@ -441,6 +445,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "loading": MessageLookupByLibrary.simpleMessage("読み込み中..."),
     "local": MessageLookupByLibrary.simpleMessage("ローカル"),
     "localBackupDesc": MessageLookupByLibrary.simpleMessage("ローカルにデータをバックアップ"),
+    "localProxyAuthentication": MessageLookupByLibrary.simpleMessage(
+      "ローカルプロキシ認証",
+    ),
+    "localProxyAuthenticationDesc": MessageLookupByLibrary.simpleMessage(
+      "HTTP・SOCKS 接続に認証を要求します。有効時は Android のシステム HTTP プロキシを無効にします。",
+    ),
+    "localProxyUsername": MessageLookupByLibrary.simpleMessage("プロキシのユーザー名"),
     "locationPermission": MessageLookupByLibrary.simpleMessage(
       "Location Permission",
     ),

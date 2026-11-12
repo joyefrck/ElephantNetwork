@@ -4993,6 +4993,56 @@ class AppLocalizations {
   String get updateLater {
     return Intl.message('Later', name: 'updateLater', desc: '', args: []);
   }
+
+  /// `Controller access key`
+  String get controllerSecret {
+    return Intl.message(
+      'Controller access key',
+      name: 'controllerSecret',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Local proxy authentication`
+  String get localProxyAuthentication {
+    return Intl.message(
+      'Local proxy authentication',
+      name: 'localProxyAuthentication',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Require credentials for HTTP and SOCKS proxy connections. Android system HTTP proxy is disabled when enabled.`
+  String get localProxyAuthenticationDesc {
+    return Intl.message(
+      'Require credentials for HTTP and SOCKS proxy connections. Android system HTTP proxy is disabled when enabled.',
+      name: 'localProxyAuthenticationDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy username`
+  String get localProxyUsername {
+    return Intl.message(
+      'Proxy username',
+      name: 'localProxyUsername',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter a valid username and password. The username cannot contain spaces or colons.`
+  String get invalidProxyCredentials {
+    return Intl.message(
+      'Enter a valid username and password. The username cannot contain spaces or colons.',
+      name: 'invalidProxyCredentials',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

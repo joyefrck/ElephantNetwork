@@ -616,5 +616,10 @@
   "updateCancelled": "已取消下载，可重新更新。",
   "updateInstalled": "更新已安装",
   "updateInstallNow": "立即安装",
-  "updateLater": "稍后"
+  "updateLater": "稍后",
+  "controllerSecret": "控制接口密钥",
+  "localProxyAuthentication": "本地代理认证",
+  "localProxyAuthenticationDesc": "HTTP 和 SOCKS 代理连接需要用户名和密码。开启后 Android 不声明系统 HTTP 代理。",
+  "localProxyUsername": "代理用户名",
+  "invalidProxyCredentials": "请输入有效的用户名和密码，用户名不能包含空格或冒号。"
 }

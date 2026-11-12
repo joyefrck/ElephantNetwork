@@ -1,3 +1,4 @@
+import 'package:fl_clash/common/local_control.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -123,7 +124,16 @@ Future<CompiledProfile> _compileProfileTask(MakeRealProfileState data) async {
     );
   }
 
-  rawConfig['external-controller'] = realPatchConfig.externalController.value;
+  rawConfig['external-controller'] = effectiveController(
+    realPatchConfig,
+    safeMode: data.safeMode,
+  ).value;
+  rawConfig['secret'] = realPatchConfig.secret;
+  for (final endpoint in ['tls', 'unix', 'pipe']) {
+    rawConfig['external-controller-$endpoint'] = '';
+  }
+  rawConfig['authentication'] = data.authentication;
+  rawConfig['skip-auth-prefixes'] = <String>[];
   rawConfig['external-ui'] = '';
   rawConfig['interface-name'] = '';
   rawConfig['external-ui-url'] = '';

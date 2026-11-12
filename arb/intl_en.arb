@@ -623,5 +623,10 @@
   "updateCancelled": "Download cancelled. You can try again.",
   "updateInstalled": "Update installed",
   "updateInstallNow": "Install now",
-  "updateLater": "Later"
+  "updateLater": "Later",
+  "controllerSecret": "Controller access key",
+  "localProxyAuthentication": "Local proxy authentication",
+  "localProxyAuthenticationDesc": "Require credentials for HTTP and SOCKS proxy connections. Android system HTTP proxy is disabled when enabled.",
+  "localProxyUsername": "Proxy username",
+  "invalidProxyCredentials": "Enter a valid username and password. The username cannot contain spaces or colons."
 }

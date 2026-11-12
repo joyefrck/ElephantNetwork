@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:fl_clash/common/local_control.dart';
 import 'package:animations/animations.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fl_clash/common/theme.dart';
@@ -105,7 +106,11 @@ class GlobalState {
         }
       },
     );
-    var config = await migration.run();
+    final migrated = await migration.run();
+    var config = normalizeLocalControlConfig(migrated);
+    if (config != migrated && !await preferences.saveConfig(config)) {
+      throw StateError('Local control settings could not be saved');
+    }
     _didCrashOnPreviousExecution = await system.didCrashOnPreviousExecution();
     if (_didCrashOnPreviousExecution) {
       config = config.copyWith(currentProfileId: null);

@@ -477,7 +477,9 @@ func handleUpdateConfig(params *UpdateParams) string {
 	if isExiting.Load() {
 		return "Core is stopping"
 	}
-	updateConfig(params)
+	if err := updateConfig(params); err != nil {
+		return err.Error()
+	}
 	return ""
 }
 

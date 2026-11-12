@@ -138,6 +138,60 @@ void main() {
     },
   );
 
+  test(
+    'authentication updates Core and suppresses Android system HTTP proxy only while enabled',
+    () async {
+      await AppLocalizations.load(const Locale('en'));
+      const authentication = AuthenticationProps(
+        enable: true,
+        username: 'local',
+        password: 'secret',
+      );
+      container
+          .read(networkSettingProvider.notifier)
+          .update((value) => value.copyWith(authentication: authentication));
+      expect(container.read(updateParamsProvider).authentication, [
+        'local:secret',
+      ]);
+      expect(
+        container.read(sharedStateProvider).vpnOptions!.systemProxy,
+        false,
+      );
+      expect(container.read(sharedStateProvider).vpnOptions!.enable, true);
+      container
+          .read(networkSettingProvider.notifier)
+          .update((value) => value.copyWith.authentication(enable: false));
+      expect(container.read(updateParamsProvider).authentication, isEmpty);
+      expect(container.read(sharedStateProvider).vpnOptions!.systemProxy, true);
+    },
+  );
+
+  test(
+    'controller update includes its secret and rejects missing credentials',
+    () {
+      container
+          .read(patchClashConfigProvider.notifier)
+          .update(
+            (value) => value.copyWith(
+              externalController: ExternalControllerStatus.open,
+            ),
+          );
+      expect(
+        container.read(updateParamsProvider).externalController,
+        ExternalControllerStatus.close,
+      );
+      final secret = 'a' * 64;
+      container
+          .read(patchClashConfigProvider.notifier)
+          .update((value) => value.copyWith(secret: secret));
+      expect(
+        container.read(updateParamsProvider).externalController,
+        ExternalControllerStatus.open,
+      );
+      expect(container.read(updateParamsProvider).secret, secret);
+    },
+  );
+
   test('group derivation sanitizes runtime state and respects clash mode', () {
     final groups = [
       const Group(

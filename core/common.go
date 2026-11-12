@@ -25,7 +25,6 @@ import (
 	cp "github.com/metacubex/mihomo/constant/provider"
 	"github.com/metacubex/mihomo/hub"
 	"github.com/metacubex/mihomo/hub/executor"
-	"github.com/metacubex/mihomo/hub/route"
 	"github.com/metacubex/mihomo/listener"
 	"github.com/metacubex/mihomo/log"
 	rp "github.com/metacubex/mihomo/rules/provider"
@@ -182,11 +181,19 @@ func readFile(path string) ([]byte, error) {
 	return data, err
 }
 
-func updateConfig(params *UpdateParams) {
+func updateConfig(params *UpdateParams) error {
 	runLock.Lock()
 	defer runLock.Unlock()
+	if isExiting.Load() {
+		return errors.New("Core is stopping")
+	}
 	if currentConfig == nil {
-		return
+		return errors.New("config is not applied")
+	}
+	if params.Authentication != nil {
+		if err := applyAuthentication(currentConfig, *params.Authentication); err != nil {
+			return err
+		}
 	}
 	general := currentConfig.General
 	if params.DelayTestTimeout != nil {
@@ -230,12 +237,7 @@ func updateConfig(params *UpdateParams) {
 		general.IPv6 = *params.IPv6
 		resolver.DisableIPv6 = !general.IPv6
 	}
-	if params.ExternalController != nil {
-		currentConfig.Controller.ExternalController = *params.ExternalController
-		route.ReCreateServer(&route.Config{
-			Addr: currentConfig.Controller.ExternalController,
-		})
-	}
+	patchLocalController(currentConfig, params)
 
 	if params.Tun != nil {
 		general.Tun.Enable = params.Tun.Enable
@@ -314,6 +316,7 @@ func updateConfig(params *UpdateParams) {
 	if updater.GeoAutoUpdate() {
 		updater.RegisterGeoUpdaterWithCancel()
 	}
+	return nil
 }
 
 func applyConfig(params *SetupParams) error {

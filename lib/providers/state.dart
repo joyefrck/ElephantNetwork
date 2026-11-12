@@ -1,3 +1,4 @@
+import 'package:fl_clash/common/local_control.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/controller.dart';
@@ -66,6 +67,9 @@ NavigationItemsState currentNavigationItemsState(Ref ref) {
 
 @riverpod
 UpdateParams updateParams(Ref ref) {
+  final authentication = ref.watch(
+    networkSettingProvider.select((state) => state.authentication),
+  );
   final timeout = ref.watch(
     appSettingProvider.select((state) => state.testTimeout),
   );
@@ -91,7 +95,9 @@ UpdateParams updateParams(Ref ref) {
         logLevel: state.logLevel,
         ipv6: state.ipv6,
         tcpConcurrent: state.tcpConcurrent,
-        externalController: state.externalController,
+        externalController: effectiveController(state),
+        secret: state.secret,
+        authentication: authentication.credentials,
         unifiedDelay: state.unifiedDelay,
         mixedPort: state.mixedPort,
         geoAutoUpdate: state.geoAutoUpdate,
@@ -614,7 +620,13 @@ SharedState sharedState(Ref ref) {
     vpnOptions: VpnOptions(
       enable: vpnSetting.enable,
       stack: stack,
-      systemProxy: vpnSetting.systemProxy,
+      systemProxy:
+          vpnSetting.systemProxy &&
+          !ref.watch(
+            networkSettingProvider.select(
+              (state) => state.authentication.enable,
+            ),
+          ),
       port: port,
       ipv6: vpnSetting.ipv6,
       dnsHijacking: vpnSetting.dnsHijacking,
