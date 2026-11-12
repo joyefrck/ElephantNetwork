@@ -52,6 +52,13 @@ Use `flutter test`, not `dart test`, because models pull in Flutter types.
 
 ## Code Generation
 
+Application icons share the source `assets_source/images/app_icon.svg`. After changing it, regenerate the shared Flutter,
+macOS, Windows, Android phone and Android TV assets with `rsvg-convert` (librsvg) and `cwebp` (WebP) available:
+
+```bash
+dart run tool/generate_app_icons.dart
+```
+
 Run code generation after modifying models, providers, or database schema:
 
 ```bash

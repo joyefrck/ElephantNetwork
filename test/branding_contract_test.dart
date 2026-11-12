@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('fork identity and GPL notices remain explicit', () {
     final constants = File('lib/common/constant.dart').readAsStringSync();
     final submodules = File('.gitmodules').readAsStringSync();
@@ -11,7 +14,10 @@ void main() {
     final upstream = File('docs/UPSTREAM.md');
 
     expect(constants, contains("const appName = 'Elephant Network';"));
-    expect(constants, contains("const repository = 'joyefrck/ElephantNetwork';"));
+    expect(
+      constants,
+      contains("const repository = 'joyefrck/ElephantNetwork';"),
+    );
     expect(
       submodules,
       contains('url = https://github.com/chen08209/Clash.Meta.git'),
@@ -22,17 +28,75 @@ void main() {
     expect(notice.readAsStringSync(), contains('chen08209/FlClash'));
     expect(upstream.existsSync(), isTrue);
     expect(upstream.readAsStringSync(), contains('upstream/main'));
+  });
+
+  test('desktop and shared app icons use the same artwork', () {
     expect(
-      sha256.convert(File('assets/images/icon.png').readAsBytesSync()).toString(),
-      'e33eca5618b59c7afd58422e0df70c9f9c990f2335229c30cdd649d1ecd17dad',
+      File('assets/images/icon.png').readAsBytesSync(),
+      File(
+        'macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png',
+      ).readAsBytesSync(),
     );
     expect(
-      sha256
-          .convert(
-            File('windows/runner/resources/app_icon.ico').readAsBytesSync(),
-          )
-          .toString(),
-      'f9a196b8cd8e9fdcfd32c5e34f8c618a2196ab89316052be14ad3d5a0be35456',
+      File('assets/images/icon.ico').readAsBytesSync(),
+      File('windows/runner/resources/app_icon.ico').readAsBytesSync(),
     );
+  });
+
+  test(
+    'launcher artwork has a pure white tile and the E brand colors',
+    () async {
+      final files = [
+        File('assets/images/icon.png'),
+        File('android/app/src/main/ic_launcher-playstore.png'),
+        ...Directory('android/app/src/main/res')
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((file) => file.path.endsWith('.webp')),
+      ];
+      for (final file in files) {
+        final codec = await ui.instantiateImageCodec(await file.readAsBytes());
+        final image = (await codec.getNextFrame()).image;
+        try {
+          final pixels = (await image.toByteData())!;
+          List<int> pixel(double x, double y) {
+            final offset =
+                ((image.height * y).floor() * image.width +
+                    (image.width * x).floor()) *
+                4;
+            return List.generate(4, (index) => pixels.getUint8(offset + index));
+          }
+
+          expect(pixel(0.5, 0.14), [255, 255, 255, 255], reason: file.path);
+          expect(pixel(0.5, 0.32), [15, 23, 42, 255], reason: file.path);
+          expect(pixel(0.5, 0.5), [16, 185, 129, 255], reason: file.path);
+        } finally {
+          image.dispose();
+          codec.dispose();
+        }
+      }
+    },
+  );
+
+  test('Windows icons contain native small and high resolution frames', () {
+    final bytes = File(
+      'windows/runner/resources/app_icon.ico',
+    ).readAsBytesSync();
+    final data = ByteData.sublistView(bytes);
+    expect(data.getUint16(2, Endian.little), 1);
+    final frameCount = data.getUint16(4, Endian.little);
+    final sizes = <int>{};
+    for (var i = 0; i < frameCount; i++) {
+      final offset = 6 + i * 16;
+      final width = data.getUint8(offset);
+      expect(data.getUint8(offset + 1), width);
+      sizes.add(width == 0 ? 256 : width);
+      expect(
+        data.getUint32(offset + 12, Endian.little) +
+            data.getUint32(offset + 8, Endian.little),
+        lessThanOrEqualTo(bytes.length),
+      );
+    }
+    expect(sizes, containsAll([16, 24, 32, 48, 64, 128, 256]));
   });
 }

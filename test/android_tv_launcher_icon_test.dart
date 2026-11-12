@@ -82,8 +82,7 @@ void main() {
       'viewportHeight',
     );
 
-    // Conservative bounds of the current logo, including the curved caps.
-    const logoBounds = ui.Rect.fromLTRB(54, 33, 179, 206.5);
+    const logoBounds = ui.Rect.fromLTRB(17, 21, 85, 79);
     final transformedBounds = ui.Rect.fromLTRB(
       (logoBounds.left * scaleX + translateX) / viewportWidth * 108,
       (logoBounds.top * scaleY + translateY) / viewportHeight * 108,
@@ -100,7 +99,7 @@ void main() {
     expect(transformedBounds.center.dy, closeTo(safeZone.center.dy, 0.05));
   });
 
-  test('phone adaptive launcher logo keeps the legacy icon visual size', () {
+  test('phone and TV adaptive icons share the centered E artwork', () {
     final adaptiveIcon = File(
       'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
     ).readAsStringSync();
@@ -114,8 +113,8 @@ void main() {
     ).readAsStringSync();
     final scaleX = _androidDoubleAttribute(vector, 'group', 'scaleX');
     final scaleY = _androidDoubleAttribute(vector, 'group', 'scaleY');
-    final pivotX = _androidDoubleAttribute(vector, 'group', 'pivotX');
-    final pivotY = _androidDoubleAttribute(vector, 'group', 'pivotY');
+    final translateX = _androidDoubleAttribute(vector, 'group', 'translateX');
+    final translateY = _androidDoubleAttribute(vector, 'group', 'translateY');
     final viewportWidth = _androidDoubleAttribute(
       vector,
       'vector',
@@ -129,23 +128,26 @@ void main() {
 
     const logoBounds = ui.Rect.fromLTRB(17, 21, 85, 79);
     final transformedBounds = ui.Rect.fromLTRB(
-      (pivotX + (logoBounds.left - pivotX) * scaleX) /
-          viewportWidth *
-          108,
-      (pivotY + (logoBounds.top - pivotY) * scaleY) /
-          viewportHeight *
-          108,
-      (pivotX + (logoBounds.right - pivotX) * scaleX) /
-          viewportWidth *
-          108,
-      (pivotY + (logoBounds.bottom - pivotY) * scaleY) /
-          viewportHeight *
-          108,
+      (logoBounds.left * scaleX + translateX) / viewportWidth * 108,
+      (logoBounds.top * scaleY + translateY) / viewportHeight * 108,
+      (logoBounds.right * scaleX + translateX) / viewportWidth * 108,
+      (logoBounds.bottom * scaleY + translateY) / viewportHeight * 108,
     );
 
-    expect(transformedBounds.width, lessThanOrEqualTo(48));
-    expect(transformedBounds.height, lessThanOrEqualTo(48));
-    expect(transformedBounds.center.dx, closeTo(54, 1));
-    expect(transformedBounds.center.dy, closeTo(54, 1));
+    expect(transformedBounds.width / 72, closeTo(0.77, 0.01));
+    expect(transformedBounds.center.dx, closeTo(54, 0.05));
+    expect(transformedBounds.center.dy, closeTo(54, 0.05));
+    expect(
+      vector,
+      File(
+        'android/app/src/main/res/drawable/ic_launcher_foreground_tv.xml',
+      ).readAsStringSync(),
+    );
+    expect(
+      File(
+        'android/app/src/main/res/values/ic_launcher_background.xml',
+      ).readAsStringSync(),
+      contains('>#FFFFFF</color>'),
+    );
   });
 }
