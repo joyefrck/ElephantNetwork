@@ -120,6 +120,36 @@ void main() {
     );
   });
 
+  testWidgets('rejected login restores the email after the wait screen', (
+    tester,
+  ) async {
+    await _pumpGate(tester, const XboardSessionState.unauthenticated());
+    await tester.enterText(
+      find.byType(TextFormField).first,
+      'owner@example.com',
+    );
+    await tester.enterText(find.byType(TextFormField).last, 'wrong-password');
+    await _pumpGate(
+      tester,
+      const XboardSessionState.authenticating('owner@example.com'),
+    );
+    expect(find.byType(TextFormField), findsNothing);
+
+    await _pumpGate(
+      tester,
+      const XboardSessionState(
+        status: XboardSessionStatus.unauthenticated,
+        email: 'owner@example.com',
+        error: XboardApiException(statusCode: 400),
+      ),
+    );
+
+    final fields = tester.widgetList<TextFormField>(find.byType(TextFormField));
+    expect(fields.first.controller?.text, 'owner@example.com');
+    expect(fields.last.controller?.text, isEmpty);
+    expect(find.text('Invalid email or password'), findsOneWidget);
+  });
+
   testWidgets('connection failure shows a network-specific error', (
     tester,
   ) async {

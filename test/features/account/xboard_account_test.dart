@@ -279,6 +279,19 @@ void main() {
   });
 
   group('XboardSessionStore', () {
+    test('clearing credentials preserves the remembered email', () async {
+      final store = XboardSessionStore(
+        secureStore: _MemorySecureStore(),
+        legacyStore: _MemoryLegacyStore(null),
+      );
+      await store.saveSession('token', 'owner@example.com');
+
+      await store.clear();
+
+      expect(await store.readToken(), isNull);
+      expect(await store.readEmail(), 'owner@example.com');
+    });
+
     test(
       'stores the account email with the token for session restore',
       () async {
@@ -325,6 +338,62 @@ void main() {
   });
 
   group('XboardSessionCoordinator', () {
+    test('rejected login remembers the email across app restarts', () async {
+      final store = XboardSessionStore(
+        secureStore: _MemorySecureStore(),
+        legacyStore: _MemoryLegacyStore(null),
+      );
+      final api = XboardApi(
+        transport: _FakeTransport({
+          XboardConfig.loginPath: const XboardApiException(statusCode: 400),
+        }),
+      );
+      final coordinator = XboardSessionCoordinator(
+        api: api,
+        store: store,
+        managedProfile: _FakeManagedProfileGateway(),
+      );
+
+      expect(await coordinator.login(' owner@example.com ', 'wrong'), isFalse);
+      expect(coordinator.state.email, 'owner@example.com');
+      expect(coordinator.state.error, isA<XboardApiException>());
+      expect(await store.readToken(), isNull);
+
+      final restarted = XboardSessionCoordinator(
+        api: api,
+        store: store,
+        managedProfile: _FakeManagedProfileGateway(),
+      );
+      expect(await restarted.restore(), isFalse);
+      expect(restarted.state.email, 'owner@example.com');
+    });
+
+    test('logout retains the email while removing the session', () async {
+      final gateway = _FakeManagedProfileGateway();
+      final store = XboardSessionStore(
+        secureStore: _MemorySecureStore(),
+        legacyStore: _MemoryLegacyStore(null),
+      );
+      final coordinator = _authenticatedCoordinator(gateway, store: store);
+      expect(await coordinator.login('owner@example.com', 'password'), isTrue);
+
+      await coordinator.logout();
+
+      expect(coordinator.state.status, XboardSessionStatus.unauthenticated);
+      expect(coordinator.state.session, isNull);
+      expect(coordinator.state.email, 'owner@example.com');
+      expect(gateway.removed, isTrue);
+      expect(await store.readToken(), isNull);
+
+      final restarted = XboardSessionCoordinator(
+        api: XboardApi(transport: _FakeTransport(const {})),
+        store: store,
+        managedProfile: gateway,
+      );
+      expect(await restarted.restore(), isFalse);
+      expect(restarted.state.email, 'owner@example.com');
+    });
+
     test('login completes before managed profile reconciliation', () async {
       final gateway = _BlockingManagedProfileGateway();
       addTearDown(() {
@@ -589,7 +658,7 @@ void main() {
         secureStore: secure,
         legacyStore: _MemoryLegacyStore(null),
       );
-      await store.saveToken('stored-token');
+      await store.saveSession('stored-token', 'owner@example.com');
       final coordinator = XboardSessionCoordinator(
         api: XboardApi(
           transport: _FakeTransport({
@@ -605,6 +674,7 @@ void main() {
       expect(await coordinator.restore(), isFalse);
       expect(coordinator.state.status, XboardSessionStatus.unauthenticated);
       expect(coordinator.state.error, isNull);
+      expect(coordinator.state.email, 'owner@example.com');
     });
 
     test('unauthorized refresh clears session and managed profile', () async {
@@ -613,7 +683,7 @@ void main() {
         secureStore: secure,
         legacyStore: _MemoryLegacyStore(null),
       );
-      await store.saveToken('stored-token');
+      await store.saveSession('stored-token', 'owner@example.com');
       final gateway = _FakeManagedProfileGateway();
       final coordinator = XboardSessionCoordinator(
         api: XboardApi(
@@ -630,7 +700,9 @@ void main() {
       expect(await coordinator.restore(), isFalse);
       expect(coordinator.state.status, XboardSessionStatus.unauthenticated);
       expect(gateway.removed, isTrue);
-      expect(secure.values, isEmpty);
+      expect(await store.readToken(), isNull);
+      expect(await store.readEmail(), 'owner@example.com');
+      expect(coordinator.state.email, 'owner@example.com');
     });
 
     test(
@@ -850,6 +922,7 @@ class _FakeManagedProfileGateway implements XboardManagedProfileGateway {
 
 XboardSessionCoordinator _authenticatedCoordinator(
   XboardManagedProfileGateway gateway, {
+  XboardSessionStore? store,
   Future<void> Function(Duration delay)? retryDelay,
 }) {
   return XboardSessionCoordinator(
@@ -870,10 +943,12 @@ XboardSessionCoordinator _authenticatedCoordinator(
         },
       }),
     ),
-    store: XboardSessionStore(
-      secureStore: _MemorySecureStore(),
-      legacyStore: _MemoryLegacyStore(null),
-    ),
+    store:
+        store ??
+        XboardSessionStore(
+          secureStore: _MemorySecureStore(),
+          legacyStore: _MemoryLegacyStore(null),
+        ),
     managedProfile: gateway,
     retryDelay: retryDelay,
   );

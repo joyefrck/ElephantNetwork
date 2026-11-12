@@ -79,6 +79,13 @@ class _XboardLoginViewState extends ConsumerState<XboardLoginView> {
   final _passwordController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _emailController.text =
+        ref.read(xboardSessionControllerProvider).email ?? '';
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();

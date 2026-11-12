@@ -115,18 +115,25 @@ class XboardSessionStore {
 
   Future<String?> readEmail() => _secureStore.read(_emailKey);
 
+  Future<void> saveEmail(String email) async {
+    final normalizedEmail = email.trim();
+    if (normalizedEmail.isEmpty) {
+      throw ArgumentError.value(email, 'email');
+    }
+    await _secureStore.write(_emailKey, normalizedEmail);
+  }
+
   Future<void> saveSession(String token, String email) async {
     final normalizedEmail = email.trim();
     if (normalizedEmail.isEmpty) {
       throw ArgumentError.value(email, 'email');
     }
     await saveToken(token);
-    await _secureStore.write(_emailKey, normalizedEmail);
+    await saveEmail(normalizedEmail);
   }
 
   Future<void> clear() async {
     await _secureStore.delete(_tokenKey);
-    await _secureStore.delete(_emailKey);
     await _legacyStore.deleteToken();
   }
 }

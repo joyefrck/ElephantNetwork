@@ -50,11 +50,11 @@ class XboardSessionCoordinator {
       _setState(XboardSessionState.loading(email: email));
       token = await _store.readToken();
     } catch (_) {
-      _setState(const XboardSessionState.unauthenticated());
+      _setUnauthenticated();
       return false;
     }
     if (token == null || token.isEmpty) {
-      _setState(const XboardSessionState.unauthenticated());
+      _setUnauthenticated();
       return false;
     }
     return _activate(token, persist: false, exposeFailure: false);
@@ -67,10 +67,11 @@ class XboardSessionCoordinator {
   Future<bool> _login(String email, String password) async {
     _setState(XboardSessionState.authenticating(email.trim()));
     try {
+      await _store.saveEmail(email);
       final token = await _api.login(email, password);
       return await _activate(token, persist: true);
     } catch (error) {
-      _setState(XboardSessionState.unauthenticated(error));
+      _setUnauthenticated(error);
       return false;
     }
   }
@@ -136,7 +137,7 @@ class XboardSessionCoordinator {
     } catch (error) {
       failure ??= error;
     }
-    _setState(XboardSessionState.unauthenticated(failure));
+    _setUnauthenticated(failure);
   }
 
   Future<bool> _activate(
@@ -160,9 +161,7 @@ class XboardSessionCoordinator {
       if (error.isUnauthorized) {
         await _managedProfile.stopAndRemove();
         await _store.clear();
-        _setState(
-          XboardSessionState.unauthenticated(exposeFailure ? error : null),
-        );
+        _setUnauthenticated(exposeFailure ? error : null);
         return false;
       }
       if (keepSessionOnFailure && state.session != null) {
@@ -170,9 +169,15 @@ class XboardSessionCoordinator {
           XboardSessionState.authenticated(state.session, error: error),
         );
       } else if (exposeFailure) {
-        _setState(XboardSessionState.unavailable(error));
+        _setState(
+          XboardSessionState(
+            status: XboardSessionStatus.unavailable,
+            email: state.email,
+            error: error,
+          ),
+        );
       } else {
-        _setState(const XboardSessionState.unauthenticated());
+        _setUnauthenticated();
       }
       return false;
     } catch (error) {
@@ -181,12 +186,28 @@ class XboardSessionCoordinator {
           XboardSessionState.authenticated(state.session, error: error),
         );
       } else if (exposeFailure) {
-        _setState(XboardSessionState.unavailable(error));
+        _setState(
+          XboardSessionState(
+            status: XboardSessionStatus.unavailable,
+            email: state.email,
+            error: error,
+          ),
+        );
       } else {
-        _setState(const XboardSessionState.unauthenticated());
+        _setUnauthenticated();
       }
       return false;
     }
+  }
+
+  void _setUnauthenticated([Object? error]) {
+    _setState(
+      XboardSessionState(
+        status: XboardSessionStatus.unauthenticated,
+        email: state.email ?? state.session?.account.email,
+        error: error,
+      ),
+    );
   }
 
   void _setState(XboardSessionState value) {
