@@ -56,7 +56,7 @@ object ServiceController {
         NetworkObserver.start()
         suspendCancellableCoroutine { continuation ->
             Core.quickSetup(initParams, setupParams) { result ->
-                continuation.resume(result.orEmpty())
+                if (continuation.isActive) continuation.resume(result.orEmpty())
             }
         }
     }
@@ -65,7 +65,8 @@ object ServiceController {
         Core.updateEventListener(callback)
     }
 
-    suspend fun start(options: VpnOptions): Long = lock.withLock {
+    suspend fun start(options: VpnOptions, onStage: (StartupPhase) -> Unit = {}): Long = lock.withLock {
+        onStage(StartupPhase.SERVICE_BINDING)
         ServiceConfig.updateVpnOptions(options)
         val nextIntent = if (options.enable) {
             VpnService::class.intent
@@ -89,6 +90,7 @@ object ServiceController {
         }
 
         val currentBinding = binding ?: return@withLock 0L
+        onStage(StartupPhase.CORE_START)
         val result = currentBinding.useService { service -> service.start() }
         if (result.isFailure) {
             GlobalState.log("Unable to start background service: ${result.exceptionOrNull()}")

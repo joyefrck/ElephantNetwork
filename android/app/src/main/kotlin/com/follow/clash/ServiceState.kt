@@ -11,8 +11,11 @@ import com.follow.clash.service.models.VpnOptions
 import com.google.gson.Gson
 import io.flutter.embedding.engine.FlutterEngine
 import java.util.concurrent.atomic.AtomicReference
+import java.util.UUID
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -34,6 +37,11 @@ private const val VPN_PERMISSION_MESSAGE = "VPN permission required."
 private const val START_FAILED_MESSAGE = "Failed to start service."
 
 object ServiceState {
+    private val startupJournal by lazy {
+        StartupJournal(StartupCheckpointPreferences(GlobalState.application)).also { journal ->
+            journal.recover()?.let { checkpoint -> GlobalState.log("Previous startup interrupted during ${checkpoint.phase}") }
+        }
+    }
     private val transitionLock = Mutex()
     private val startPreparationLock = Mutex()
     private val mutableRunState = MutableStateFlow(RunState.STOPPED)
@@ -55,6 +63,10 @@ object ServiceState {
 
     private val tilePlugin: TilePlugin?
         get() = flutterEngine?.plugin<TilePlugin>()
+
+    fun recoverStartup() {
+        startupJournal
+    }
 
     fun attachFlutterEngine(engine: FlutterEngine) {
         flutterEngine = engine
@@ -128,15 +140,16 @@ object ServiceState {
         handleStopAction()
     }
 
-    fun requestStart(): Deferred<Boolean> {
-        val request = createRequest(running = true)
+    fun requestStart(): Deferred<Boolean> = requestStart(createRequest(running = true))
+
+    private fun requestStart(request: RunRequest): Deferred<Boolean> {
         val result = CompletableDeferred<Boolean>()
         val launchRequest: (Boolean) -> Unit = { shouldStart ->
-            if (!shouldStart) {
-                fail(request)
-                result.complete(false)
-            } else {
-                GlobalState.launch {
+            GlobalState.launch {
+                if (!shouldStart) {
+                    fail(request)
+                    result.complete(false)
+                } else {
                     result.complete(
                         runCatching { start(request) }
                             .onFailure { error ->
@@ -148,11 +161,21 @@ object ServiceState {
                 }
             }
         }
-        val plugin = appPlugin
-        if (plugin != null) {
-            plugin.requestNotificationPermission(launchRequest)
-        } else {
-            launchRequest(true)
+        GlobalState.launch {
+            if (!isCurrent(request)) {
+                result.complete(false)
+                return@launch
+            }
+            beginStartup(request, StartupPhase.NOTIFICATION_PERMISSION)
+            markStartup(request, StartupPhase.NOTIFICATION_PERMISSION)
+            withContext(Dispatchers.Main) {
+                if (!isCurrent(request)) {
+                    result.complete(false)
+                } else {
+                    val plugin = appPlugin
+                    if (plugin != null) plugin.requestNotificationPermission(launchRequest) else launchRequest(true)
+                }
+            }
         }
         return result
     }
@@ -178,15 +201,27 @@ object ServiceState {
     }
 
     private suspend fun loadPreferencesAndStart() {
-        sharedState = GlobalState.application.sharedState
-        if (sharedState.setupParams == null || sharedState.vpnOptions == null) {
-            GlobalState.application.showToast(MISSING_CONFIG_MESSAGE)
-            return
-        }
-        if (setupCore()) {
-            if (!requestStart().await()) {
+        val request = createRequest(running = true)
+        beginStartup(request, StartupPhase.PREFERENCES)
+        try {
+            sharedState = GlobalState.application.sharedState
+            if (!isCurrent(request)) return
+            if (sharedState.setupParams == null || sharedState.vpnOptions == null) {
+                fail(request)
+                GlobalState.application.showToast(MISSING_CONFIG_MESSAGE)
+                return
+            }
+            markStartup(request, StartupPhase.CONFIGURATION)
+            if (!setupCore()) {
+                fail(request)
+                return
+            }
+            if (isCurrent(request) && !requestStart(request).await()) {
                 GlobalState.application.showToast(START_FAILED_MESSAGE)
             }
+        } catch (error: Exception) {
+            GlobalState.log("Unable to prepare background startup: $error")
+            fail(request)
         }
     }
 
@@ -241,6 +276,8 @@ object ServiceState {
         if (!isCurrent(request)) {
             return@withLock false
         }
+        beginStartup(request, StartupPhase.VPN_PERMISSION)
+        markStartup(request, StartupPhase.VPN_PERMISSION)
         val options = sharedState.vpnOptions
         if (options == null) {
             fail(request)
@@ -262,16 +299,18 @@ object ServiceState {
                 return@transition false
             }
             if (runState.value == RunState.STARTED && runTimeMillis != 0L) {
+                markStartup(request, StartupPhase.STARTED)
                 return@transition true
             }
             mutableRunState.value = RunState.STARTING
-            val startedAtMillis = ServiceController.start(options)
+            val startedAtMillis = ServiceController.start(options) { phase -> markStartup(request, phase) }
             mutableRunState.value =
                 if (startedAtMillis == 0L) RunState.STOPPED else RunState.STARTED
             if (startedAtMillis == 0L) {
                 fail(request)
                 return@transition false
             }
+            markStartup(request, StartupPhase.STARTED)
             isCurrent(request)
         }
     }
@@ -280,12 +319,15 @@ object ServiceState {
         if (!isCurrent(request)) {
             return@withLock false
         }
+        beginStartup(request, StartupPhase.STOPPING)
         if (runState.value == RunState.STOPPED && runTimeMillis == 0L) {
+            markStartup(request, StartupPhase.STOPPED)
             return@withLock true
         }
         mutableRunState.value = RunState.STOPPING
         ServiceController.stop()
         mutableRunState.value = RunState.STOPPED
+        markStartup(request, StartupPhase.STOPPED)
         isCurrent(request)
     }
 
@@ -312,11 +354,21 @@ object ServiceState {
 
     private fun isCurrent(request: RunRequest): Boolean = latestRequest.get() === request
 
+    private fun beginStartup(request: RunRequest, phase: StartupPhase) {
+        if (isCurrent(request)) startupJournal.begin(request.id, phase)
+    }
+
+    private fun markStartup(request: RunRequest, phase: StartupPhase) {
+        if (isCurrent(request)) startupJournal.mark(request.id, phase)
+    }
+
     private fun fail(request: RunRequest) {
+        markStartup(request, StartupPhase.FAILED)
         latestRequest.compareAndSet(request, RunRequest(running = false))
     }
 
     internal class RunRequest(
         val running: Boolean,
+        val id: String = UUID.randomUUID().toString(),
     )
 }

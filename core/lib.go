@@ -192,6 +192,16 @@ func SetEventListener(listener func([]byte)) {
 	eventListenerMu.Lock()
 	eventListener = listener
 	eventListenerMu.Unlock()
+	if listener == nil {
+		stopRouteWatch()
+		cancelProbeTasks()
+	}
+}
+
+func hasMessageListener() bool {
+	eventListenerMu.RLock()
+	defer eventListenerMu.RUnlock()
+	return eventListener != nil
 }
 
 func sendMessageBatch(messages []Message) {

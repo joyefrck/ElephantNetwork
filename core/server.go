@@ -8,16 +8,23 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"sync/atomic"
 )
 
 var (
-	conn   io.ReadWriteCloser
-	connMu sync.Mutex
+	conn           io.ReadWriteCloser
+	connMu         sync.Mutex
+	eventConnected atomic.Bool
 )
 
 const maxIPCFrameSize = 64 * 1024 * 1024
 
+func hasMessageListener() bool { return eventConnected.Load() }
+
 func sendMessageBatch(messages []Message) {
+	if !hasMessageListener() {
+		return
+	}
 	arguments, err := json.Marshal(messages)
 	if err != nil {
 		logError("Message batch marshal error: %v", err)
@@ -96,7 +103,9 @@ func startServer(arg string) {
 		panic(err.Error())
 	}
 
+	eventConnected.Store(true)
 	defer func(conn io.Closer) {
+		eventConnected.Store(false)
 		_ = conn.Close()
 	}(conn)
 

@@ -10,20 +10,31 @@ const (
 )
 
 var (
+	stateMessageQueue    = make(chan Message, messageQueueSize)
 	priorityMessageQueue = make(chan Message, messageQueueSize)
 	bulkMessageQueue     = make(chan Message, messageQueueSize)
 )
 
 func init() {
-	go runMessageBatcher(priorityMessageQueue, bulkMessageQueue, sendMessageBatch)
+	go runMessageBatcher(stateMessageQueue, priorityMessageQueue, bulkMessageQueue, sendMessageBatch)
+}
+
+func queueForMessage(message Message) chan Message {
+	switch message.Type {
+	case LogMessage, RequestMessage:
+		return bulkMessageQueue
+	case DelayMessage:
+		return priorityMessageQueue
+	default:
+		return stateMessageQueue
+	}
 }
 
 func sendMessage(message Message) {
-	queue := priorityMessageQueue
-	if message.Type == LogMessage || message.Type == RequestMessage {
-		queue = bulkMessageQueue
+	if !hasMessageListener() {
+		return
 	}
-	enqueueLatest(queue, message)
+	enqueueLatest(queueForMessage(message), message)
 }
 
 func enqueueLatest(queue chan Message, message Message) {
@@ -32,9 +43,6 @@ func enqueueLatest(queue chan Message, message Message) {
 		return
 	default:
 	}
-
-	// Event delivery must never block the core. Each priority class evicts only
-	// its own oldest event, so log or request floods cannot displace state.
 	select {
 	case <-queue:
 	default:
@@ -45,78 +53,86 @@ func enqueueLatest(queue chan Message, message Message) {
 	}
 }
 
-func runMessageBatcher(
-	priorityMessages <-chan Message,
-	bulkMessages <-chan Message,
-	send func([]Message),
-) {
-	ticker := time.NewTicker(messageBatchInterval)
-	defer ticker.Stop()
-
+func runMessageBatcher(stateMessages, priorityMessages, bulkMessages <-chan Message, send func([]Message)) {
+	timer := time.NewTimer(messageBatchInterval)
+	if !timer.Stop() {
+		<-timer.C
+	}
+	defer timer.Stop()
+	var deadline <-chan time.Time
 	batch := make([]Message, 0, messageBatchSize)
 	flush := func() {
 		if len(batch) == 0 {
 			return
 		}
+		if !timer.Stop() {
+			select {
+			case <-timer.C:
+			default:
+			}
+		}
+		deadline = nil
 		current := append([]Message(nil), batch...)
 		batch = batch[:0]
 		send(current)
 	}
 	appendMessage := func(message Message) {
+		if len(batch) == 0 {
+			timer.Reset(messageBatchInterval)
+			deadline = timer.C
+		}
 		batch = append(batch, message)
 		if len(batch) >= messageBatchSize {
 			flush()
 		}
 	}
-
-	priorityBurst := 0
-	for priorityMessages != nil || bulkMessages != nil {
-		// Give bulk events one guaranteed opportunity after a bounded priority
-		// burst, while retaining priority preference under ordinary load.
-		if priorityBurst >= messagePriorityBurst && bulkMessages != nil {
+	drain := func(queue *<-chan Message, budget int) bool {
+		progress := false
+		for i := 0; i < budget && *queue != nil; i++ {
 			select {
-			case message, ok := <-bulkMessages:
+			case message, ok := <-*queue:
+				progress = true
 				if !ok {
-					bulkMessages = nil
-				} else {
-					appendMessage(message)
+					*queue = nil
+					return progress
 				}
-				priorityBurst = 0
-				continue
+				appendMessage(message)
 			default:
-				priorityBurst = 0
+				return progress
 			}
 		}
-
-		// Prefer state-bearing events whenever both queues have work.
+		return progress
+	}
+	accept := func(queue *<-chan Message, message Message, ok bool) {
+		if !ok {
+			*queue = nil
+		} else {
+			appendMessage(message)
+		}
+	}
+	for stateMessages != nil || priorityMessages != nil || bulkMessages != nil {
 		select {
-		case message, ok := <-priorityMessages:
-			if !ok {
-				priorityMessages = nil
-			} else {
-				appendMessage(message)
-				priorityBurst++
-			}
-			continue
+		case <-deadline:
+			flush()
 		default:
 		}
-
+		progress := drain(&stateMessages, messagePriorityBurst)
+		progress = drain(&priorityMessages, messagePriorityBurst) || progress
+		progress = drain(&bulkMessages, 1) || progress
+		if progress {
+			continue
+		}
+		if stateMessages == nil && priorityMessages == nil && bulkMessages == nil {
+			break
+		}
 		select {
+		case message, ok := <-stateMessages:
+			accept(&stateMessages, message, ok)
 		case message, ok := <-priorityMessages:
-			if !ok {
-				priorityMessages = nil
-			} else {
-				appendMessage(message)
-				priorityBurst++
-			}
+			accept(&priorityMessages, message, ok)
 		case message, ok := <-bulkMessages:
-			if !ok {
-				bulkMessages = nil
-			} else {
-				appendMessage(message)
-			}
-			priorityBurst = 0
-		case <-ticker.C:
+			accept(&bulkMessages, message, ok)
+		case <-deadline:
 			flush()
 		}
 	}
