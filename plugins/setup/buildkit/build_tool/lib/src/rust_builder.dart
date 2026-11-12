@@ -34,7 +34,11 @@ class RustBuilder {
     bool force = false,
     Future<void> Function()? beforeBuild,
   }) async {
-    final args = ['build', '--features', 'windows-service', '--release'];
+    final args = [
+      'build',
+      if (target.goos == 'windows') ...['--features', 'windows-service'],
+      '--release'
+    ];
     final env = {
       'CORE_SHA256': coreSha256,
       'CORE_NAME': '${config.coreName}${target.executableExtension}',
@@ -90,7 +94,7 @@ class RustBuilder {
   }) async {
     final builder = FingerprintBuilder(rootDir: rootDir)
       ..addValue('cache_schema', BuildCache.schemaVersion)
-      ..addValue('kind', 'windows-helper')
+      ..addValue('kind', '${target.goos}-helper')
       ..addValue('target', {
         'goos': target.goos,
         'goarch': target.goarch,

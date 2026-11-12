@@ -13,5 +13,7 @@ func main() {
 		fmt.Println("Arguments error")
 		os.Exit(1)
 	}
+	go exitOnTermination()
+	defer releaseOnExit()
 	startServer(args[1])
 }

@@ -392,7 +392,7 @@ the SHA256 of the Core produced for the active Flutter configuration.
 
 The helper owns its Windows Service Control Manager lifecycle through two elevated commands:
 
-- `ElephantNetworkHelperService.exe install` stops and removes any stale registration, creates the auto-start service for the
+- `ElephantNetworkHelperService.exe install --owner-pid <App PID>` stops and removes any stale registration, creates the auto-start service for the
   current executable path, starts it, and waits for the running state.
 - `ElephantNetworkHelperService.exe uninstall` stops the service, waits for shutdown, removes its registration, and is also used
   by the Windows package uninstaller.
@@ -403,7 +403,7 @@ The Dart layer only launches the helper's `install` command through `ShellExecut
 In every Flutter build mode `/start` opens the fixed Core executable beside the Helper without write/delete sharing,
 validates it against the SHA256 embedded only in the Helper, and keeps that handle open through process creation.
 `/ping` only compares the requested `coreSha256` with the Helper's embedded value and checks the fixed Core path exists;
-it never hashes the Core. Protocol version 6 uses 32-character lowercase-hex session ownership:
+it never hashes the Core. Protocol version 7 uses 32-character lowercase-hex session ownership:
 
 - `GET /ping?coreSha256=...` returns the current Helper executable path with `x-elephant-network-helper-protocol` when the
   requested SHA matches.
@@ -416,3 +416,11 @@ it never hashes the Core. Protocol version 6 uses 32-character lowercase-hex ses
 All endpoints bind only to `127.0.0.1:47891` and do not use request-token authentication. Lifecycle safety comes from the
 fixed executable/hash, strict pipe namespace, session-scoped stop contract, and Dart-side peer-PID verification. When the
 Helper service itself shuts down, it unconditionally stops the Core process it owns.
+
+Windows Helper protocol 7 registers the installing App process account SID in its service arguments. Every accepted loopback TCP connection must belong to that account, verified against the client endpoint PID and Windows token. Requests retain the existing Core hash, lowercase session identity and named-pipe peer PID checks. The fixed ElephantNetwork port remains 47891.
+
+Windows stale proxy cleanup requires the persisted ElephantNetwork proxy-owner record to match the current server exactly, no PAC, and successful IPv4 and IPv6 listener queries proving the port unused. Unknown ownership and failed listener queries leave the settings unchanged.
+
+Linux packages ship the same hash-verified Helper contract over `/run/elephantnetwork/helper.sock`. The systemd unit records the invoking UID/GID, refuses another owner's registration, and accepts only peers with the installed UID. The socket and its directory must be root-owned; the helper and every executable ancestor must be root-owned without group/other write permission. The Core keeps the user's real UID with root effective privileges, and termination/IPC loss performs bounded route cleanup. Lifecycle ownership stays in the shared desktop controller, including direct-launch fallback when the Helper is unavailable.
+
+Windows binds each managed Core to a kill-on-close job. If confinement fails after spawn, the Helper confirms termination before releasing ownership and reports a post-spawn failure; it never silently drops an unconfirmed child.

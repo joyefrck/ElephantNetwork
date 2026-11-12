@@ -49,7 +49,7 @@ Read `.agents/architecture.md` for the current core modes, manager stack, build 
 
 - Keep the Windows Helper protocol and Core SHA256 validation identical across
   Flutter build modes; the Helper owns executable integrity checks.
-- Protocol version 6 uses a 32-character lowercase-hex session ID. `/start` must return the submitted session and PID;
+- Protocol version 7 uses a 32-character lowercase-hex session ID. `/start` must return the submitted session and PID;
   `/stop` must never terminate a different session; Dart must verify the connected named-pipe peer PID.
 - `/start` must release the previously managed Core before it verifies, so no `/start` outcome leaves a Helper-managed
   Core behind for the caller's direct-launch fallback to race.
@@ -71,3 +71,7 @@ Read `.agents/architecture.md` for the current core modes, manager stack, build 
   a scope-specific cleanup API instead.
 - `plugins/setup/` is a build harness, not a Dart API plugin.
 - Build hooks can trigger Go or Rust compilation indirectly through Flutter platform builds.
+
+## Linux Helper
+
+Linux uses the shared desktop launcher and lifecycle, with a UID-bound systemd Helper over a root-owned Unix socket. Verify both peer credentials and installation ownership before allowing privileged Core launch. Keep the real UID as the desktop user while retaining root effective privileges for TUN. Preserve bounded Core route cleanup on termination and IPC loss. Tests in a container cover peer identity and package-manager behavior; real systemd, polkit UI and TUN still need a desktop host.

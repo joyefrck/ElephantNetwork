@@ -4,8 +4,15 @@ use sha2::{Digest, Sha256};
 use std::collections::VecDeque;
 use std::convert::Infallible;
 use std::fs::{File, OpenOptions};
-#[cfg(not(all(feature = "windows-service", target_os = "windows")))]
+#[cfg(not(any(
+    all(feature = "windows-service", target_os = "windows"),
+    target_os = "linux"
+)))]
 use std::future::pending;
+#[cfg(not(any(
+    all(feature = "windows-service", target_os = "windows"),
+    target_os = "linux"
+)))]
 use std::future::Future;
 use std::io::{BufRead, Error, Read};
 #[cfg(windows)]
@@ -20,13 +27,29 @@ use warp::{Filter, Rejection, Reply};
 #[cfg(windows)]
 use windows_sys::Win32::Storage::FileSystem::FILE_SHARE_READ;
 
-const LISTEN_PORT: u16 = 47891;
+#[cfg(windows)]
+use std::os::windows::io::AsRawHandle;
+#[cfg(windows)]
+use windows_sys::Win32::Foundation::{CloseHandle, HANDLE};
+#[cfg(windows)]
+use windows_sys::Win32::System::JobObjects::{
+    AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
+    SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+    JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+};
+
+#[cfg(not(target_os = "linux"))]
+pub(super) const LISTEN_PORT: u16 = 47891;
+#[cfg(not(target_os = "linux"))]
 const CORE_PIPE_PREFIX: &str = r"\\.\pipe\ElephantNetworkCore_";
 const PROTOCOL_VERSION_HEADER: &str = "x-elephant-network-helper-protocol";
-const PROTOCOL_VERSION: &str = "6";
+const PROTOCOL_VERSION: &str = "7";
 const EXPECTED_CORE_SHA256: &str = env!("CORE_SHA256");
 const LOG_CAPACITY: usize = 100;
+#[cfg(not(target_os = "linux"))]
 const CORE_EXIT_TIMEOUT: Duration = Duration::from_millis(1500);
+#[cfg(target_os = "linux")]
+const CORE_EXIT_TIMEOUT: Duration = Duration::from_secs(4);
 const CORE_EXIT_POLL_INTERVAL: Duration = Duration::from_millis(20);
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -76,11 +99,19 @@ struct ErrorResponse {
 struct ManagedCore {
     session_id: String,
     child: Child,
+    #[cfg(windows)]
+    _job: Option<CoreJob>,
 }
 
 impl ManagedCore {
     fn terminate(&mut self) -> Result<(), Error> {
+        #[cfg(not(target_os = "linux"))]
         let _ = self.child.kill();
+        #[cfg(target_os = "linux")]
+        unsafe {
+            libc::kill(self.child.id() as libc::pid_t, libc::SIGTERM);
+        }
+
         let deadline = Instant::now() + CORE_EXIT_TIMEOUT;
         loop {
             if self.child.try_wait()?.is_some() {
@@ -90,6 +121,46 @@ impl ManagedCore {
                 return Err(Error::other("Core did not exit after termination"));
             }
             thread::sleep(CORE_EXIT_POLL_INTERVAL);
+        }
+    }
+}
+
+#[cfg(windows)]
+struct CoreJob(HANDLE);
+
+#[cfg(windows)]
+impl CoreJob {
+    fn bind(child: &Child) -> Result<Self, Error> {
+        unsafe {
+            let job = CreateJobObjectW(std::ptr::null(), std::ptr::null());
+            if job == 0 {
+                return Err(Error::last_os_error());
+            }
+            let job = Self(job);
+            let mut limits: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
+            limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+            if SetInformationJobObject(
+                job.0,
+                JobObjectExtendedLimitInformation,
+                &limits as *const _ as *const _,
+                std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+            ) == 0
+            {
+                return Err(Error::last_os_error());
+            }
+            if AssignProcessToJobObject(job.0, child.as_raw_handle() as HANDLE) == 0 {
+                return Err(Error::last_os_error());
+            }
+            Ok(job)
+        }
+    }
+}
+
+#[cfg(windows)]
+impl Drop for CoreJob {
+    fn drop(&mut self) {
+        unsafe {
+            CloseHandle(self.0);
         }
     }
 }
@@ -107,6 +178,8 @@ impl VerifiedCore {
             .parent()
             .ok_or_else(|| Error::other("Core executable has no parent directory"))?
             .to_path_buf();
+        #[cfg(target_os = "linux")]
+        super::linux::ensure_root_owned(&path).map_err(Error::other)?;
         let handle = open_verified_core(&path, EXPECTED_CORE_SHA256)?;
         Ok(Self {
             path,
@@ -116,12 +189,30 @@ impl VerifiedCore {
     }
 
     fn spawn(&self, address: &str) -> Result<Child, Error> {
-        Command::new(&self.path)
+        let mut command = Command::new(&self.path);
+        command
             .current_dir(&self.directory)
             .stderr(Stdio::piped())
-            .arg(address)
-            .spawn()
+            .arg(address);
+        #[cfg(target_os = "linux")]
+        adopt_core_owner(&mut command)?;
+        command.spawn()
     }
+}
+
+#[cfg(target_os = "linux")]
+fn adopt_core_owner(command: &mut Command) -> Result<(), Error> {
+    use std::os::unix::process::CommandExt;
+    let (uid, gid) = super::linux::core_owner()?;
+    unsafe {
+        command.pre_exec(move || {
+            if libc::setresgid(gid, 0, 0) != 0 || libc::setresuid(uid, 0, 0) != 0 {
+                return Err(Error::last_os_error());
+            }
+            Ok(())
+        });
+    }
+    Ok(())
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -173,11 +264,23 @@ fn open_verified_core(path: &Path, expected_sha256: &str) -> Result<File, Error>
     Ok(core_file)
 }
 
+#[cfg(not(target_os = "linux"))]
 fn is_allowed_core_pipe(address: &str) -> bool {
     let Some(suffix) = address.strip_prefix(CORE_PIPE_PREFIX) else {
         return false;
     };
     is_valid_session_id(suffix)
+}
+
+#[cfg(target_os = "linux")]
+fn is_allowed_core_pipe(address: &str) -> bool {
+    let Some(value) = address
+        .strip_prefix("/tmp/FlClashSocket_")
+        .and_then(|value| value.strip_suffix(".sock"))
+    else {
+        return false;
+    };
+    !value.is_empty() && value.len() <= 10 && value.bytes().all(|byte| byte.is_ascii_digit())
 }
 
 fn is_valid_session_id(value: &str) -> bool {
@@ -253,6 +356,10 @@ fn start(start_params: StartParams) -> warp::reply::Response {
             StatusCode::INTERNAL_SERVER_ERROR,
         );
     }
+    #[cfg(target_os = "linux")]
+    if let Err(error) = super::linux::ensure_owner_socket(&start_params.address) {
+        return error_response("invalidRequest", error.to_string(), StatusCode::BAD_REQUEST);
+    }
     let core = match VerifiedCore::open() {
         Ok(core) => core,
         Err(error) => {
@@ -285,7 +392,30 @@ fn start(start_params: StartParams) -> warp::reply::Response {
             *managed = Some(ManagedCore {
                 session_id: start_params.session_id.clone(),
                 child,
+                #[cfg(windows)]
+                _job: None,
             });
+            #[cfg(windows)]
+            {
+                let confinement = CoreJob::bind(&managed.as_ref().unwrap().child);
+                match confinement {
+                    Ok(job) => managed.as_mut().unwrap()._job = Some(job),
+                    Err(error) => {
+                        if let Err(stop_error) = release_managed_core(&mut managed) {
+                            return error_response(
+                                "coreStopFailed",
+                                stop_error.to_string(),
+                                StatusCode::INTERNAL_SERVER_ERROR,
+                            );
+                        }
+                        return error_response(
+                            "internalError",
+                            format!("Core confinement failed: {error}"),
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                        );
+                    }
+                }
+            }
             json_response(
                 &StartResponse {
                     session_id: start_params.session_id,
@@ -355,7 +485,7 @@ fn stop_core(stop_params: StopParams) -> warp::reply::Response {
     }
 }
 
-fn log_message(message: String) {
+pub(super) fn log_message(message: String) {
     let mut log_buffer = LOGS.lock().unwrap();
     while log_buffer.len() >= LOG_CAPACITY {
         log_buffer.pop_front();
@@ -494,7 +624,7 @@ async fn handle_rejection(rejection: Rejection) -> Result<warp::reply::Response,
     ))
 }
 
-fn routes() -> impl Filter<Extract = (impl Reply,), Error = Infallible> + Clone {
+pub(super) fn routes() -> impl Filter<Extract = (impl Reply,), Error = Infallible> + Clone {
     let api_ping = warp::get()
         .and(warp::path("ping"))
         .and(warp::path::end())
@@ -525,31 +655,47 @@ fn routes() -> impl Filter<Extract = (impl Reply,), Error = Infallible> + Clone 
         .recover(handle_rejection)
 }
 
-#[cfg(not(all(feature = "windows-service", target_os = "windows")))]
+#[cfg(not(any(
+    all(feature = "windows-service", target_os = "windows"),
+    target_os = "linux"
+)))]
 pub async fn run_service() -> anyhow::Result<()> {
     run_service_until(pending(), || Ok(())).await
 }
 
-pub(super) async fn run_service_until<F, S>(shutdown: F, on_started: S) -> anyhow::Result<()>
-where
-    F: Future<Output = ()> + Send + 'static,
-    S: FnOnce() -> anyhow::Result<()>,
-{
+pub(super) fn ensure_core_sha256_configured() -> anyhow::Result<()> {
     if EXPECTED_CORE_SHA256.is_empty() {
         anyhow::bail!("expected Core SHA256 is empty");
     }
+    Ok(())
+}
 
-    let (_, server) = warp::serve(routes())
-        .try_bind_with_graceful_shutdown(([127, 0, 0, 1], LISTEN_PORT), shutdown)
-        .map_err(|error| anyhow::anyhow!("bind helper server: {error}"))?;
-    on_started()?;
-    server.await;
+pub(super) fn release_managed_core_on_shutdown() {
     let mut managed = MANAGED_CORE.lock().unwrap();
     if let Err(error) = release_managed_core(&mut managed) {
         log_message(format!(
             "Helper could not stop the managed Core on shutdown: {error}"
         ));
     }
+}
+
+#[cfg(not(any(
+    all(feature = "windows-service", target_os = "windows"),
+    target_os = "linux"
+)))]
+pub(super) async fn run_service_until<F, S>(shutdown: F, on_started: S) -> anyhow::Result<()>
+where
+    F: Future<Output = ()> + Send + 'static,
+    S: FnOnce() -> anyhow::Result<()>,
+{
+    ensure_core_sha256_configured()?;
+
+    let (_, server) = warp::serve(routes())
+        .try_bind_with_graceful_shutdown(([127, 0, 0, 1], LISTEN_PORT), shutdown)
+        .map_err(|error| anyhow::anyhow!("bind helper server: {error}"))?;
+    on_started()?;
+    server.await;
+    release_managed_core_on_shutdown();
 
     Ok(())
 }
@@ -607,12 +753,14 @@ mod tests {
         *MANAGED_CORE.lock().unwrap() = Some(ManagedCore {
             session_id: session_id.to_string(),
             child: spawn_running_core(),
+            #[cfg(windows)]
+            _job: None,
         });
     }
 
     #[test]
-    fn protocol_6_uses_lowercase_session_ownership() {
-        assert_eq!(PROTOCOL_VERSION, "6");
+    fn protocol_7_uses_lowercase_session_ownership() {
+        assert_eq!(PROTOCOL_VERSION, "7");
         assert!(is_valid_session_id("0123456789abcdef0123456789abcdef"));
         assert!(!is_valid_session_id("ABCDEF0123456789abcdef0123456789"));
         assert!(!is_valid_session_id("0123456789abcdef"));
@@ -762,22 +910,41 @@ mod tests {
         *MANAGED_CORE.lock().unwrap() = Some(ManagedCore {
             session_id: "fedcba9876543210fedcba9876543210".to_string(),
             child: spawn_placeholder_core(),
+            #[cfg(windows)]
+            _job: None,
         });
 
         let response = warp::test::request()
             .method("POST")
             .path("/start")
             .json(&StartParams {
-                address: r"\\.\pipe\ElephantNetworkCore_0123456789abcdef0123456789abcdef"
-                    .to_string(),
+                address: if cfg!(target_os = "linux") {
+                    "/tmp/FlClashSocket_1234567890.sock".to_string()
+                } else {
+                    r"\\.\pipe\ElephantNetworkCore_0123456789abcdef0123456789abcdef".to_string()
+                },
                 session_id: "0123456789abcdef0123456789abcdef".to_string(),
             })
             .reply(&routes())
             .await;
 
-        assert_eq!(response.status(), StatusCode::CONFLICT);
+        assert_eq!(
+            response.status(),
+            if cfg!(target_os = "linux") {
+                StatusCode::BAD_REQUEST
+            } else {
+                StatusCode::CONFLICT
+            }
+        );
         let body: serde_json::Value = serde_json::from_slice(response.body()).unwrap();
-        assert_eq!(body["code"], "coreVerificationFailed");
+        assert_eq!(
+            body["code"],
+            if cfg!(target_os = "linux") {
+                "invalidRequest"
+            } else {
+                "coreVerificationFailed"
+            }
+        );
         assert!(MANAGED_CORE.lock().unwrap().is_none());
     }
 
@@ -835,6 +1002,8 @@ mod tests {
         let mut managed = Some(ManagedCore {
             session_id: "0123456789abcdef0123456789abcdef".to_string(),
             child: spawn_running_core(),
+            #[cfg(windows)]
+            _job: None,
         });
 
         release_managed_core(&mut managed).unwrap();
@@ -939,6 +1108,7 @@ mod tests {
         );
     }
 
+    #[cfg(not(target_os = "linux"))]
     #[test]
     fn only_accepts_random_core_pipe_namespace() {
         assert!(is_allowed_core_pipe(
@@ -960,5 +1130,31 @@ mod tests {
         assert!(!is_allowed_core_pipe(
             r"\\.\pipe\ElephantNetworkCore_ABCDEF0123456789abcdef0123456789"
         ));
+    }
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn accepts_only_local_core_sockets_without_traversal() {
+        assert!(is_allowed_core_pipe("/tmp/FlClashSocket_1234.sock"));
+        for value in [
+            "/tmp/FlClashSocket_.sock",
+            "/tmp/FlClashSocket_1/../../other.sock",
+            "/tmp/Other_1.sock",
+            "/tmp/FlClashSocket_12345678901.sock",
+            r"\\.\pipe\ElephantNetworkCore_0123456789abcdef0123456789abcdef",
+        ] {
+            assert!(!is_allowed_core_pipe(value));
+        }
+    }
+    #[cfg(windows)]
+    #[test]
+    fn closing_the_helper_job_terminates_its_core() {
+        let mut child = spawn_running_core();
+        let job = CoreJob::bind(&child).unwrap();
+        drop(job);
+        let deadline = Instant::now() + CORE_EXIT_TIMEOUT;
+        while child.try_wait().unwrap().is_none() && Instant::now() < deadline {
+            thread::sleep(CORE_EXIT_POLL_INTERVAL);
+        }
+        assert!(child.try_wait().unwrap().is_some());
     }
 }

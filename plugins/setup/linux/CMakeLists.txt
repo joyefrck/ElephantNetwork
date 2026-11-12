@@ -11,6 +11,12 @@ get_filename_component(PROJECT_ROOT "${CMAKE_SOURCE_DIR}" DIRECTORY)
 
 install(PROGRAMS "${PROJECT_ROOT}/libclash/linux/FlClashCore"
   "${PROJECT_ROOT}/libclash/linux/ElephantNetworkUpdater"
+  "${PROJECT_ROOT}/libclash/linux/ElephantNetworkHelperService"
+  DESTINATION "${CMAKE_BINARY_DIR}/bundle"
+  COMPONENT Runtime
+)
+
+install(FILES "${PROJECT_ROOT}/libclash/linux/manifest.json"
   DESTINATION "${CMAKE_BINARY_DIR}/bundle"
   COMPONENT Runtime
 )

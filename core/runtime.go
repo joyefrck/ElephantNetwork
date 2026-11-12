@@ -19,6 +19,9 @@ import (
 func handleUpdateRuntimeConfig(sections map[string]any) string {
 	runLock.Lock()
 	defer runLock.Unlock()
+	if isExiting.Load() {
+		return "Core is stopping"
+	}
 	if currentConfig == nil {
 		return "Core configuration is not applied"
 	}

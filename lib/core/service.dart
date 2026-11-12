@@ -34,11 +34,11 @@ class CoreService extends CoreHandlerInterface {
 
     final lifecycle = DesktopCoreLifecycle(
       transportFactory: () => IPCCoreTransport(address: address),
-      launcherResolver: WindowsHelperLauncherResolver(
-        isWindows: system.isWindows,
+      launcherResolver: HelperLauncherResolver(
+        supportsHelper: system.isWindows || system.isLinux,
         directLauncher: directLauncher,
-        helperLauncher: WindowsHelperLauncher(windowsHelperClient),
-        helperReady: () => windowsHelperClient.readiness(),
+        helperLauncher: HelperLauncher(desktopHelperClient),
+        helperReady: () => desktopHelperClient.readiness(),
       ),
       verifyPeerPid: system.isWindows,
     );

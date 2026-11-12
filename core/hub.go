@@ -32,6 +32,7 @@ import (
 
 var (
 	isInit            atomic.Bool
+	isExiting         atomic.Bool
 	externalProviders = map[string]cp.Provider{}
 	logSubscriber     observable.Subscription[log.Event]
 )
@@ -39,6 +40,9 @@ var (
 func handleInitClash(params *InitParams) bool {
 	runLock.Lock()
 	defer runLock.Unlock()
+	if isExiting.Load() {
+		return false
+	}
 	version = params.Version
 	constant.SetHomeDir(params.HomeDir)
 	if !isInit.Load() {
@@ -51,6 +55,9 @@ func handleInitClash(params *InitParams) bool {
 func handleStartListener() bool {
 	runLock.Lock()
 	defer runLock.Unlock()
+	if isExiting.Load() {
+		return false
+	}
 	isRunning = true
 	updateListeners()
 	resolver.ResetConnection()
@@ -79,6 +86,8 @@ func handleForceGC() {
 }
 
 func handleShutdown() bool {
+	runLock.Lock()
+	defer runLock.Unlock()
 	stopListeners()
 	executor.Shutdown()
 	handleForceGC()
@@ -465,6 +474,9 @@ func handleCrash() {
 }
 
 func handleUpdateConfig(params *UpdateParams) string {
+	if isExiting.Load() {
+		return "Core is stopping"
+	}
 	updateConfig(params)
 	return ""
 }

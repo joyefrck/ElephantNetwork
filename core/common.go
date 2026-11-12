@@ -109,7 +109,7 @@ func updateListeners() {
 	if !isRunning {
 		return
 	}
-	if currentConfig == nil {
+	if currentConfig == nil || isExiting.Load() {
 		return
 	}
 	listeners := currentConfig.Listeners
@@ -320,12 +320,18 @@ func applyConfig(params *SetupParams) error {
 	runtime.GC()
 	runLock.Lock()
 	defer runLock.Unlock()
+	if isExiting.Load() {
+		return fmt.Errorf("Core is stopping")
+	}
 	var err error
 	constant.DefaultTestURL = params.TestURL
 	provider.SetDefaultTestTimeout(hostDelayTimeout(params.DelayTestTimeout))
 	currentConfig, err = executor.ParseWithPath(filepath.Join(constant.Path.HomeDir(), "config.yaml"))
 	if err != nil {
 		currentConfig, _ = config.ParseRawConfig(config.DefaultRawConfig())
+	}
+	if isExiting.Load() {
+		return fmt.Errorf("Core is stopping")
 	}
 	applyPlatformLimits(currentConfig, features.Android)
 	hub.ApplyConfig(currentConfig)

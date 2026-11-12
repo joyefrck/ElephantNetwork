@@ -150,6 +150,13 @@ class BuildLinuxCommand extends BuildCommand {
     );
     final results = await builder.buildAll(targets, force: force);
     await _buildUpdater(targets.first, config);
+    final coreSha256 = await calcSha256(results.first.primaryOutput);
+    await RustBuilder(
+            rootDir: _rootDir, config: config, cache: cache, notice: notice)
+        .build(targets.first, coreSha256, force: force);
+    writeCoreManifest(
+        path: p.join(_rootDir, config.outputDir, 'linux', coreManifestName),
+        coreSha256: coreSha256);
 
     if (results.any((result) => result.rebuilt)) {
       _log.info(

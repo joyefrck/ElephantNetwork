@@ -8,7 +8,6 @@ import 'package:fl_clash/core/desktop/helper_client.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/state.dart';
-import 'package:fl_clash/widgets/input.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 
@@ -78,8 +77,7 @@ class System {
   Future<bool> checkIsAdmin() async {
     final corePath = appPath.corePath.replaceAll(' ', '\\\\ ');
     if (system.isWindows) {
-      return await windowsHelperClient.readiness() ==
-          WindowsHelperReadiness.ready;
+      return await desktopHelperClient.readiness() == HelperReadiness.ready;
     } else if (system.isMacOS) {
       final result = await Process.run('stat', ['-f', '%Su:%Sg %Sp', corePath]);
       final output = result.stdout.trim();
@@ -88,12 +86,7 @@ class System {
       }
       return false;
     } else if (Platform.isLinux) {
-      final result = await Process.run('stat', ['-c', '%U:%G %A', corePath]);
-      final output = result.stdout.trim();
-      if (output.startsWith('root:') && output.contains('rws')) {
-        return true;
-      }
-      return false;
+      return await desktopHelperClient.readiness() == HelperReadiness.ready;
     }
     return true;
   }
@@ -127,29 +120,18 @@ class System {
       }
       return AuthorizeCode.success;
     } else if (Platform.isLinux) {
-      final shell = Platform.environment['SHELL'] ?? 'bash';
-      final password = await globalState.showCommonDialog<String>(
-        child: InputDialog(
-          obscureText: true,
-          title: currentAppLocalizations.pleaseInputAdminPassword,
-          value: '',
-          inputFormatters: TextInputLimits.limit(TextInputLimits.password),
-        ),
-      );
-      if (password == null || password.isEmpty) {
-        return AuthorizeCode.error;
+      final result = await Process.run('/usr/bin/pkexec', [
+        appPath.helperPath,
+        'install',
+      ]);
+      if (result.exitCode != 0) return AuthorizeCode.error;
+      for (var attempt = 0; attempt < 20; attempt++) {
+        if (await desktopHelperClient.readiness() == HelperReadiness.ready) {
+          return AuthorizeCode.success;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 100));
       }
-      final escapedPassword = _shellEscape(password);
-      final escapedCorePath = _shellEscape(appPath.corePath);
-      final arguments = [
-        '-c',
-        'echo $escapedPassword | sudo -S chown root:root $escapedCorePath && echo $escapedPassword | sudo -S chmod +sx $escapedCorePath',
-      ];
-      final result = await Process.run(shell, arguments);
-      if (result.exitCode != 0) {
-        return AuthorizeCode.error;
-      }
-      return AuthorizeCode.success;
+      return AuthorizeCode.error;
     }
     return AuthorizeCode.error;
   }
@@ -232,12 +214,12 @@ class Windows {
   }
 
   Future<AuthorizeCode> registerService() async {
-    final readiness = await windowsHelperClient.readiness();
+    final readiness = await desktopHelperClient.readiness();
     switch (readiness) {
-      case WindowsHelperReadiness.ready:
+      case HelperReadiness.ready:
         commonPrint.log('helper service is ready');
         return AuthorizeCode.none;
-      case WindowsHelperReadiness.manifestMissing:
+      case HelperReadiness.manifestMissing:
         commonPrint.log(
           'Core manifest is missing or invalid; Helper service unavailable, '
           'falling back to direct Core',
@@ -245,7 +227,7 @@ class Windows {
         );
         globalState.showNotifier(currentAppLocalizations.helperCorruptTip);
         return AuthorizeCode.error;
-      case WindowsHelperReadiness.notReady:
+      case HelperReadiness.notReady:
         break;
     }
 
@@ -253,7 +235,7 @@ class Windows {
       'helper service is unavailable, requesting elevated installation',
       logLevel: LogLevel.warning,
     );
-    if (!runas(appPath.helperPath, 'install')) {
+    if (!runas(appPath.helperPath, 'install --owner-pid $pid')) {
       commonPrint.log(
         'failed to launch elevated helper installation',
         logLevel: LogLevel.error,
@@ -280,11 +262,11 @@ class Windows {
       final remaining = timeout - stopwatch.elapsed;
       if (remaining <= Duration.zero) return false;
       final isRunning =
-          await windowsHelperClient.readiness(
+          await desktopHelperClient.readiness(
             timeout: remaining,
             logFailure: false,
           ) ==
-          WindowsHelperReadiness.ready;
+          HelperReadiness.ready;
       if (isRunning) return true;
       final delay = timeout - stopwatch.elapsed;
       if (delay <= Duration.zero || attempt == maxAttempts - 1) return false;
