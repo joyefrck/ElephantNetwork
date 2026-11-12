@@ -311,6 +311,7 @@ func updateConfig(params *UpdateParams) error {
 	if updater.GeoAutoUpdate() {
 		updater.RegisterGeoUpdaterWithCancel()
 	}
+	bumpRouteEpoch()
 	return nil
 }
 
@@ -336,7 +337,10 @@ func applyConfig(params *SetupParams) error {
 	applyPlatformLimits(next, features.Android)
 	hub.ApplyConfig(next)
 	currentConfig = next
+	selectMu.Lock()
 	patchSelectGroup(params.SelectedMap)
+	refreshRouteLocked(routeReset)
+	selectMu.Unlock()
 	updateListeners()
 	if updater.GeoAutoUpdate() {
 		updater.RegisterGeoUpdaterWithCancel()

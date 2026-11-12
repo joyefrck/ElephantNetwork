@@ -4,6 +4,11 @@ import 'package:fl_clash/enum/enum.dart';
 
 enum CoreMethod {
   message('message'),
+  routeWatch('route.watch'),
+  routeCheck('route.check'),
+  probeOutboundIp('probe.outboundIp'),
+  probeServices('probe.services'),
+  probeCancel('probe.cancel'),
   coreInit('core.init'),
   coreInitialized('core.initialized'),
   coreGc('core.gc'),

@@ -125,7 +125,7 @@ func InvokeMethod(data string, reply func([]byte)) {
 		(MethodResponse{reply: reply}).failure("invalid_method_call", err.Error(), nil)
 		return
 	}
-	go handleMethodCall(call, MethodResponse{ID: call.ID, reply: reply})
+	dispatchMethodCall(call, MethodResponse{ID: call.ID, reply: reply})
 }
 
 func StartTun(callbacks TunCallbacks, fd int, stack, address, dnsAddress string) bool {

@@ -122,7 +122,7 @@ func startServer(arg string) {
 			reply: send,
 		}
 
-		go handleMethodCall(call, response)
+		dispatchMethodCall(call, response)
 	}
 }
 

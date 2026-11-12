@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:fl_clash/features/diagnostics/diagnostics_models.dart';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
@@ -22,6 +23,7 @@ List<CoreEvent> coreEventsFromData(Object? data) {
 }
 
 abstract mixin class CoreEventListener {
+  void onRouteChanged(RouteStamp stamp) {}
   void onLog(Log log) {}
 
   void onDelay(Delay delay) {}
@@ -48,6 +50,13 @@ class CoreEventManager {
       for (final CoreEventListener listener in _listeners) {
         try {
           switch (event.type) {
+            case CoreEventType.routeChanged:
+              listener.onRouteChanged(
+                RouteStamp.fromJson(
+                  Map<String, dynamic>.from(event.data as Map),
+                ),
+              );
+              break;
             case CoreEventType.log:
               listener.onLog(Log.fromJson(event.data));
               break;

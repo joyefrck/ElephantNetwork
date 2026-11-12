@@ -21,6 +21,7 @@ import 'package:path/path.dart' show dirname, join;
 
 import 'config/advanced.dart';
 import 'developer.dart';
+import 'diagnostics.dart';
 import 'theme.dart';
 
 class ToolsView extends ConsumerStatefulWidget {
@@ -82,6 +83,12 @@ class _ToolViewState extends ConsumerState<ToolsView> {
         const _ConfigItem(),
         const _AdvancedConfigItem(),
         const _SettingItem(),
+        ListItem.open(
+          leading: const Icon(Icons.network_check),
+          title: Text(context.appLocalizations.networkDiagnostics),
+          subtitle: Text(context.appLocalizations.networkDiagnosticsDesc),
+          widget: const DiagnosticsView(),
+        ),
       ],
     );
   }

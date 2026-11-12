@@ -13,6 +13,7 @@ part 'converter.dart';
 part 'generated/database.g.dart';
 part 'groups.dart';
 part 'icons.dart';
+part 'ip_qualities.dart';
 part 'links.dart';
 part 'profiles.dart';
 part 'rules.dart';
@@ -28,13 +29,21 @@ part 'restore_commits.dart';
     ProxyGroups,
     IconRecords,
     RestoreCommits,
+    IpQualities,
   ],
-  daos: [ProfilesDao, ScriptsDao, RulesDao, ProxyGroupsDao, IconRecordsDao],
+  daos: [
+    ProfilesDao,
+    ScriptsDao,
+    RulesDao,
+    ProxyGroupsDao,
+    IconRecordsDao,
+    IpQualitiesDao,
+  ],
 )
 class Database extends _$Database {
   Database([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
-  static const currentSchemaVersion = 5;
+  static const currentSchemaVersion = 6;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -65,6 +74,7 @@ class Database extends _$Database {
         }
         if (from < 4) await m.createTable(restoreCommits);
         if (from < 5) await m.addColumn(profiles, profiles.profileType);
+        if (from < 6) await m.createTable(ipQualities);
       },
     );
   }

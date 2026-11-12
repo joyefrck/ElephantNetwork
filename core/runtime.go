@@ -100,6 +100,7 @@ func handleUpdateRuntimeConfig(sections map[string]any) string {
 		currentConfig.Sniffer = parsed.Sniffer
 	}
 	resolver.ResetConnection()
+	bumpRouteEpoch()
 	return ""
 }
 

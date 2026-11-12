@@ -354,6 +354,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "developerModeEnableTip": MessageLookupByLibrary.simpleMessage(
       "Developer mode is enabled.",
     ),
+    "diagnosticsDirect": MessageLookupByLibrary.simpleMessage(
+      "Proxy is stopped. Probes use a direct connection.",
+    ),
+    "diagnosticsFailed": MessageLookupByLibrary.simpleMessage(
+      "Some probes failed. You can refresh to retry.",
+    ),
+    "diagnosticsNotReady": MessageLookupByLibrary.simpleMessage(
+      "The Core is not connected. Try again when it is ready.",
+    ),
+    "diagnosticsRefresh": MessageLookupByLibrary.simpleMessage("Refresh"),
+    "diagnosticsRoute": MessageLookupByLibrary.simpleMessage("Actual route"),
+    "diagnosticsRouteChanged": MessageLookupByLibrary.simpleMessage(
+      "The route changed. Previous results were cleared; refresh to check again.",
+    ),
+    "diagnosticsRouting": MessageLookupByLibrary.simpleMessage(
+      "Probes follow the current routing rules.",
+    ),
+    "diagnosticsSource": MessageLookupByLibrary.simpleMessage("Source"),
     "direct": MessageLookupByLibrary.simpleMessage("Direct"),
     "disableUDP": MessageLookupByLibrary.simpleMessage("Disable UDP"),
     "disclaimer": MessageLookupByLibrary.simpleMessage("Disclaimer"),
@@ -543,6 +561,19 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "invalidProxyProvider": m16,
     "invalidSubRule": m17,
+    "ipAbuser": MessageLookupByLibrary.simpleMessage("Abuse reported"),
+    "ipBusiness": MessageLookupByLibrary.simpleMessage("Business network"),
+    "ipHosting": MessageLookupByLibrary.simpleMessage("Hosting / data center"),
+    "ipMobile": MessageLookupByLibrary.simpleMessage("Mobile network"),
+    "ipProxy": MessageLookupByLibrary.simpleMessage("Proxy"),
+    "ipQuality": MessageLookupByLibrary.simpleMessage("IP quality"),
+    "ipQualityUnavailable": MessageLookupByLibrary.simpleMessage(
+      "IP quality is unavailable. Failed lookups pause for five minutes.",
+    ),
+    "ipReportedFlags": MessageLookupByLibrary.simpleMessage(
+      "Flags reported by the source",
+    ),
+    "ipResidential": MessageLookupByLibrary.simpleMessage("Residential"),
     "ipcidr": MessageLookupByLibrary.simpleMessage("Ipcidr"),
     "ipv6Desc": MessageLookupByLibrary.simpleMessage(
       "When turned on it will be able to receive IPv6 traffic",
@@ -642,6 +673,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "networkDetection": MessageLookupByLibrary.simpleMessage(
       "Network detection",
     ),
+    "networkDiagnostics": MessageLookupByLibrary.simpleMessage(
+      "Network diagnostics",
+    ),
+    "networkDiagnosticsDesc": MessageLookupByLibrary.simpleMessage(
+      "Check the actual outbound IP and service availability",
+    ),
     "networkException": MessageLookupByLibrary.simpleMessage(
       "Network exception, please check your connection and try again",
     ),
@@ -691,6 +728,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "otherContributors": MessageLookupByLibrary.simpleMessage(
       "Other contributors",
     ),
+    "outboundIp": MessageLookupByLibrary.simpleMessage("Outbound IP"),
     "outboundMode": MessageLookupByLibrary.simpleMessage("Outbound mode"),
     "override": MessageLookupByLibrary.simpleMessage("Override"),
     "overrideDns": MessageLookupByLibrary.simpleMessage("Override Dns"),
@@ -733,6 +771,22 @@ class MessageLookup extends MessageLookupByLibrary {
       "Please press the keyboard.",
     ),
     "preview": MessageLookupByLibrary.simpleMessage("Preview"),
+    "probeAvailable": MessageLookupByLibrary.simpleMessage("Available"),
+    "probeBlocked": MessageLookupByLibrary.simpleMessage("Blocked"),
+    "probeComingSoon": MessageLookupByLibrary.simpleMessage("Coming soon"),
+    "probeDisallowedIsp": MessageLookupByLibrary.simpleMessage(
+      "ISP not allowed",
+    ),
+    "probeFailed": MessageLookupByLibrary.simpleMessage("Check failed"),
+    "probeOriginalsOnly": MessageLookupByLibrary.simpleMessage(
+      "Original titles only",
+    ),
+    "probeRestricted": MessageLookupByLibrary.simpleMessage("Restricted"),
+    "probeTimeout": MessageLookupByLibrary.simpleMessage("Timed out"),
+    "probeUnavailable": MessageLookupByLibrary.simpleMessage("Unavailable"),
+    "probeUnsupportedRegion": MessageLookupByLibrary.simpleMessage(
+      "Region not supported",
+    ),
     "process": MessageLookupByLibrary.simpleMessage("Process"),
     "profile": MessageLookupByLibrary.simpleMessage("Profile"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
@@ -1008,6 +1062,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "selected": MessageLookupByLibrary.simpleMessage("Selected"),
     "selectedCountTitle": m25,
+    "serviceAvailability": MessageLookupByLibrary.simpleMessage(
+      "Service availability",
+    ),
     "serviceUnavailable": MessageLookupByLibrary.simpleMessage(
       "Elephant Network is temporarily unavailable",
     ),

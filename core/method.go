@@ -5,9 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime"
+	"sync/atomic"
 )
 
+var methodCallSeq atomic.Uint64
+
+func dispatchMethodCall(call *MethodCall, response MethodResponse) {
+	call.seq = methodCallSeq.Add(1)
+	go handleMethodCall(call, response)
+}
+
 type MethodCall struct {
+	seq       uint64
 	ID        string          `json:"id,omitempty"`
 	Method    CoreMethod      `json:"method"`
 	Arguments json.RawMessage `json:"arguments"`
@@ -124,6 +133,42 @@ func handleMethodCall(call *MethodCall, response MethodResponse) {
 		}
 	}()
 	switch call.Method {
+	case probeCancelMethod:
+		var params CancelProbeParams
+		if decodeMethodArguments(call, response, &params) {
+			if params.TaskID == "" {
+				response.failure("invalid_arguments", "task-id is required", nil)
+				return
+			}
+			cancelProbeTask(params.TaskID)
+			response.success(nil)
+		}
+		return
+	case routeWatchMethod:
+		var params WatchParams
+		if decodeMethodArguments(call, response, &params) {
+			response.success(handleWatchRoute(params.Watch, call.seq))
+		}
+		return
+	case routeCheckMethod:
+		var params CheckRoutesParams
+		if decodeMethodArguments(call, response, &params) {
+			response.success(handleCheckRoutes(&params))
+		}
+		return
+	case probeOutboundIpMethod:
+		var params OutboundIpParams
+		if decodeMethodArguments(call, response, &params) {
+			response.success(handleOutboundIp(&params))
+		}
+		return
+	case probeServicesMethod:
+		var params ServiceCheckParams
+		if decodeMethodArguments(call, response, &params) {
+			response.success(handleServiceCheck(&params))
+		}
+		return
+
 	case configUpdateRuntimeMethod:
 		var sections map[string]any
 		if !decodeMethodArguments(call, response, &sections) {

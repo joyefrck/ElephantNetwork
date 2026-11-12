@@ -98,6 +98,12 @@ type ProxiesData struct {
 }
 
 const (
+	probeCancelMethod     CoreMethod = "probe.cancel"
+	routeWatchMethod      CoreMethod = "route.watch"
+	routeCheckMethod      CoreMethod = "route.check"
+	probeOutboundIpMethod CoreMethod = "probe.outboundIp"
+	probeServicesMethod   CoreMethod = "probe.services"
+
 	messageMethod             CoreMethod = "message"
 	coreInitMethod            CoreMethod = "core.init"
 	coreInitializedMethod     CoreMethod = "core.initialized"
@@ -136,7 +142,18 @@ const (
 	profileClearEffectMethod  CoreMethod = "profile.clearEffect"
 )
 
+type RouteState struct {
+	CoreEpoch    uint64 `json:"core-epoch"`
+	RouteVersion uint64 `json:"route-version"`
+}
+
+type WatchParams struct {
+	Watch bool `json:"watch"`
+}
+
 type CoreMethod string
+
+const RouteChangedMessage MessageType = "routeChanged"
 
 type MessageType string
 

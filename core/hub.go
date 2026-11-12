@@ -62,6 +62,7 @@ func handleStartListener() bool {
 		return false
 	}
 	isRunning.Store(true)
+	bumpRouteEpoch()
 	updateListeners()
 	resolver.ResetConnection()
 	return true
@@ -71,6 +72,7 @@ func handleStopListener() bool {
 	runLock.Lock()
 	defer runLock.Unlock()
 	isRunning.Store(false)
+	bumpRouteEpoch()
 	listener.StopListener()
 	resolver.ResetConnection()
 	return true
@@ -91,6 +93,8 @@ func handleForceGC() {
 func handleShutdown() bool {
 	runLock.Lock()
 	defer runLock.Unlock()
+	stopRouteWatch()
+	cancelProbeTasks()
 	stopListeners()
 	executor.Shutdown()
 	handleForceGC()
@@ -166,6 +170,8 @@ func handleChangeProxy(params *ChangeProxyParams, fn func(string string)) {
 	runLock.Lock()
 	go func() {
 		defer runLock.Unlock()
+		selectMu.Lock()
+		defer selectMu.Unlock()
 		groupName := params.GroupName
 		proxyName := params.ProxyName
 		proxies := tunnel.AllProxies()
@@ -194,6 +200,7 @@ func handleChangeProxy(params *ChangeProxyParams, fn func(string string)) {
 			}
 		}
 
+		refreshRouteLocked(routeUnchanged)
 		fn("")
 		return
 	}()
@@ -309,6 +316,7 @@ func handleClearDnsCache() {
 func handleResetNetwork() {
 	runLock.Lock()
 	defer runLock.Unlock()
+	bumpRouteEpoch()
 	closeConnections()
 	dns.ClearAll()
 }
@@ -564,6 +572,7 @@ func init() {
 		})
 	}
 	statistic.DefaultRequestNotify = func(c statistic.Tracker) {
+		notifyProbeRoute(c)
 		sendMessage(Message{
 			Type: RequestMessage,
 			Data: c,

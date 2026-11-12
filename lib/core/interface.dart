@@ -3,10 +3,17 @@ import 'dart:async';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 
+import 'package:fl_clash/features/diagnostics/diagnostics_models.dart';
+
 import 'desktop/model.dart';
 import 'method.dart';
 
 mixin CoreInterface {
+  Future<RouteStamp> watchRoute(bool watch);
+  Future<OutboundProbe> probeOutboundIp(String taskId, String proxyName);
+  Future<List<ServiceProbe>> probeServices(String taskId, String proxyName);
+  Future<void> cancelProbe(String taskId);
+
   Future<CoreLifecycleResult> start();
 
   Future<CoreLifecycleResult> restart();
@@ -90,6 +97,64 @@ mixin CoreInterface {
 }
 
 abstract class CoreHandlerInterface with CoreInterface {
+  @override
+  Future<RouteStamp> watchRoute(bool watch) async {
+    final data = await _invokeMethod<Map<String, dynamic>>(
+      method: CoreMethod.routeWatch,
+      arguments: {'watch': watch},
+    );
+    if (data == null) throw const FormatException('Missing route state');
+    return RouteStamp.fromJson(data);
+  }
+
+  @override
+  Future<OutboundProbe> probeOutboundIp(String taskId, String proxyName) async {
+    final data = await _invokeMethod<Map<String, dynamic>>(
+      method: CoreMethod.probeOutboundIp,
+      arguments: {
+        'task-id': taskId,
+        'proxy-name': proxyName,
+        'timeout': 10000,
+        'urls': [
+          'https://ipwho.is',
+          'https://api.myip.com',
+          'https://ipapi.co/json',
+          'https://ident.me/json',
+          'https://api.ip.sb/geoip',
+          'https://ipinfo.io/json',
+        ],
+      },
+      timeout: const Duration(seconds: 15),
+    );
+    if (data == null) throw const FormatException('Missing outbound probe');
+    return OutboundProbe.fromJson(data);
+  }
+
+  @override
+  Future<List<ServiceProbe>> probeServices(
+    String taskId,
+    String proxyName,
+  ) async {
+    final data = await _invokeMethod<List<dynamic>>(
+      method: CoreMethod.probeServices,
+      arguments: {'task-id': taskId, 'proxy-name': proxyName, 'timeout': 10000},
+      timeout: const Duration(seconds: 70),
+    );
+    if (data == null) throw const FormatException('Missing service probes');
+    return data
+        .map(
+          (item) =>
+              ServiceProbe.fromJson(Map<String, dynamic>.from(item as Map)),
+        )
+        .toList();
+  }
+
+  @override
+  Future<void> cancelProbe(String taskId) => _invokeCommand(
+    method: CoreMethod.probeCancel,
+    arguments: {'task-id': taskId},
+  );
+
   Future<T?> _invokeMethod<T>({
     required CoreMethod method,
     Object? arguments,

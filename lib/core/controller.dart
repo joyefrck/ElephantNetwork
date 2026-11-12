@@ -1,3 +1,4 @@
+import 'package:fl_clash/features/diagnostics/diagnostics_models.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -10,7 +11,17 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 
-class CoreController {
+class CoreController implements DiagnosticsCore {
+  @override
+  Future<RouteStamp> watchRoute(bool watch) => _interface.watchRoute(watch);
+  @override
+  Future<OutboundProbe> probeOutboundIp(String taskId, String proxyName) =>
+      _interface.probeOutboundIp(taskId, proxyName);
+  @override
+  Future<List<ServiceProbe>> probeServices(String taskId, String proxyName) =>
+      _interface.probeServices(taskId, proxyName);
+  @override
+  Future<void> cancelProbe(String taskId) => _interface.cancelProbe(taskId);
   static CoreController? _instance;
   late CoreHandlerInterface _interface;
 

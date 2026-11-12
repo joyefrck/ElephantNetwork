@@ -41,3 +41,12 @@ class StringSetConverter extends TypeConverter<Set<String>, String> {
     return json.encode(value.toList());
   }
 }
+
+class IpQualityConverter extends TypeConverter<IpQuality, String> {
+  const IpQualityConverter();
+  @override
+  IpQuality fromSql(String fromDb) =>
+      IpQuality.fromJson(jsonDecode(fromDb) as Map<String, dynamic>);
+  @override
+  String toSql(IpQuality value) => jsonEncode(value.toJson());
+}

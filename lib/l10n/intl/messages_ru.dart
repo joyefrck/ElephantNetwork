@@ -359,6 +359,26 @@ class MessageLookup extends MessageLookupByLibrary {
     "developerModeEnableTip": MessageLookupByLibrary.simpleMessage(
       "Режим разработчика активирован.",
     ),
+    "diagnosticsDirect": MessageLookupByLibrary.simpleMessage(
+      "Прокси остановлен. Проверки выполняются напрямую.",
+    ),
+    "diagnosticsFailed": MessageLookupByLibrary.simpleMessage(
+      "Некоторые проверки не удались. Повторите попытку.",
+    ),
+    "diagnosticsNotReady": MessageLookupByLibrary.simpleMessage(
+      "Ядро не подключено. Повторите после подключения.",
+    ),
+    "diagnosticsRefresh": MessageLookupByLibrary.simpleMessage("Обновить"),
+    "diagnosticsRoute": MessageLookupByLibrary.simpleMessage(
+      "Фактический маршрут",
+    ),
+    "diagnosticsRouteChanged": MessageLookupByLibrary.simpleMessage(
+      "Маршрут изменился. Результаты очищены; повторите проверку.",
+    ),
+    "diagnosticsRouting": MessageLookupByLibrary.simpleMessage(
+      "Проверки следуют текущим правилам маршрутизации.",
+    ),
+    "diagnosticsSource": MessageLookupByLibrary.simpleMessage("Источник"),
     "direct": MessageLookupByLibrary.simpleMessage("Прямой"),
     "disableUDP": MessageLookupByLibrary.simpleMessage("Отключить UDP"),
     "disclaimer": MessageLookupByLibrary.simpleMessage(
@@ -562,6 +582,21 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "invalidProxyProvider": m16,
     "invalidSubRule": m17,
+    "ipAbuser": MessageLookupByLibrary.simpleMessage(
+      "Есть сообщения о злоупотреблениях",
+    ),
+    "ipBusiness": MessageLookupByLibrary.simpleMessage("Корпоративная сеть"),
+    "ipHosting": MessageLookupByLibrary.simpleMessage("Хостинг / дата-центр"),
+    "ipMobile": MessageLookupByLibrary.simpleMessage("Мобильная сеть"),
+    "ipProxy": MessageLookupByLibrary.simpleMessage("Прокси"),
+    "ipQuality": MessageLookupByLibrary.simpleMessage("Качество IP"),
+    "ipQualityUnavailable": MessageLookupByLibrary.simpleMessage(
+      "Данные о качестве IP недоступны. Повторная попытка через пять минут.",
+    ),
+    "ipReportedFlags": MessageLookupByLibrary.simpleMessage(
+      "Признаки по данным источника",
+    ),
+    "ipResidential": MessageLookupByLibrary.simpleMessage("Домашняя сеть"),
     "ipcidr": MessageLookupByLibrary.simpleMessage("IPCIDR"),
     "ipv6Desc": MessageLookupByLibrary.simpleMessage(
       "При включении будет возможно получать IPv6 трафик",
@@ -669,6 +704,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "networkDetection": MessageLookupByLibrary.simpleMessage(
       "Обнаружение сети",
     ),
+    "networkDiagnostics": MessageLookupByLibrary.simpleMessage(
+      "Диагностика сети",
+    ),
+    "networkDiagnosticsDesc": MessageLookupByLibrary.simpleMessage(
+      "Проверка выходного IP и доступности сервисов",
+    ),
     "networkException": MessageLookupByLibrary.simpleMessage(
       "Ошибка сети, проверьте соединение и попробуйте еще раз",
     ),
@@ -720,6 +761,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "otherContributors": MessageLookupByLibrary.simpleMessage(
       "Другие участники",
     ),
+    "outboundIp": MessageLookupByLibrary.simpleMessage("Выходной IP"),
     "outboundMode": MessageLookupByLibrary.simpleMessage(
       "Режим исходящего трафика",
     ),
@@ -770,6 +812,24 @@ class MessageLookup extends MessageLookupByLibrary {
       "Пожалуйста, нажмите клавишу.",
     ),
     "preview": MessageLookupByLibrary.simpleMessage("Предпросмотр"),
+    "probeAvailable": MessageLookupByLibrary.simpleMessage("Доступен"),
+    "probeBlocked": MessageLookupByLibrary.simpleMessage("Заблокирован"),
+    "probeComingSoon": MessageLookupByLibrary.simpleMessage("Скоро появится"),
+    "probeDisallowedIsp": MessageLookupByLibrary.simpleMessage(
+      "Провайдер не поддерживается",
+    ),
+    "probeFailed": MessageLookupByLibrary.simpleMessage("Ошибка проверки"),
+    "probeOriginalsOnly": MessageLookupByLibrary.simpleMessage(
+      "Только оригинальный контент",
+    ),
+    "probeRestricted": MessageLookupByLibrary.simpleMessage("Ограничен"),
+    "probeTimeout": MessageLookupByLibrary.simpleMessage(
+      "Время ожидания истекло",
+    ),
+    "probeUnavailable": MessageLookupByLibrary.simpleMessage("Недоступен"),
+    "probeUnsupportedRegion": MessageLookupByLibrary.simpleMessage(
+      "Регион не поддерживается",
+    ),
     "process": MessageLookupByLibrary.simpleMessage("процесс"),
     "profile": MessageLookupByLibrary.simpleMessage("Профиль"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
@@ -1057,6 +1117,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "selected": MessageLookupByLibrary.simpleMessage("Выбрано"),
     "selectedCountTitle": m25,
+    "serviceAvailability": MessageLookupByLibrary.simpleMessage(
+      "Доступность сервисов",
+    ),
     "serviceUnavailable": MessageLookupByLibrary.simpleMessage(
       "Elephant Network временно недоступен",
     ),

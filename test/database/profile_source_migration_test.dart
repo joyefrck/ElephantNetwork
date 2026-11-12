@@ -65,6 +65,7 @@ void main() {
       ]);
       await initial.close();
       raw.execute('ALTER TABLE profiles DROP COLUMN profile_type');
+      raw.execute('DROP TABLE ip_qualities');
       raw.userVersion = 4;
       final db = Database(NativeDatabase.opened(raw));
       addTearDown(db.close);

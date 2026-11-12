@@ -5063,6 +5063,281 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Network diagnostics`
+  String get networkDiagnostics {
+    return Intl.message(
+      'Network diagnostics',
+      name: 'networkDiagnostics',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check the actual outbound IP and service availability`
+  String get networkDiagnosticsDesc {
+    return Intl.message(
+      'Check the actual outbound IP and service availability',
+      name: 'networkDiagnosticsDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Probes follow the current routing rules.`
+  String get diagnosticsRouting {
+    return Intl.message(
+      'Probes follow the current routing rules.',
+      name: 'diagnosticsRouting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy is stopped. Probes use a direct connection.`
+  String get diagnosticsDirect {
+    return Intl.message(
+      'Proxy is stopped. Probes use a direct connection.',
+      name: 'diagnosticsDirect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The Core is not connected. Try again when it is ready.`
+  String get diagnosticsNotReady {
+    return Intl.message(
+      'The Core is not connected. Try again when it is ready.',
+      name: 'diagnosticsNotReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The route changed. Previous results were cleared; refresh to check again.`
+  String get diagnosticsRouteChanged {
+    return Intl.message(
+      'The route changed. Previous results were cleared; refresh to check again.',
+      name: 'diagnosticsRouteChanged',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Some probes failed. You can refresh to retry.`
+  String get diagnosticsFailed {
+    return Intl.message(
+      'Some probes failed. You can refresh to retry.',
+      name: 'diagnosticsFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Outbound IP`
+  String get outboundIp {
+    return Intl.message('Outbound IP', name: 'outboundIp', desc: '', args: []);
+  }
+
+  /// `Actual route`
+  String get diagnosticsRoute {
+    return Intl.message(
+      'Actual route',
+      name: 'diagnosticsRoute',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Source`
+  String get diagnosticsSource {
+    return Intl.message(
+      'Source',
+      name: 'diagnosticsSource',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `IP quality`
+  String get ipQuality {
+    return Intl.message('IP quality', name: 'ipQuality', desc: '', args: []);
+  }
+
+  /// `Residential`
+  String get ipResidential {
+    return Intl.message(
+      'Residential',
+      name: 'ipResidential',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Mobile network`
+  String get ipMobile {
+    return Intl.message('Mobile network', name: 'ipMobile', desc: '', args: []);
+  }
+
+  /// `Business network`
+  String get ipBusiness {
+    return Intl.message(
+      'Business network',
+      name: 'ipBusiness',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Hosting / data center`
+  String get ipHosting {
+    return Intl.message(
+      'Hosting / data center',
+      name: 'ipHosting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Flags reported by the source`
+  String get ipReportedFlags {
+    return Intl.message(
+      'Flags reported by the source',
+      name: 'ipReportedFlags',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy`
+  String get ipProxy {
+    return Intl.message('Proxy', name: 'ipProxy', desc: '', args: []);
+  }
+
+  /// `Abuse reported`
+  String get ipAbuser {
+    return Intl.message('Abuse reported', name: 'ipAbuser', desc: '', args: []);
+  }
+
+  /// `IP quality is unavailable. Failed lookups pause for five minutes.`
+  String get ipQualityUnavailable {
+    return Intl.message(
+      'IP quality is unavailable. Failed lookups pause for five minutes.',
+      name: 'ipQualityUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Service availability`
+  String get serviceAvailability {
+    return Intl.message(
+      'Service availability',
+      name: 'serviceAvailability',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Available`
+  String get probeAvailable {
+    return Intl.message(
+      'Available',
+      name: 'probeAvailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unavailable`
+  String get probeUnavailable {
+    return Intl.message(
+      'Unavailable',
+      name: 'probeUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Restricted`
+  String get probeRestricted {
+    return Intl.message(
+      'Restricted',
+      name: 'probeRestricted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `ISP not allowed`
+  String get probeDisallowedIsp {
+    return Intl.message(
+      'ISP not allowed',
+      name: 'probeDisallowedIsp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Blocked`
+  String get probeBlocked {
+    return Intl.message('Blocked', name: 'probeBlocked', desc: '', args: []);
+  }
+
+  /// `Region not supported`
+  String get probeUnsupportedRegion {
+    return Intl.message(
+      'Region not supported',
+      name: 'probeUnsupportedRegion',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Original titles only`
+  String get probeOriginalsOnly {
+    return Intl.message(
+      'Original titles only',
+      name: 'probeOriginalsOnly',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Coming soon`
+  String get probeComingSoon {
+    return Intl.message(
+      'Coming soon',
+      name: 'probeComingSoon',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Timed out`
+  String get probeTimeout {
+    return Intl.message('Timed out', name: 'probeTimeout', desc: '', args: []);
+  }
+
+  /// `Check failed`
+  String get probeFailed {
+    return Intl.message(
+      'Check failed',
+      name: 'probeFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Refresh`
+  String get diagnosticsRefresh {
+    return Intl.message(
+      'Refresh',
+      name: 'diagnosticsRefresh',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

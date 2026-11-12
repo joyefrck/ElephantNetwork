@@ -280,6 +280,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "developerModeEnableTip": MessageLookupByLibrary.simpleMessage(
       "デベロッパーモードが有効になりました。",
     ),
+    "diagnosticsDirect": MessageLookupByLibrary.simpleMessage(
+      "プロキシは停止中です。直接接続で診断します。",
+    ),
+    "diagnosticsFailed": MessageLookupByLibrary.simpleMessage(
+      "一部の診断に失敗しました。再試行できます。",
+    ),
+    "diagnosticsNotReady": MessageLookupByLibrary.simpleMessage(
+      "コアが未接続です。準備完了後に再試行してください。",
+    ),
+    "diagnosticsRefresh": MessageLookupByLibrary.simpleMessage("再読み込み"),
+    "diagnosticsRoute": MessageLookupByLibrary.simpleMessage("実際の経路"),
+    "diagnosticsRouteChanged": MessageLookupByLibrary.simpleMessage(
+      "経路が変更されました。再度診断してください。",
+    ),
+    "diagnosticsRouting": MessageLookupByLibrary.simpleMessage(
+      "現在のルーティングルールで診断します。",
+    ),
+    "diagnosticsSource": MessageLookupByLibrary.simpleMessage("データソース"),
     "direct": MessageLookupByLibrary.simpleMessage("ダイレクト"),
     "disableUDP": MessageLookupByLibrary.simpleMessage("UDPを無効化"),
     "disclaimer": MessageLookupByLibrary.simpleMessage("免責事項"),
@@ -431,6 +449,17 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "invalidProxyProvider": m16,
     "invalidSubRule": m17,
+    "ipAbuser": MessageLookupByLibrary.simpleMessage("不正利用の報告あり"),
+    "ipBusiness": MessageLookupByLibrary.simpleMessage("企業回線"),
+    "ipHosting": MessageLookupByLibrary.simpleMessage("ホスティング / データセンター"),
+    "ipMobile": MessageLookupByLibrary.simpleMessage("モバイル回線"),
+    "ipProxy": MessageLookupByLibrary.simpleMessage("プロキシ"),
+    "ipQuality": MessageLookupByLibrary.simpleMessage("IP 品質"),
+    "ipQualityUnavailable": MessageLookupByLibrary.simpleMessage(
+      "IP 品質を取得できません。失敗後は5分間待機します。",
+    ),
+    "ipReportedFlags": MessageLookupByLibrary.simpleMessage("ソースが報告したフラグ"),
+    "ipResidential": MessageLookupByLibrary.simpleMessage("住宅回線"),
     "ipcidr": MessageLookupByLibrary.simpleMessage("IPCIDR"),
     "ipv6Desc": MessageLookupByLibrary.simpleMessage("有効化するとIPv6トラフィックを受信可能"),
     "ipv6InboundDesc": MessageLookupByLibrary.simpleMessage("IPv6インバウンドを許可"),
@@ -508,6 +537,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "network": MessageLookupByLibrary.simpleMessage("ネットワーク"),
     "networkDesc": MessageLookupByLibrary.simpleMessage("ネットワーク関連設定の変更"),
     "networkDetection": MessageLookupByLibrary.simpleMessage("ネットワーク検出"),
+    "networkDiagnostics": MessageLookupByLibrary.simpleMessage("ネットワーク診断"),
+    "networkDiagnosticsDesc": MessageLookupByLibrary.simpleMessage(
+      "実際の出口 IP とサービスの利用可否を確認",
+    ),
     "networkException": MessageLookupByLibrary.simpleMessage(
       "ネットワーク例外、接続を確認してもう一度お試しください",
     ),
@@ -549,6 +582,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "orders": MessageLookupByLibrary.simpleMessage("注文"),
     "other": MessageLookupByLibrary.simpleMessage("その他"),
     "otherContributors": MessageLookupByLibrary.simpleMessage("その他の貢献者"),
+    "outboundIp": MessageLookupByLibrary.simpleMessage("出口 IP"),
     "outboundMode": MessageLookupByLibrary.simpleMessage("アウトバウンドモード"),
     "override": MessageLookupByLibrary.simpleMessage("上書き"),
     "overrideDns": MessageLookupByLibrary.simpleMessage("DNS上書き"),
@@ -585,6 +619,16 @@ class MessageLookup extends MessageLookupByLibrary {
     "prerequisites": MessageLookupByLibrary.simpleMessage("Prerequisites"),
     "pressKeyboard": MessageLookupByLibrary.simpleMessage("キーボードを押してください"),
     "preview": MessageLookupByLibrary.simpleMessage("プレビュー"),
+    "probeAvailable": MessageLookupByLibrary.simpleMessage("利用可能"),
+    "probeBlocked": MessageLookupByLibrary.simpleMessage("ブロック"),
+    "probeComingSoon": MessageLookupByLibrary.simpleMessage("近日公開"),
+    "probeDisallowedIsp": MessageLookupByLibrary.simpleMessage("ISP は非対応"),
+    "probeFailed": MessageLookupByLibrary.simpleMessage("診断失敗"),
+    "probeOriginalsOnly": MessageLookupByLibrary.simpleMessage("オリジナル作品のみ"),
+    "probeRestricted": MessageLookupByLibrary.simpleMessage("制限あり"),
+    "probeTimeout": MessageLookupByLibrary.simpleMessage("タイムアウト"),
+    "probeUnavailable": MessageLookupByLibrary.simpleMessage("利用不可"),
+    "probeUnsupportedRegion": MessageLookupByLibrary.simpleMessage("地域は非対応"),
     "process": MessageLookupByLibrary.simpleMessage("プロセス"),
     "profile": MessageLookupByLibrary.simpleMessage("プロファイル"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
@@ -820,6 +864,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "selectSubRule": MessageLookupByLibrary.simpleMessage("サブルールを選択してください"),
     "selected": MessageLookupByLibrary.simpleMessage("選択済み"),
     "selectedCountTitle": m25,
+    "serviceAvailability": MessageLookupByLibrary.simpleMessage("サービス利用可否"),
     "serviceUnavailable": MessageLookupByLibrary.simpleMessage(
       "Elephant Network に接続できません",
     ),
