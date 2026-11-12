@@ -297,6 +297,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "When enabled, automatically uploads crash logs without sensitive information when the app crashes",
     ),
     "create": MessageLookupByLibrary.simpleMessage("Create"),
+    "createCustomProfile": MessageLookupByLibrary.simpleMessage(
+      "Create custom profile",
+    ),
+    "createCustomProfileDesc": MessageLookupByLibrary.simpleMessage(
+      "Create a local configuration and edit its YAML.",
+    ),
     "createProfile": MessageLookupByLibrary.simpleMessage("Create Profile"),
     "creationTime": MessageLookupByLibrary.simpleMessage("Creation time"),
     "currentNodeLabel": MessageLookupByLibrary.simpleMessage("Current node:"),

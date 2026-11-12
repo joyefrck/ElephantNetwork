@@ -621,5 +621,7 @@
   "localProxyAuthentication": "本地代理认证",
   "localProxyAuthenticationDesc": "HTTP 和 SOCKS 代理连接需要用户名和密码。开启后 Android 不声明系统 HTTP 代理。",
   "localProxyUsername": "代理用户名",
-  "invalidProxyCredentials": "请输入有效的用户名和密码，用户名不能包含空格或冒号。"
+  "invalidProxyCredentials": "请输入有效的用户名和密码，用户名不能包含空格或冒号。",
+  "createCustomProfile": "创建自定义配置",
+  "createCustomProfileDesc": "创建本地配置，并编辑 YAML 内容。"
 }

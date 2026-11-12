@@ -80,18 +80,23 @@ class CoreController {
 
   FutureOr<bool> get isInit => _interface.isInit;
 
-  Future<String> validateConfig(String path) async {
-    final res = await _interface.validateConfig(path);
+  Future<String> validateConfig(String path, {bool runtime = false}) async {
+    final res = await _interface.validateConfig(path, runtime: runtime);
     return res;
   }
 
-  Future<String> validateConfigWithData(String data) async {
+  Future<String> validateConfigWithData(
+    String data, {
+    bool runtime = false,
+  }) async {
     final path = await appPath.tempFilePath;
     final file = File(path);
-    await file.safeWriteAsString(data);
-    final res = await _interface.validateConfig(path);
-    await File(path).safeDelete();
-    return res;
+    try {
+      await file.safeWriteAsString(data);
+      return await _interface.validateConfig(path, runtime: runtime);
+    } finally {
+      await file.safeDelete();
+    }
   }
 
   Future<String> updateConfig(UpdateParams updateParams) async {
@@ -198,11 +203,12 @@ class CoreController {
 
   Future<Map<String, dynamic>> getConfig(int id) async {
     final profilePath = await appPath.getProfilePath(id.toString());
-    final data = Map<String, dynamic>.from(
-      await _interface.getConfig(profilePath),
-    );
-    data['rules'] = data['rule'];
-    data.remove('rule');
+    return readConfig(profilePath);
+  }
+
+  Future<Map<String, dynamic>> readConfig(String path) async {
+    final data = Map<String, dynamic>.from(await _interface.getConfig(path));
+    if (data.containsKey('rule')) data['rules'] = data.remove('rule');
     return data;
   }
 

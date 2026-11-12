@@ -50,7 +50,7 @@ class _ProfilesViewState extends State<ProfilesView> {
     _isUpdating = true;
     final List<UpdatingMessage> messages = [];
     final updateProfiles = profiles.map<Future>((profile) async {
-      if (profile.type == ProfileType.file) return;
+      if (profile.type != ProfileType.url) return;
       try {
         await globalState.container
             .read(profilesActionProvider.notifier)
@@ -200,7 +200,7 @@ class ProfileItem extends StatelessWidget {
   }
 
   Future updateProfile() async {
-    if (profile.type == ProfileType.file) return;
+    if (profile.type != ProfileType.url) return;
     await globalState.loadingRun(() async {
       await globalState.container
           .read(profilesActionProvider.notifier)
@@ -398,7 +398,8 @@ class ProfileItem extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ...switch (profile.type) {
-                    ProfileType.file => _buildFileProfileInfo(context),
+                    ProfileType.file ||
+                    ProfileType.custom => _buildFileProfileInfo(context),
                     ProfileType.url => _buildUrlProfileInfo(context),
                   },
                 ],

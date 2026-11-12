@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -29,6 +30,38 @@ void main() {
       expect(info.expire, 0);
     });
   });
+
+  test(
+    'custom profiles persist independently of URL and never auto update',
+    () {
+      final profile = Profile.custom(label: 'Local');
+      expect(profile.type, ProfileType.custom);
+      expect(profile.url, isEmpty);
+      expect(profile.source, ProfileSource.user);
+      expect(profile.realAutoUpdate, false);
+      expect(Profile.fromJson(jsonDecode(jsonEncode(profile))), profile);
+      final legacy = Profile.fromJson({
+        'id': 42,
+        'url': 'https://example.test',
+        'autoUpdateDuration': 0,
+      });
+      expect(legacy.type, ProfileType.url);
+      expect(legacy.profileType, isNull);
+    },
+  );
+
+  test(
+    'malformed subscription attributes do not prevent a valid profile import',
+    () {
+      final info = SubscriptionInfo.formHString(
+        'unknown; upload=10; download=bad; total=100; expire',
+      );
+      expect(info.upload, 10);
+      expect(info.download, 0);
+      expect(info.total, 100);
+      expect(info.expire, 0);
+    },
+  );
 
   group('ProfileExtension', () {
     test('derives type, label, filename, and updating key', () {

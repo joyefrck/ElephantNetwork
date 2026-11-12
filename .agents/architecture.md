@@ -432,3 +432,7 @@ The app owns controller endpoints and credentials. Enabled controllers require a
 ## Core Wire Contract
 
 Dart `CoreMethod.wireName` and Go method constants share `area.verb` names. Arguments are objects or absent, command success is a null result, and failures use the error envelope. App-facing convenience methods may return their existing bool/string success values after validating the null command response. RPC timeouts throw `CoreMethodException`; they must not become successful configuration changes. Android validates response IDs and both transports clean scoped spilled responses. Invalid setup must retain the active configuration. Old wire names are intentionally rejected, so package the Dart and Core changes together.
+
+## Custom Profiles And Imports
+
+Profile type is separate from subscription ownership. The nullable `profile_type` column preserves legacy URL/file inference and stores an explicit custom marker. Custom profiles stay in tool-level configuration management and never auto-update from a URL. Core config reads retain unknown YAML fields; import validation compiles the candidate with current overrides before validating the complete runtime configuration. File imports commit payload and fetched metadata with SQLite plus the existing recovery journal. Explicit user edits to URL/label retain their previous save-on-refresh-failure behavior, while failed downloads keep the valid payload. New file imports must not publish a profile row before validation succeeds.

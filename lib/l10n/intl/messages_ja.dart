@@ -235,6 +235,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "有効にすると、アプリがクラッシュした際に機密情報を含まないクラッシュログを自動的にアップロードします",
     ),
     "create": MessageLookupByLibrary.simpleMessage("作成"),
+    "createCustomProfile": MessageLookupByLibrary.simpleMessage("カスタム設定を作成"),
+    "createCustomProfileDesc": MessageLookupByLibrary.simpleMessage(
+      "ローカル設定を作成し、YAML を編集します。",
+    ),
     "createProfile": MessageLookupByLibrary.simpleMessage("Create Profile"),
     "creationTime": MessageLookupByLibrary.simpleMessage("作成時間"),
     "currentNodeLabel": MessageLookupByLibrary.simpleMessage("現在のノード："),

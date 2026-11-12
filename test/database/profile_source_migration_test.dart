@@ -1,6 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 
@@ -40,4 +41,46 @@ void main() {
     expect(profile.source, ProfileSource.user);
     expect(profile.ownerAccountId, isNull);
   });
+  test(
+    'schema v4 migrates without changing inferred URL/file types or managed ownership',
+    () async {
+      final raw = sqlite.sqlite3.openInMemory();
+      final initial = Database(
+        NativeDatabase.opened(raw, closeUnderlyingOnClose: false),
+      );
+      await initial.profilesDao.putAll([
+        const Profile(
+          id: 1,
+          label: 'URL',
+          url: 'https://example.test',
+          source: ProfileSource.xboard,
+          ownerAccountId: 'account',
+          autoUpdateDuration: Duration.zero,
+        ).toCompanion(),
+        const Profile(
+          id: 2,
+          label: 'File',
+          autoUpdateDuration: Duration.zero,
+        ).toCompanion(),
+      ]);
+      await initial.close();
+      raw.execute('ALTER TABLE profiles DROP COLUMN profile_type');
+      raw.userVersion = 4;
+      final db = Database(NativeDatabase.opened(raw));
+      addTearDown(db.close);
+      final profiles = await db.profilesDao.query().get();
+      expect(profiles.map((value) => value.type), [
+        ProfileType.url,
+        ProfileType.file,
+      ]);
+      expect(profiles.first.ownerAccountId, 'account');
+      expect(profiles.first.source, ProfileSource.xboard);
+      final custom = Profile.custom(label: 'Custom').copyWith(id: 3);
+      await db.profilesDao.putAll([custom.toCompanion()]);
+      expect(
+        (await db.profilesDao.query().get()).last.type,
+        ProfileType.custom,
+      );
+    },
+  );
 }

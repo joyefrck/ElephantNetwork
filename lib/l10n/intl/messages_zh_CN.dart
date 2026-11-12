@@ -213,6 +213,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "开启后，应用崩溃时自动上传不包含敏感信息的崩溃日志",
     ),
     "create": MessageLookupByLibrary.simpleMessage("创建"),
+    "createCustomProfile": MessageLookupByLibrary.simpleMessage("创建自定义配置"),
+    "createCustomProfileDesc": MessageLookupByLibrary.simpleMessage(
+      "创建本地配置，并编辑 YAML 内容。",
+    ),
     "createProfile": MessageLookupByLibrary.simpleMessage("创建配置"),
     "creationTime": MessageLookupByLibrary.simpleMessage("创建时间"),
     "currentNodeLabel": MessageLookupByLibrary.simpleMessage("当前节点："),

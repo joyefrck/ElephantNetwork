@@ -29,8 +29,11 @@ abstract class SubscriptionInfo with _$SubscriptionInfo {
     final list = info.split(';');
     final Map<String, int?> map = {};
     for (final i in list) {
-      final keyValue = i.trim().split('=');
-      map[keyValue[0]] = int.tryParse(keyValue[1]);
+      final separator = i.indexOf('=');
+      if (separator <= 0) continue;
+      map[i.substring(0, separator).trim()] = int.tryParse(
+        i.substring(separator + 1).trim(),
+      );
     }
     return SubscriptionInfo(
       upload: map['upload'] ?? 0,
@@ -48,6 +51,7 @@ abstract class Profile with _$Profile {
     @Default('') String label,
     String? currentGroupName,
     @Default('') String url,
+    @JsonKey(name: 'type') ProfileType? profileType,
     DateTime? lastUpdateDate,
     required Duration autoUpdateDuration,
     SubscriptionInfo? subscriptionInfo,
@@ -73,6 +77,10 @@ abstract class Profile with _$Profile {
       autoUpdateDuration: defaultUpdateDuration,
     );
   }
+
+  factory Profile.custom({String? label}) => Profile.normal(
+    label: label,
+  ).copyWith(profileType: ProfileType.custom, autoUpdate: false);
 }
 
 @freezed
@@ -142,9 +150,9 @@ extension ProfilesExt on List<Profile> {
 
 extension ProfileExtension on Profile {
   ProfileType get type =>
-      url.isEmpty == true ? ProfileType.file : ProfileType.url;
+      profileType ?? (url.isEmpty ? ProfileType.file : ProfileType.url);
 
-  bool get realAutoUpdate => url.isEmpty == true ? false : autoUpdate;
+  bool get realAutoUpdate => type == ProfileType.url && autoUpdate;
 
   String get realLabel => label.takeFirstValid([id.toString()]);
 
@@ -155,7 +163,7 @@ extension ProfileExtension on Profile {
   Future<Profile?> checkAndUpdateAndCopy() async {
     final mFile = await _getFile(false);
     final isExists = await mFile.exists();
-    if (isExists || url.isEmpty) {
+    if (isExists || type != ProfileType.url) {
       return null;
     }
     return update();
@@ -175,21 +183,32 @@ extension ProfileExtension on Profile {
     return _getFile();
   }
 
-  Future<Profile> update() async {
+  Future<({Profile profile, Uint8List bytes})> download() async {
+    if (type != ProfileType.url) {
+      throw StateError('Only URL profiles can be downloaded');
+    }
     final subscriptionUrl = source == ProfileSource.xboard
         ? XboardConfig.managedSubscriptionUri(url).toString()
         : url;
     final response = await request.getFileResponseForUrl(subscriptionUrl);
     final disposition = response.headers.value('content-disposition');
     final userinfo = response.headers.value('subscription-userinfo');
-    return copyWith(
-      url: subscriptionUrl,
-      label: label.takeFirstValid([
-        utils.getFileNameForDisposition(disposition),
-        id.toString(),
-      ]),
-      subscriptionInfo: SubscriptionInfo.formHString(userinfo),
-    ).saveFile(response.data ?? Uint8List.fromList([]));
+    return (
+      profile: copyWith(
+        url: subscriptionUrl,
+        label: label.takeFirstValid([
+          utils.getFileNameForDisposition(disposition),
+          id.toString(),
+        ]),
+        subscriptionInfo: SubscriptionInfo.formHString(userinfo),
+      ),
+      bytes: response.data ?? Uint8List.fromList([]),
+    );
+  }
+
+  Future<Profile> update() async {
+    final result = await download();
+    return result.profile.saveFile(result.bytes);
   }
 
   Future<Profile> saveFile(Uint8List bytes) {

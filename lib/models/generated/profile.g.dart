@@ -27,6 +27,7 @@ _Profile _$ProfileFromJson(Map<String, dynamic> json) => _Profile(
   label: json['label'] as String? ?? '',
   currentGroupName: json['currentGroupName'] as String?,
   url: json['url'] as String? ?? '',
+  profileType: $enumDecodeNullable(_$ProfileTypeEnumMap, json['type']),
   lastUpdateDate: json['lastUpdateDate'] == null
       ? null
       : DateTime.parse(json['lastUpdateDate'] as String),
@@ -63,6 +64,7 @@ Map<String, dynamic> _$ProfileToJson(_Profile instance) => <String, dynamic>{
   'label': instance.label,
   'currentGroupName': instance.currentGroupName,
   'url': instance.url,
+  'type': _$ProfileTypeEnumMap[instance.profileType],
   'lastUpdateDate': instance.lastUpdateDate?.toIso8601String(),
   'autoUpdateDuration': instance.autoUpdateDuration.inMicroseconds,
   'subscriptionInfo': instance.subscriptionInfo,
@@ -74,6 +76,12 @@ Map<String, dynamic> _$ProfileToJson(_Profile instance) => <String, dynamic>{
   'ownerAccountId': instance.ownerAccountId,
   'scriptId': instance.scriptId,
   'order': instance.order,
+};
+
+const _$ProfileTypeEnumMap = {
+  ProfileType.file: 'file',
+  ProfileType.url: 'url',
+  ProfileType.custom: 'custom',
 };
 
 const _$OverwriteTypeEnumMap = {

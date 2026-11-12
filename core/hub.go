@@ -3,10 +3,12 @@ package core
 import (
 	"cmp"
 	"context"
+	"fmt"
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/adapter/outboundgroup"
 	"github.com/metacubex/mihomo/common/observable"
 	"github.com/metacubex/mihomo/common/utils"
+	"github.com/metacubex/mihomo/component/age"
 	"github.com/metacubex/mihomo/component/mmdb"
 	"github.com/metacubex/mihomo/component/resolver"
 	"github.com/metacubex/mihomo/component/updater"
@@ -20,6 +22,7 @@ import (
 	"github.com/metacubex/mihomo/log"
 	"github.com/metacubex/mihomo/tunnel"
 	"github.com/metacubex/mihomo/tunnel/statistic"
+	"go.yaml.in/yaml/v3"
 	"golang.org/x/exp/slices"
 	"net"
 	"os"
@@ -96,16 +99,23 @@ func handleShutdown() bool {
 }
 
 func handleValidateConfig(path string) string {
+	return validateProfileConfig(path, false)
+}
+
+func validateProfileConfig(path string, runtime bool) string {
 	runLock.Lock()
 	defer runLock.Unlock()
 	names := config.GetProxyNameList()
 	defer config.SetProxyNameList(names)
-
 	buf, err := readFile(path)
 	if err != nil {
 		return err.Error()
 	}
-	_, err = config.UnmarshalRawConfig(buf)
+	if runtime {
+		_, err = executor.ParseWithBytes(buf)
+	} else {
+		_, err = config.UnmarshalRawConfig(buf)
+	}
 	if err != nil {
 		return err.Error()
 	}
@@ -460,16 +470,26 @@ func handleGetMemory(fn func(value uint64)) {
 	}()
 }
 
-func handleGetConfig(path string) (*config.RawConfig, error) {
+func handleGetConfig(path string) (map[string]any, error) {
 	bytes, err := readFile(path)
 	if err != nil {
 		return nil, err
 	}
-	prof, err := config.UnmarshalRawConfig(bytes)
+	if _, err := config.UnmarshalRawConfig(bytes); err != nil {
+		return nil, err
+	}
+	bytes, err = age.DecryptBytes(bytes)
 	if err != nil {
 		return nil, err
 	}
-	return prof, nil
+	var raw map[string]any
+	if err := yaml.Unmarshal(bytes, &raw); err != nil {
+		return nil, err
+	}
+	if raw == nil {
+		return nil, fmt.Errorf("configuration must be a mapping")
+	}
+	return raw, nil
 }
 
 func handleCrash() {

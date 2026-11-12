@@ -34,7 +34,7 @@ part 'restore_commits.dart';
 class Database extends _$Database {
   Database([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
-  static const currentSchemaVersion = 4;
+  static const currentSchemaVersion = 5;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -64,6 +64,7 @@ class Database extends _$Database {
           await m.addColumn(profiles, profiles.ownerAccountId);
         }
         if (from < 4) await m.createTable(restoreCommits);
+        if (from < 5) await m.addColumn(profiles, profiles.profileType);
       },
     );
   }

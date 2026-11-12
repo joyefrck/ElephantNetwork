@@ -172,7 +172,8 @@ func (message *Message) Json() (string, error) {
 }
 
 type PathParams struct {
-	Path string `json:"path"`
+	Path    string `json:"path"`
+	Runtime bool   `json:"runtime"`
 }
 type NameParams struct {
 	Name string `json:"name"`

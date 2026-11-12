@@ -21,7 +21,7 @@ mixin CoreInterface {
 
   Future<bool> forceGc();
 
-  Future<String> validateConfig(String path);
+  Future<String> validateConfig(String path, {bool runtime = false});
 
   Future<Map<String, dynamic>> getConfig(String path);
 
@@ -179,10 +179,10 @@ abstract class CoreHandlerInterface with CoreInterface {
   }
 
   @override
-  Future<String> validateConfig(String path) async {
+  Future<String> validateConfig(String path, {bool runtime = false}) async {
     await _invokeCommand(
       method: CoreMethod.configValidate,
-      arguments: {'path': path},
+      arguments: {'path': path, if (runtime) 'runtime': true},
     );
     return '';
   }

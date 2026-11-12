@@ -61,6 +61,10 @@ class Profiles extends _$Profiles {
     );
   }
 
+  void acceptCommitted(Profile profile) {
+    state = state.copyAndPut(profile, (item) => item.id == profile.id);
+  }
+
   Future<void> del(int id) async {
     final previous = List<Profile>.from(state);
     state = previous.where((e) => e.id != id).toList();

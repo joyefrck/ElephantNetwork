@@ -5043,6 +5043,26 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Create custom profile`
+  String get createCustomProfile {
+    return Intl.message(
+      'Create custom profile',
+      name: 'createCustomProfile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create a local configuration and edit its YAML.`
+  String get createCustomProfileDesc {
+    return Intl.message(
+      'Create a local configuration and edit its YAML.',
+      name: 'createCustomProfileDesc',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

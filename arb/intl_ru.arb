@@ -621,5 +621,7 @@
   "localProxyAuthentication": "Авторизация локального прокси",
   "localProxyAuthenticationDesc": "Требовать учётные данные для HTTP и SOCKS. При включении системный HTTP-прокси Android отключается.",
   "localProxyUsername": "Имя пользователя прокси",
-  "invalidProxyCredentials": "Введите допустимые имя и пароль. Имя не должно содержать пробелы или двоеточия."
+  "invalidProxyCredentials": "Введите допустимые имя и пароль. Имя не должно содержать пробелы или двоеточия.",
+  "createCustomProfile": "Создать свою конфигурацию",
+  "createCustomProfileDesc": "Создать локальную конфигурацию и отредактировать YAML."
 }

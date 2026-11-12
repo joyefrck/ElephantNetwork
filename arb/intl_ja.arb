@@ -621,5 +621,7 @@
   "localProxyAuthentication": "ローカルプロキシ認証",
   "localProxyAuthenticationDesc": "HTTP・SOCKS 接続に認証を要求します。有効時は Android のシステム HTTP プロキシを無効にします。",
   "localProxyUsername": "プロキシのユーザー名",
-  "invalidProxyCredentials": "有効なユーザー名とパスワードを入力してください。ユーザー名に空白やコロンは使えません。"
+  "invalidProxyCredentials": "有効なユーザー名とパスワードを入力してください。ユーザー名に空白やコロンは使えません。",
+  "createCustomProfile": "カスタム設定を作成",
+  "createCustomProfileDesc": "ローカル設定を作成し、YAML を編集します。"
 }

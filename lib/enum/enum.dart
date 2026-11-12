@@ -126,7 +126,7 @@ enum AccessControlMode { acceptSelected, rejectSelected }
 
 enum AccessSortType { none, name, time }
 
-enum ProfileType { file, url }
+enum ProfileType { file, url, custom }
 
 enum ProfileSource { user, xboard }
 

@@ -62,7 +62,7 @@ void main() {
       unfoldSet: {},
     );
     expect(emptyProfile.toColumns(true), hasLength(9));
-    expect(emptyProfile.toColumns(false), hasLength(15));
+    expect(emptyProfile.toColumns(false), hasLength(16));
     expect(emptyProfile.toCompanion(true).toColumns(true), hasLength(9));
 
     final insertedProfile = ProfilesCompanion.insert(

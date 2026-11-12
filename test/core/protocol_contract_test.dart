@@ -199,6 +199,11 @@ void main() {
     await handler.sideLoadExternalProvider(providerName: 'provider', data: 'x');
     await handler.asyncTestDelay('https://example.com', 'DIRECT');
     await handler.clearEffect(42);
+    await handler.validateConfig('/candidate.yaml', runtime: true);
+    expect(handler.calls[CoreMethod.configValidate], {
+      'path': '/candidate.yaml',
+      'runtime': true,
+    });
 
     for (final method in [
       CoreMethod.coreInit,

@@ -332,3 +332,8 @@ Windows runner 另跑 Helper 的 `windows-service` 测试；Android 用 JDK 17 �
 - C2 已通过 armv7/arm64/x86_64 联编、Android core/service/app Kotlin 编译，以及 Android 16 arm64 模拟器的 3 项真实 JNI 测试：结构化响应/Unicode、连续 Java 回调异常、事件监听器断开重连。安装的完整私有调试包 2.1.0+22102 使用生成的 libclash.so，不再包含旧 libcore.so。
 - 完整调试包启动发现并修复未连接时触发日志 RPC 的未处理异常。日志订阅现在等待连接、按最新开关收敛、处理失败和重连，旧请求不会阻塞新连接；流量重置也等待并处理响应。最新 975 项根包测试与静态检查通过，27 项构建工具测试、Go 测试/vet、Windows/Linux Core 交叉编译和 macOS 独立 Core 的真实 IPC 测试通过。Android 私有包在模拟器重启后未再出现该启动异常。
 - C2 的 VPN 授权、系统撤销、Always-on、TV 遥控器和全部平台真实安装升级仍有实机验收缺项。未发布或推送 GitHub。
+
+- C2 本地提交 `ef952ddc`，未推送 GitHub。
+- C3 已加入工具页下的自定义配置创建入口与显式 custom 类型，数据库版本为 5。新列可空以保留旧 URL/文件推断方式，受管订阅 source/owner 字段保持独立；自定义配置不参加订阅自动更新。创建后沿用现有配置列表和 YAML 编辑入口。
+- C3 导入先暂存并按 App 的规则、脚本、DNS 和运行设置编译，再完整校验最终配置。文件与拉取后的元数据复用恢复日志和 SQLite 提交标记，数据库失败回滚文件；显式编辑 URL/标签后刷新失败仍保留编辑值，沿用原有约定，原有效文件不被失败的下载替换。未知 YAML 字段不会再被 RawConfig 类型序列化丢弃。修复 provider 侧载错误被吞与规则 provider 类型分支错误，以及不完整 subscription-userinfo 导致异常。
+- C3 已通过 986 项根包全量测试、11 项最后补充的备份/保存/创建交互专项测试、无静态检查问题、Go 测试/vet、macOS 私有构建，以及 Android 模拟器的原生读取/校验/回调测试。覆盖 v2/v4 数据库迁移、URL/文件/custom 共存、真实备份对 custom 类型的保留、错误内容与数据库失败回滚、保存失败重试、重复提交及页面销毁。未发布、未推送。

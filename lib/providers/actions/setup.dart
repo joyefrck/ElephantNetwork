@@ -354,6 +354,7 @@ class SetupAction extends _$SetupAction {
   Future<VM2<String, String>> getProfile({
     required SetupState setupState,
     required PatchClashConfig patchConfig,
+    Map<String, dynamic>? baseConfig,
     void Function(CompiledProfile)? onCompiled,
   }) async {
     final profileId = setupState.profileId;
@@ -367,7 +368,7 @@ class SetupAction extends _$SetupAction {
     final overrideDns = ref.read(overrideDnsProvider);
     final appendSystemDns = networkVM2.a;
     final routeMode = networkVM2.b;
-    final configMap = await coreController.getConfig(profileId);
+    final configMap = baseConfig ?? await coreController.getConfig(profileId);
     String? scriptContent;
     final List<Rule> addedRules = [];
     final List<ProxyGroup> proxyGroups = [];

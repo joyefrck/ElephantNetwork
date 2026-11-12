@@ -39,7 +39,7 @@ class ProfilesAction extends _$ProfilesAction {
       final isNotNeedUpdate = profile.lastUpdateDate
           ?.add(profile.autoUpdateDuration)
           .isBeforeNow;
-      if (isNotNeedUpdate == false || profile.type == ProfileType.file) {
+      if (isNotNeedUpdate == false || profile.type != ProfileType.url) {
         continue;
       }
       try {
@@ -63,10 +63,55 @@ class ProfilesAction extends _$ProfilesAction {
 
   Future<void> updateProfiles() async {
     for (final profile in ref.read(profilesProvider)) {
-      if (profile.type == ProfileType.file) continue;
+      if (profile.type != ProfileType.url) continue;
       await updateProfile(profile);
     }
   }
+
+  Future<Profile> importProfileData(Profile profile, Uint8List bytes) {
+    return dataMutationQueue.run(() async {
+      final prepared = ref.read(profilesProvider).optimizeLabel(profile);
+      final next = await commitProfileData(
+        database: database,
+        activeRoot: await appPath.homeDirPath,
+        profile: prepared,
+        bytes: bytes,
+        recoverPending: () =>
+            ref.read(backupActionProvider.notifier)._recoverPendingRestore(),
+        validate: (path) async {
+          final base = await coreController.readConfig(path);
+          final setup = await ref.read(setupStateProvider(profile.id).future);
+          final compiled = await ref
+              .read(setupActionProvider.notifier)
+              .getProfile(
+                setupState: setup.copyWith(profileSource: profile.source),
+                patchConfig: ref.read(patchClashConfigProvider),
+                baseConfig: base,
+              );
+          final error = await coreController.validateConfigWithData(
+            compiled.a,
+            runtime: true,
+          );
+          if (error.isNotEmpty) throw FormatException(error);
+        },
+        onCleanupFailure: (error) => commonPrint.log(
+          'Profile cleanup: $error',
+          logLevel: LogLevel.warning,
+        ),
+      );
+      if (!ref.mounted) return next;
+      ref.read(profilesProvider.notifier).acceptCommitted(next);
+      if (ref.read(currentProfileIdProvider) == null) {
+        ref.read(currentProfileIdProvider.notifier).value = next.id;
+      }
+      return next;
+    });
+  }
+
+  Future<Profile> createCustomProfile({String? label}) => importProfileData(
+    Profile.custom(label: label ?? currentAppLocalizations.custom),
+    Uint8List.fromList(utf8.encode(defaultCustomProfile)),
+  );
 
   Future<void> updateProfile(Profile profile, {bool showLoading = false}) {
     return dataMutationQueue.run(
@@ -82,9 +127,11 @@ class ProfilesAction extends _$ProfilesAction {
       if (showLoading) {
         ref.read(isUpdatingProvider(profile.updatingKey).notifier).value = true;
       }
-      await ref.read(profilesProvider.notifier).put(profile);
-      final newProfile = await profile.update();
-      await ref.read(profilesProvider.notifier).put(newProfile);
+      if (ref.read(profilesProvider).getProfile(profile.id) != null) {
+        await ref.read(profilesProvider.notifier).put(profile);
+      }
+      final downloaded = await profile.download();
+      await importProfileData(downloaded.profile, downloaded.bytes);
       if (profile.id == ref.read(currentProfileIdProvider)) {
         ref
             .read(setupActionProvider.notifier)
@@ -101,16 +148,9 @@ class ProfilesAction extends _$ProfilesAction {
     final bytes = await platformFile.readBytes();
     globalState.navigatorKey.currentState?.popUntil((route) => route.isFirst);
     ref.read(currentPageLabelProvider.notifier).toProfiles();
-    final profile = await globalState.loadingRun(
-      tag: LoadingTag.profiles,
-      () async {
-        return Profile.normal(label: platformFile.name).saveFile(bytes);
-      },
-      title: currentAppLocalizations.addProfile,
-    );
-    if (profile != null) {
-      putProfile(profile);
-    }
+    await globalState.loadingRun(tag: LoadingTag.profiles, () async {
+      return importProfileData(Profile.normal(label: platformFile.name), bytes);
+    }, title: currentAppLocalizations.addProfile);
   }
 
   Future<void> addProfileFormURL(String url) async {
@@ -118,16 +158,10 @@ class ProfilesAction extends _$ProfilesAction {
       globalState.navigatorKey.currentState?.popUntil((route) => route.isFirst);
     }
     ref.read(currentPageLabelProvider.notifier).value = PageLabel.profiles;
-    final profile = await globalState.loadingRun(
-      tag: LoadingTag.profiles,
-      () async {
-        return Profile.normal(url: url).update();
-      },
-      title: currentAppLocalizations.addProfile,
-    );
-    if (profile != null) {
-      putProfile(profile);
-    }
+    await globalState.loadingRun(tag: LoadingTag.profiles, () async {
+      final downloaded = await Profile.normal(url: url).download();
+      return importProfileData(downloaded.profile, downloaded.bytes);
+    }, title: currentAppLocalizations.addProfile);
   }
 
   void setProfileAndAutoApply(Profile profile) {

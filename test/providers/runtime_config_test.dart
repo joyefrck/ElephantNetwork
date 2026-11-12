@@ -24,6 +24,7 @@ class _RuntimeSetupAction extends SetupAction {
   Future<VM2<String, String>> getProfile({
     required SetupState setupState,
     required PatchClashConfig patchConfig,
+    Map<String, dynamic>? baseConfig,
     void Function(CompiledProfile)? onCompiled,
   }) async {
     onCompiled?.call(compiled);

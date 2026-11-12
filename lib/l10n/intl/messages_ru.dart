@@ -304,6 +304,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "При включении автоматически загружает журналы сбоев без конфиденциальной информации, когда приложение выходит из строя",
     ),
     "create": MessageLookupByLibrary.simpleMessage("Создать"),
+    "createCustomProfile": MessageLookupByLibrary.simpleMessage(
+      "Создать свою конфигурацию",
+    ),
+    "createCustomProfileDesc": MessageLookupByLibrary.simpleMessage(
+      "Создать локальную конфигурацию и отредактировать YAML.",
+    ),
     "createProfile": MessageLookupByLibrary.simpleMessage("Create Profile"),
     "creationTime": MessageLookupByLibrary.simpleMessage("Время создания"),
     "currentNodeLabel": MessageLookupByLibrary.simpleMessage("Текущий узел:"),

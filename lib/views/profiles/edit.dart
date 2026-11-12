@@ -35,6 +35,7 @@ class _EditProfileViewState extends State<EditProfileView> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _fileInfoNotifier = ValueNotifier<FileInfo?>(null);
   Uint8List? _fileData;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -58,7 +59,7 @@ class _EditProfileViewState extends State<EditProfileView> {
   }
 
   Future<void> _handleConfirm() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_isSaving || !_formKey.currentState!.validate()) return;
     var profile = widget.profile.copyWith(
       url: _urlController.text,
       label: _labelController.text,
@@ -67,34 +68,35 @@ class _EditProfileViewState extends State<EditProfileView> {
         minutes: int.parse(_autoUpdateDurationController.text),
       ),
     );
-    final profilesAction = globalState.container.read(
-      profilesActionProvider.notifier,
-    );
-    final hasUpdate = widget.profile.url != profile.url;
-    if (_fileData != null) {
-      if (profile.type == ProfileType.url && _autoUpdate) {
-        final appLocalizations = context.appLocalizations;
-        final res = await globalState.showMessage(
-          title: appLocalizations.tip,
-          message: TextSpan(text: appLocalizations.profileHasUpdate),
+    final fileData = _fileData;
+    setState(() => _isSaving = true);
+    try {
+      final saved = await globalState.loadingRun(() async {
+        final profilesAction = globalState.container.read(
+          profilesActionProvider.notifier,
         );
-        if (res == true) {
-          profile = profile.copyWith(autoUpdate: false);
-        }
-      }
-      profilesAction.putProfile(await profile.saveFile(_fileData!));
-    } else if (!hasUpdate) {
-      profilesAction.putProfile(profile);
-    } else {
-      globalState.safeRun(() async {
-        await Future.delayed(commonDuration);
-        if (hasUpdate) {
+        final hasUpdate = widget.profile.url != profile.url;
+        if (fileData != null) {
+          if (profile.type == ProfileType.url && _autoUpdate) {
+            final l10n = context.appLocalizations;
+            final res = await globalState.showMessage(
+              title: l10n.tip,
+              message: TextSpan(text: l10n.profileHasUpdate),
+            );
+            if (!mounted) return false;
+            if (res == true) profile = profile.copyWith(autoUpdate: false);
+          }
+          await profilesAction.importProfileData(profile, fileData);
+        } else if (!hasUpdate) {
+          await profilesAction.putProfile(profile);
+        } else {
           await profilesAction.updateProfile(profile);
         }
-      });
-    }
-    if (mounted) {
-      Navigator.of(context).pop();
+        return true;
+      }, tag: LoadingTag.profiles);
+      if (saved == true && mounted) Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -338,24 +340,30 @@ class _EditProfileViewState extends State<EditProfileView> {
           child: FloatLayout(
             floatingWidget: FloatWrapper(
               child: CommonFloatingActionButton(
-                onPressed: _handleConfirm,
+                onPressed: _isSaving ? null : _handleConfirm,
                 icon: const Icon(Icons.save),
                 label: appLocalizations.save,
               ),
             ),
-            child: Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: ListView.separated(
-                  padding: kMaterialListPadding.copyWith(bottom: 72),
-                  itemBuilder: (_, index) {
-                    return items[index];
-                  },
-                  separatorBuilder: (_, _) {
-                    return const SizedBox(height: 24);
-                  },
-                  itemCount: items.length,
+            child: AbsorbPointer(
+              absorbing: _isSaving,
+              child: ExcludeFocus(
+                excluding: _isSaving,
+                child: Form(
+                  key: _formKey,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: ListView.separated(
+                      padding: kMaterialListPadding.copyWith(bottom: 72),
+                      itemBuilder: (_, index) {
+                        return items[index];
+                      },
+                      separatorBuilder: (_, _) {
+                        return const SizedBox(height: 24);
+                      },
+                      itemCount: items.length,
+                    ),
+                  ),
                 ),
               ),
             ),

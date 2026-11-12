@@ -1,9 +1,12 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/pages/scan.dart';
+import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/action.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddProfileView extends StatelessWidget {
   final BuildContext context;
@@ -62,11 +65,56 @@ class AddProfileView extends StatelessWidget {
     }
   }
 
+  Future<void> _createCustomProfile(BuildContext sourceContext) async {
+    final l10n = sourceContext.appLocalizations;
+    final label = await globalState.showCommonDialog<String>(
+      child: InputDialog(
+        title: l10n.createCustomProfile,
+        labelText: l10n.name,
+        value: l10n.custom,
+        inputFormatters: TextInputLimits.limit(TextInputLimits.name),
+        validator: (value) => value?.trim().isNotEmpty == true
+            ? null
+            : l10n.profileNameNullValidationDesc,
+      ),
+    );
+    if (label == null || !sourceContext.mounted) return;
+    final profile = await globalState.loadingRun(
+      () => globalState.container
+          .read(profilesActionProvider.notifier)
+          .createCustomProfile(label: label),
+      tag: LoadingTag.profiles,
+    );
+    if (profile != null && sourceContext.mounted) {
+      globalState.navigatorKey.currentState?.popUntil((route) => route.isFirst);
+      globalState.container
+          .read(currentPageLabelProvider.notifier)
+          .toProfiles();
+    }
+  }
+
   @override
   Widget build(context) {
     final appLocalizations = context.appLocalizations;
     return ListView(
       children: [
+        Consumer(
+          builder: (context, ref, _) {
+            final loading = ref.watch(loadingProvider(LoadingTag.profiles));
+            return ListItem(
+              leading: const Icon(Icons.edit_note),
+              title: Text(appLocalizations.createCustomProfile),
+              subtitle: Text(appLocalizations.createCustomProfileDesc),
+              trailing: loading
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : null,
+              onTap: loading ? null : () => _createCustomProfile(context),
+            );
+          },
+        ),
         ListItem(
           leading: const Icon(Icons.qr_code_sharp),
           title: Text(appLocalizations.qrcode),

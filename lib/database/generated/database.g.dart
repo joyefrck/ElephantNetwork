@@ -47,6 +47,15 @@ class $ProfilesTable extends Profiles
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  @override
+  late final GeneratedColumnWithTypeConverter<ProfileType?, String>
+  profileType = GeneratedColumn<String>(
+    'profile_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  ).withConverter<ProfileType?>($ProfilesTable.$converterprofileTypen);
   static const VerificationMeta _lastUpdateDateMeta = const VerificationMeta(
     'lastUpdateDate',
   );
@@ -167,6 +176,7 @@ class $ProfilesTable extends Profiles
     label,
     currentGroupName,
     url,
+    profileType,
     lastUpdateDate,
     overwriteType,
     source,
@@ -293,6 +303,12 @@ class $ProfilesTable extends Profiles
         DriftSqlType.string,
         data['${effectivePrefix}url'],
       )!,
+      profileType: $ProfilesTable.$converterprofileTypen.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}profile_type'],
+        ),
+      ),
       lastUpdateDate: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_update_date'],
@@ -355,6 +371,10 @@ class $ProfilesTable extends Profiles
     return $ProfilesTable(attachedDatabase, alias);
   }
 
+  static JsonTypeConverter2<ProfileType, String, String> $converterprofileType =
+      const EnumNameConverter<ProfileType>(ProfileType.values);
+  static JsonTypeConverter2<ProfileType?, String?, String?>
+  $converterprofileTypen = JsonTypeConverter2.asNullable($converterprofileType);
   static JsonTypeConverter2<OverwriteType, String, String>
   $converteroverwriteType = const EnumNameConverter<OverwriteType>(
     OverwriteType.values,
@@ -374,6 +394,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
   final String label;
   final String? currentGroupName;
   final String url;
+  final ProfileType? profileType;
   final DateTime? lastUpdateDate;
   final OverwriteType overwriteType;
   final ProfileSource source;
@@ -390,6 +411,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     required this.label,
     this.currentGroupName,
     required this.url,
+    this.profileType,
     this.lastUpdateDate,
     required this.overwriteType,
     required this.source,
@@ -411,6 +433,11 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       map['current_group_name'] = Variable<String>(currentGroupName);
     }
     map['url'] = Variable<String>(url);
+    if (!nullToAbsent || profileType != null) {
+      map['profile_type'] = Variable<String>(
+        $ProfilesTable.$converterprofileTypen.toSql(profileType),
+      );
+    }
     if (!nullToAbsent || lastUpdateDate != null) {
       map['last_update_date'] = Variable<DateTime>(lastUpdateDate);
     }
@@ -463,6 +490,9 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           ? const Value.absent()
           : Value(currentGroupName),
       url: Value(url),
+      profileType: profileType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(profileType),
       lastUpdateDate: lastUpdateDate == null && nullToAbsent
           ? const Value.absent()
           : Value(lastUpdateDate),
@@ -497,6 +527,9 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       label: serializer.fromJson<String>(json['label']),
       currentGroupName: serializer.fromJson<String?>(json['currentGroupName']),
       url: serializer.fromJson<String>(json['url']),
+      profileType: $ProfilesTable.$converterprofileTypen.fromJson(
+        serializer.fromJson<String?>(json['profileType']),
+      ),
       lastUpdateDate: serializer.fromJson<DateTime?>(json['lastUpdateDate']),
       overwriteType: $ProfilesTable.$converteroverwriteType.fromJson(
         serializer.fromJson<String>(json['overwriteType']),
@@ -528,6 +561,9 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       'label': serializer.toJson<String>(label),
       'currentGroupName': serializer.toJson<String?>(currentGroupName),
       'url': serializer.toJson<String>(url),
+      'profileType': serializer.toJson<String?>(
+        $ProfilesTable.$converterprofileTypen.toJson(profileType),
+      ),
       'lastUpdateDate': serializer.toJson<DateTime?>(lastUpdateDate),
       'overwriteType': serializer.toJson<String>(
         $ProfilesTable.$converteroverwriteType.toJson(overwriteType),
@@ -555,6 +591,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     String? label,
     Value<String?> currentGroupName = const Value.absent(),
     String? url,
+    Value<ProfileType?> profileType = const Value.absent(),
     Value<DateTime?> lastUpdateDate = const Value.absent(),
     OverwriteType? overwriteType,
     ProfileSource? source,
@@ -573,6 +610,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
         ? currentGroupName.value
         : this.currentGroupName,
     url: url ?? this.url,
+    profileType: profileType.present ? profileType.value : this.profileType,
     lastUpdateDate: lastUpdateDate.present
         ? lastUpdateDate.value
         : this.lastUpdateDate,
@@ -600,6 +638,9 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           ? data.currentGroupName.value
           : this.currentGroupName,
       url: data.url.present ? data.url.value : this.url,
+      profileType: data.profileType.present
+          ? data.profileType.value
+          : this.profileType,
       lastUpdateDate: data.lastUpdateDate.present
           ? data.lastUpdateDate.value
           : this.lastUpdateDate,
@@ -635,6 +676,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           ..write('label: $label, ')
           ..write('currentGroupName: $currentGroupName, ')
           ..write('url: $url, ')
+          ..write('profileType: $profileType, ')
           ..write('lastUpdateDate: $lastUpdateDate, ')
           ..write('overwriteType: $overwriteType, ')
           ..write('source: $source, ')
@@ -656,6 +698,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     label,
     currentGroupName,
     url,
+    profileType,
     lastUpdateDate,
     overwriteType,
     source,
@@ -676,6 +719,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           other.label == this.label &&
           other.currentGroupName == this.currentGroupName &&
           other.url == this.url &&
+          other.profileType == this.profileType &&
           other.lastUpdateDate == this.lastUpdateDate &&
           other.overwriteType == this.overwriteType &&
           other.source == this.source &&
@@ -694,6 +738,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
   final Value<String> label;
   final Value<String?> currentGroupName;
   final Value<String> url;
+  final Value<ProfileType?> profileType;
   final Value<DateTime?> lastUpdateDate;
   final Value<OverwriteType> overwriteType;
   final Value<ProfileSource> source;
@@ -710,6 +755,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     this.label = const Value.absent(),
     this.currentGroupName = const Value.absent(),
     this.url = const Value.absent(),
+    this.profileType = const Value.absent(),
     this.lastUpdateDate = const Value.absent(),
     this.overwriteType = const Value.absent(),
     this.source = const Value.absent(),
@@ -727,6 +773,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     required String label,
     this.currentGroupName = const Value.absent(),
     required String url,
+    this.profileType = const Value.absent(),
     this.lastUpdateDate = const Value.absent(),
     required OverwriteType overwriteType,
     this.source = const Value.absent(),
@@ -750,6 +797,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Expression<String>? label,
     Expression<String>? currentGroupName,
     Expression<String>? url,
+    Expression<String>? profileType,
     Expression<DateTime>? lastUpdateDate,
     Expression<String>? overwriteType,
     Expression<String>? source,
@@ -767,6 +815,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       if (label != null) 'label': label,
       if (currentGroupName != null) 'current_group_name': currentGroupName,
       if (url != null) 'url': url,
+      if (profileType != null) 'profile_type': profileType,
       if (lastUpdateDate != null) 'last_update_date': lastUpdateDate,
       if (overwriteType != null) 'overwrite_type': overwriteType,
       if (source != null) 'source': source,
@@ -787,6 +836,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Value<String>? label,
     Value<String?>? currentGroupName,
     Value<String>? url,
+    Value<ProfileType?>? profileType,
     Value<DateTime?>? lastUpdateDate,
     Value<OverwriteType>? overwriteType,
     Value<ProfileSource>? source,
@@ -804,6 +854,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       label: label ?? this.label,
       currentGroupName: currentGroupName ?? this.currentGroupName,
       url: url ?? this.url,
+      profileType: profileType ?? this.profileType,
       lastUpdateDate: lastUpdateDate ?? this.lastUpdateDate,
       overwriteType: overwriteType ?? this.overwriteType,
       source: source ?? this.source,
@@ -833,6 +884,11 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     }
     if (url.present) {
       map['url'] = Variable<String>(url.value);
+    }
+    if (profileType.present) {
+      map['profile_type'] = Variable<String>(
+        $ProfilesTable.$converterprofileTypen.toSql(profileType.value),
+      );
     }
     if (lastUpdateDate.present) {
       map['last_update_date'] = Variable<DateTime>(lastUpdateDate.value);
@@ -889,6 +945,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
           ..write('label: $label, ')
           ..write('currentGroupName: $currentGroupName, ')
           ..write('url: $url, ')
+          ..write('profileType: $profileType, ')
           ..write('lastUpdateDate: $lastUpdateDate, ')
           ..write('overwriteType: $overwriteType, ')
           ..write('source: $source, ')
@@ -3737,6 +3794,7 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       required String label,
       Value<String?> currentGroupName,
       required String url,
+      Value<ProfileType?> profileType,
       Value<DateTime?> lastUpdateDate,
       required OverwriteType overwriteType,
       Value<ProfileSource> source,
@@ -3755,6 +3813,7 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<String> label,
       Value<String?> currentGroupName,
       Value<String> url,
+      Value<ProfileType?> profileType,
       Value<DateTime?> lastUpdateDate,
       Value<OverwriteType> overwriteType,
       Value<ProfileSource> source,
@@ -3838,6 +3897,12 @@ class $$ProfilesTableFilterComposer
   ColumnFilters<String> get url => $composableBuilder(
     column: $table.url,
     builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<ProfileType?, ProfileType, String>
+  get profileType => $composableBuilder(
+    column: $table.profileType,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<DateTime> get lastUpdateDate => $composableBuilder(
@@ -3984,6 +4049,11 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get profileType => $composableBuilder(
+    column: $table.profileType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get lastUpdateDate => $composableBuilder(
     column: $table.lastUpdateDate,
     builder: (column) => ColumnOrderings(column),
@@ -4062,6 +4132,12 @@ class $$ProfilesTableAnnotationComposer
 
   GeneratedColumn<String> get url =>
       $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<ProfileType?, String> get profileType =>
+      $composableBuilder(
+        column: $table.profileType,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<DateTime> get lastUpdateDate => $composableBuilder(
     column: $table.lastUpdateDate,
@@ -4199,6 +4275,7 @@ class $$ProfilesTableTableManager
                 Value<String> label = const Value.absent(),
                 Value<String?> currentGroupName = const Value.absent(),
                 Value<String> url = const Value.absent(),
+                Value<ProfileType?> profileType = const Value.absent(),
                 Value<DateTime?> lastUpdateDate = const Value.absent(),
                 Value<OverwriteType> overwriteType = const Value.absent(),
                 Value<ProfileSource> source = const Value.absent(),
@@ -4216,6 +4293,7 @@ class $$ProfilesTableTableManager
                 label: label,
                 currentGroupName: currentGroupName,
                 url: url,
+                profileType: profileType,
                 lastUpdateDate: lastUpdateDate,
                 overwriteType: overwriteType,
                 source: source,
@@ -4234,6 +4312,7 @@ class $$ProfilesTableTableManager
                 required String label,
                 Value<String?> currentGroupName = const Value.absent(),
                 required String url,
+                Value<ProfileType?> profileType = const Value.absent(),
                 Value<DateTime?> lastUpdateDate = const Value.absent(),
                 required OverwriteType overwriteType,
                 Value<ProfileSource> source = const Value.absent(),
@@ -4251,6 +4330,7 @@ class $$ProfilesTableTableManager
                 label: label,
                 currentGroupName: currentGroupName,
                 url: url,
+                profileType: profileType,
                 lastUpdateDate: lastUpdateDate,
                 overwriteType: overwriteType,
                 source: source,

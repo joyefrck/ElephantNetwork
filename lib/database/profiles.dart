@@ -13,6 +13,8 @@ class Profiles extends Table {
 
   TextColumn get url => text()();
 
+  TextColumn get profileType => textEnum<ProfileType>().nullable()();
+
   DateTimeColumn get lastUpdateDate => dateTime().nullable()();
 
   TextColumn get overwriteType => textEnum<OverwriteType>()();
@@ -116,6 +118,7 @@ extension RawProfilExt on RawProfile {
       label: label,
       currentGroupName: currentGroupName,
       url: url,
+      profileType: profileType,
       lastUpdateDate: lastUpdateDate,
       autoUpdateDuration: Duration(milliseconds: autoUpdateDurationMillis),
       subscriptionInfo: subscriptionInfo,
@@ -138,6 +141,7 @@ extension ProfilesCompanionExt on Profile {
       label: label,
       currentGroupName: Value(currentGroupName),
       url: url,
+      profileType: Value(profileType),
       lastUpdateDate: Value(lastUpdateDate),
       autoUpdateDurationMillis: autoUpdateDuration.inMilliseconds,
       subscriptionInfo: Value(subscriptionInfo),

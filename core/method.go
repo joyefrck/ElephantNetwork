@@ -160,7 +160,7 @@ func handleMethodCall(call *MethodCall, response MethodResponse) {
 		if !decodeMethodArguments(call, response, &path) {
 			return
 		}
-		response.command(handleValidateConfig(path.Path))
+		response.command(validateProfileConfig(path.Path, path.Runtime))
 		return
 	case configUpdateMethod:
 		params := UpdateParams{}

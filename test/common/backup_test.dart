@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:archive/archive_io.dart';
 import 'package:drift/native.dart';
 import 'package:fl_clash/database/database.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/common/backup.dart';
 import 'package:fl_clash/common/task.dart';
@@ -105,6 +106,7 @@ void main() {
           const Profile(
             id: 1,
             label: 'Preserved',
+            profileType: ProfileType.custom,
             autoUpdateDuration: Duration.zero,
           ),
         ]);
@@ -135,6 +137,7 @@ void main() {
         stagingRoot: '${root.path}/staging',
       );
       expect(staged.data.profiles.single.label, 'Preserved');
+      expect(staged.data.profiles.single.type, ProfileType.custom);
       expect(
         await File('${staged.directory}/profiles/1.yaml').readAsString(),
         'proxies: []',
