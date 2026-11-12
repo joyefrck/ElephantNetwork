@@ -51,6 +51,7 @@ class SystemAction extends _$SystemAction {
 
   @protected
   Future<void> cleanupExitResources(bool needSave) async {
+    if (!dataMutationQueue.isCurrent) await dataMutationQueue.idle;
     await Future.wait([
       if (needSave) preferences.saveConfig(ref.read(configProvider)),
       if (macOS != null) macOS!.updateDns(true),

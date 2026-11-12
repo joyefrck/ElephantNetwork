@@ -192,27 +192,25 @@ extension ProfileExtension on Profile {
     ).saveFile(response.data ?? Uint8List.fromList([]));
   }
 
-  Future<Profile> saveFile(Uint8List bytes) async {
-    final path = await appPath.tempFilePath;
-    final tempFile = File(path);
-    await tempFile.safeWriteAsBytes(bytes);
-    final message = await coreController.validateConfig(path);
-    if (message.isNotEmpty) {
-      throw message;
-    }
-    final mFile = await file;
-    await tempFile.copy(mFile.path);
-    await tempFile.safeDelete();
-    return copyWith(lastUpdateDate: DateTime.now());
+  Future<Profile> saveFile(Uint8List bytes) {
+    return dataMutationQueue.run(() async {
+      final tempFile = File(await appPath.tempFilePath);
+      try {
+        await tempFile.safeWriteAsBytes(bytes);
+        return await saveFileWithPath(tempFile.path);
+      } finally {
+        await tempFile.safeDelete();
+      }
+    });
   }
 
-  Future<Profile> saveFileWithPath(String path) async {
-    final message = await coreController.validateConfig(path);
-    if (message.isNotEmpty) {
-      throw message;
-    }
-    final mFile = await file;
-    await File(path).copy(mFile.path);
-    return copyWith(lastUpdateDate: DateTime.now());
+  Future<Profile> saveFileWithPath(String path) {
+    return dataMutationQueue.run(() async {
+      final message = await coreController.validateConfig(path);
+      if (message.isNotEmpty) throw message;
+      final file = await _getFile(false);
+      await replaceDataFile(File(path), file);
+      return copyWith(lastUpdateDate: DateTime.now());
+    });
   }
 }

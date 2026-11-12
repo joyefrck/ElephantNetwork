@@ -206,7 +206,7 @@ Provider files in `lib/providers/`:
 
 ## Database
 
-The app uses Drift/SQLite in `lib/database/`. Current schema version is 2.
+The app uses Drift/SQLite in `lib/database/`. Current schema version is 4.
 
 Tables:
 
@@ -424,3 +424,5 @@ Windows stale proxy cleanup requires the persisted ElephantNetwork proxy-owner r
 Linux packages ship the same hash-verified Helper contract over `/run/elephantnetwork/helper.sock`. The systemd unit records the invoking UID/GID, refuses another owner's registration, and accepts only peers with the installed UID. The socket and its directory must be root-owned; the helper and every executable ancestor must be root-owned without group/other write permission. The Core keeps the user's real UID with root effective privileges, and termination/IPC loss performs bounded route cleanup. Lifecycle ownership stays in the shared desktop controller, including direct-launch fallback when the Helper is unavailable.
 
 Windows binds each managed Core to a kill-on-close job. If confinement fails after spawn, the Helper confirms termination before releasing ownership and reports a post-spawn failure; it never silently drops an unconfirmed child.
+
+Restore stages and validates archives before changing active data. SQLite transactions include a restore commit ID, while `.restore-recovery/` keeps bounded file undo journals outside extracted archive contents. Startup recovers journals before loading configuration; desktop takes the data lock before migration or recovery. Uncommitted tasks roll files back, committed tasks finish settings persistence. Backup snapshots use SQLite `VACUUM INTO` so WAL data is included. Subscription and restore file mutations share the reentrant `DataMutationQueue`.

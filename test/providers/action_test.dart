@@ -691,7 +691,7 @@ class _TestProfiles extends Profiles {
   List<Profile> build() => initial;
 
   @override
-  void put(Profile profile) {
+  Future<void> put(Profile profile) async {
     final next = List<Profile>.from(state);
     final index = next.indexWhere((item) => item.id == profile.id);
     if (index == -1) {

@@ -3499,6 +3499,162 @@ class IconRecordsCompanion extends UpdateCompanion<IconRecord> {
   }
 }
 
+class $RestoreCommitsTable extends RestoreCommits
+    with TableInfo<$RestoreCommitsTable, RawRestoreCommit> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RestoreCommitsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'restore_commits';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RawRestoreCommit> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RawRestoreCommit map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RawRestoreCommit(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+    );
+  }
+
+  @override
+  $RestoreCommitsTable createAlias(String alias) {
+    return $RestoreCommitsTable(attachedDatabase, alias);
+  }
+}
+
+class RawRestoreCommit extends DataClass
+    implements Insertable<RawRestoreCommit> {
+  final String id;
+  const RawRestoreCommit({required this.id});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    return map;
+  }
+
+  RestoreCommitsCompanion toCompanion(bool nullToAbsent) {
+    return RestoreCommitsCompanion(id: Value(id));
+  }
+
+  factory RawRestoreCommit.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RawRestoreCommit(id: serializer.fromJson<String>(json['id']));
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{'id': serializer.toJson<String>(id)};
+  }
+
+  RawRestoreCommit copyWith({String? id}) =>
+      RawRestoreCommit(id: id ?? this.id);
+  RawRestoreCommit copyWithCompanion(RestoreCommitsCompanion data) {
+    return RawRestoreCommit(id: data.id.present ? data.id.value : this.id);
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RawRestoreCommit(')
+          ..write('id: $id')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => id.hashCode;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RawRestoreCommit && other.id == this.id);
+}
+
+class RestoreCommitsCompanion extends UpdateCompanion<RawRestoreCommit> {
+  final Value<String> id;
+  final Value<int> rowid;
+  const RestoreCommitsCompanion({
+    this.id = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RestoreCommitsCompanion.insert({
+    required String id,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id);
+  static Insertable<RawRestoreCommit> custom({
+    Expression<String>? id,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RestoreCommitsCompanion copyWith({Value<String>? id, Value<int>? rowid}) {
+    return RestoreCommitsCompanion(
+      id: id ?? this.id,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RestoreCommitsCompanion(')
+          ..write('id: $id, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$Database extends GeneratedDatabase {
   _$Database(QueryExecutor e) : super(e);
   $DatabaseManager get managers => $DatabaseManager(this);
@@ -3510,6 +3666,7 @@ abstract class _$Database extends GeneratedDatabase {
   );
   late final $ProxyGroupsTable proxyGroups = $ProxyGroupsTable(this);
   late final $IconRecordsTable iconRecords = $IconRecordsTable(this);
+  late final $RestoreCommitsTable restoreCommits = $RestoreCommitsTable(this);
   late final Index idxRuleTarget = Index(
     'idx_rule_target',
     'CREATE INDEX idx_rule_target ON rules (rule_target)',
@@ -3542,6 +3699,7 @@ abstract class _$Database extends GeneratedDatabase {
     profileRuleLinks,
     proxyGroups,
     iconRecords,
+    restoreCommits,
     idxRuleTarget,
     idxProfileSceneOrder,
     idxProfileNameOrder,
@@ -5906,6 +6064,116 @@ typedef $$IconRecordsTableProcessedTableManager =
       IconRecord,
       PrefetchHooks Function()
     >;
+typedef $$RestoreCommitsTableCreateCompanionBuilder =
+    RestoreCommitsCompanion Function({required String id, Value<int> rowid});
+typedef $$RestoreCommitsTableUpdateCompanionBuilder =
+    RestoreCommitsCompanion Function({Value<String> id, Value<int> rowid});
+
+class $$RestoreCommitsTableFilterComposer
+    extends Composer<_$Database, $RestoreCommitsTable> {
+  $$RestoreCommitsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RestoreCommitsTableOrderingComposer
+    extends Composer<_$Database, $RestoreCommitsTable> {
+  $$RestoreCommitsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RestoreCommitsTableAnnotationComposer
+    extends Composer<_$Database, $RestoreCommitsTable> {
+  $$RestoreCommitsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+}
+
+class $$RestoreCommitsTableTableManager
+    extends
+        RootTableManager<
+          _$Database,
+          $RestoreCommitsTable,
+          RawRestoreCommit,
+          $$RestoreCommitsTableFilterComposer,
+          $$RestoreCommitsTableOrderingComposer,
+          $$RestoreCommitsTableAnnotationComposer,
+          $$RestoreCommitsTableCreateCompanionBuilder,
+          $$RestoreCommitsTableUpdateCompanionBuilder,
+          (
+            RawRestoreCommit,
+            BaseReferences<_$Database, $RestoreCommitsTable, RawRestoreCommit>,
+          ),
+          RawRestoreCommit,
+          PrefetchHooks Function()
+        > {
+  $$RestoreCommitsTableTableManager(_$Database db, $RestoreCommitsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RestoreCommitsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RestoreCommitsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RestoreCommitsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RestoreCommitsCompanion(id: id, rowid: rowid),
+          createCompanionCallback:
+              ({required String id, Value<int> rowid = const Value.absent()}) =>
+                  RestoreCommitsCompanion.insert(id: id, rowid: rowid),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RestoreCommitsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$Database,
+      $RestoreCommitsTable,
+      RawRestoreCommit,
+      $$RestoreCommitsTableFilterComposer,
+      $$RestoreCommitsTableOrderingComposer,
+      $$RestoreCommitsTableAnnotationComposer,
+      $$RestoreCommitsTableCreateCompanionBuilder,
+      $$RestoreCommitsTableUpdateCompanionBuilder,
+      (
+        RawRestoreCommit,
+        BaseReferences<_$Database, $RestoreCommitsTable, RawRestoreCommit>,
+      ),
+      RawRestoreCommit,
+      PrefetchHooks Function()
+    >;
 
 class $DatabaseManager {
   final _$Database _db;
@@ -5922,6 +6190,8 @@ class $DatabaseManager {
       $$ProxyGroupsTableTableManager(_db, _db.proxyGroups);
   $$IconRecordsTableTableManager get iconRecords =>
       $$IconRecordsTableTableManager(_db, _db.iconRecords);
+  $$RestoreCommitsTableTableManager get restoreCommits =>
+      $$RestoreCommitsTableTableManager(_db, _db.restoreCommits);
 }
 
 mixin _$ProfilesDaoMixin on DatabaseAccessor<Database> {

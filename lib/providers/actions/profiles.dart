@@ -53,10 +53,12 @@ class ProfilesAction extends _$ProfilesAction {
     }
   }
 
-  void putProfile(Profile profile) {
-    ref.read(profilesProvider.notifier).put(profile);
-    if (ref.read(currentProfileIdProvider) != null) return;
-    ref.read(currentProfileIdProvider.notifier).value = profile.id;
+  Future<void> putProfile(Profile profile) {
+    final operation = ref.read(profilesProvider.notifier).put(profile);
+    if (ref.read(currentProfileIdProvider) == null) {
+      ref.read(currentProfileIdProvider.notifier).value = profile.id;
+    }
+    return operation;
   }
 
   Future<void> updateProfiles() async {
@@ -66,17 +68,23 @@ class ProfilesAction extends _$ProfilesAction {
     }
   }
 
-  Future<void> updateProfile(
+  Future<void> updateProfile(Profile profile, {bool showLoading = false}) {
+    return dataMutationQueue.run(
+      () => _updateProfile(profile, showLoading: showLoading),
+    );
+  }
+
+  Future<void> _updateProfile(
     Profile profile, {
-    bool showLoading = false,
+    required bool showLoading,
   }) async {
     try {
       if (showLoading) {
         ref.read(isUpdatingProvider(profile.updatingKey).notifier).value = true;
       }
-      ref.read(profilesProvider.notifier).put(profile);
+      await ref.read(profilesProvider.notifier).put(profile);
       final newProfile = await profile.update();
-      ref.read(profilesProvider.notifier).put(newProfile);
+      await ref.read(profilesProvider.notifier).put(newProfile);
       if (profile.id == ref.read(currentProfileIdProvider)) {
         ref
             .read(setupActionProvider.notifier)

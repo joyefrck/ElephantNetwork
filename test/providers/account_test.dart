@@ -269,7 +269,7 @@ class _TestProfiles extends Profiles {
   List<Profile> build() => initial;
 
   @override
-  void put(Profile profile) {
+  Future<void> put(Profile profile) async {
     final exists = state.any((item) => item.id == profile.id);
     state = exists
         ? [

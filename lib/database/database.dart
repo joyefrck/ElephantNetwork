@@ -17,6 +17,7 @@ part 'links.dart';
 part 'profiles.dart';
 part 'rules.dart';
 part 'scripts.dart';
+part 'restore_commits.dart';
 
 @DriftDatabase(
   tables: [
@@ -26,14 +27,17 @@ part 'scripts.dart';
     ProfileRuleLinks,
     ProxyGroups,
     IconRecords,
+    RestoreCommits,
   ],
   daos: [ProfilesDao, ScriptsDao, RulesDao, ProxyGroupsDao, IconRecordsDao],
 )
 class Database extends _$Database {
   Database([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
+  static const currentSchemaVersion = 4;
+
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => currentSchemaVersion;
 
   static LazyDatabase _openConnection() {
     return LazyDatabase(() async {
@@ -45,6 +49,9 @@ class Database extends _$Database {
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
+      beforeOpen: (_) async {
+        await customStatement('PRAGMA foreign_keys = ON');
+      },
       onUpgrade: (m, from, to) async {
         if (from < 2) {
           await m.createTable(proxyGroups);
@@ -56,6 +63,7 @@ class Database extends _$Database {
           await m.addColumn(profiles, profiles.source);
           await m.addColumn(profiles, profiles.ownerAccountId);
         }
+        if (from < 4) await m.createTable(restoreCommits);
       },
     );
   }
@@ -119,22 +127,80 @@ class Database extends _$Database {
     List<ProxyGroup> proxyGroups, {
     bool isOverride = false,
   }) async {
-    if (profiles.isNotEmpty ||
-        scripts.isNotEmpty ||
-        rules.isNotEmpty ||
-        links.isNotEmpty) {
-      await batch((b) {
-        isOverride
-            ? profilesDao.setAllWithBatch(b, profiles)
-            : profilesDao.putAllWithBatch(
-                b,
-                profiles.map((item) => item.toCompanion()),
-              );
-        scriptsDao.setAllWithBatch(b, scripts);
-        rulesDao.restoreWithBatch(b, rules, links);
-        proxyGroupsDao.setAllWithBatch(null, b, proxyGroups);
-      });
+    if (!isOverride &&
+        profiles.isEmpty &&
+        scripts.isEmpty &&
+        rules.isEmpty &&
+        links.isEmpty &&
+        proxyGroups.isEmpty) {
+      return;
     }
+    await transaction(() async {
+      await customStatement('PRAGMA defer_foreign_keys = ON');
+      await batch((b) {
+        if (isOverride) {
+          profilesDao.setAllWithBatch(b, profiles);
+          scriptsDao.setAllWithBatch(b, scripts);
+          rulesDao.restoreWithBatch(b, rules, links);
+          proxyGroupsDao.setAllWithBatch(null, b, proxyGroups);
+        } else {
+          profilesDao.putAllWithBatch(
+            b,
+            profiles.map((item) => item.toCompanion()),
+          );
+          b.insertAllOnConflictUpdate(
+            this.scripts,
+            scripts.map((item) => item.toCompanion()),
+          );
+          b.insertAllOnConflictUpdate(
+            this.rules,
+            rules.map((item) => item.toCompanion()),
+          );
+          b.insertAllOnConflictUpdate(
+            profileRuleLinks,
+            links.map((item) => item.toCompanion()),
+          );
+          b.insertAllOnConflictUpdate(
+            this.proxyGroups,
+            proxyGroups.map((item) => item.toCompanion()),
+          );
+        }
+      });
+      await _purgeOrphans();
+    });
+  }
+
+  Future<void> _purgeOrphans() async {
+    await customStatement(
+      'DELETE FROM profile_rule_mapping WHERE rule_id NOT IN (SELECT id FROM rules) OR (profile_id IS NOT NULL AND profile_id NOT IN (SELECT id FROM profiles))',
+    );
+    await customStatement(
+      'DELETE FROM proxy_groups WHERE profile_id IS NOT NULL AND profile_id NOT IN (SELECT id FROM profiles)',
+    );
+    await customStatement(
+      'UPDATE profiles SET script_id = NULL WHERE script_id IS NOT NULL AND script_id NOT IN (SELECT id FROM scripts)',
+    );
+  }
+
+  Future<void> markRestoreCommitted(String id) async {
+    await into(
+      restoreCommits,
+    ).insertOnConflictUpdate(RestoreCommitsCompanion.insert(id: id));
+  }
+
+  Future<bool> isRestoreCommitted(String id) async {
+    return await (select(
+          restoreCommits,
+        )..where((row) => row.id.equals(id))).getSingleOrNull() !=
+        null;
+  }
+
+  Future<void> forgetRestoreCommit(String id) async {
+    await (delete(restoreCommits)..where((row) => row.id.equals(id))).go();
+  }
+
+  Future<void> createBackup(String path) async {
+    await customStatement('VACUUM INTO ?', [path]);
   }
 
   Future<void> setProfileCustomData(

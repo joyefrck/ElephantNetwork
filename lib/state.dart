@@ -18,6 +18,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'common/common.dart';
 import 'common/migration.dart';
+import 'common/backup.dart';
 import 'database/database.dart';
 import 'enum/enum.dart';
 import 'l10n/l10n.dart';
@@ -84,6 +85,26 @@ class GlobalState {
 
   Future<ProviderContainer> _initData(int version) async {
     packageInfo = await PackageInfo.fromPlatform();
+    final dataRoot = await Directory(
+      await appPath.homeDirPath,
+    ).create(recursive: true);
+    await RestoreFileTransaction.recover(
+      activeRoot: dataRoot.path,
+      isCommitted: database.isRestoreCommitted,
+      forgetCommit: database.forgetRestoreCommit,
+      persistConfig: (config, previousDigest) async {
+        if (!shouldRecoverConfiguration(
+          await preferences.getConfigMap(),
+          config,
+          previousDigest,
+        )) {
+          return;
+        }
+        if (!await preferences.saveConfig(config)) {
+          throw StateError('Restored settings could not be saved');
+        }
+      },
+    );
     var config = await migration.run();
     _didCrashOnPreviousExecution = await system.didCrashOnPreviousExecution();
     if (_didCrashOnPreviousExecution) {

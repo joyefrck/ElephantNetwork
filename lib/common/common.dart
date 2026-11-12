@@ -46,3 +46,4 @@ export 'tray.dart';
 export 'utils.dart';
 export 'window.dart';
 export 'yaml.dart';
+export 'data_mutation.dart';

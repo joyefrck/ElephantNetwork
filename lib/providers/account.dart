@@ -1,3 +1,4 @@
+import 'package:fl_clash/common/data_mutation.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/account/account.dart';
 import 'package:fl_clash/features/account/xboard_managed_profile.dart';
@@ -70,7 +71,10 @@ class RiverpodXboardManagedProfileGateway
   final bool Function() _hasNodes;
 
   @override
-  Future<void> prepare(XboardAccount account) async {
+  Future<void> prepare(XboardAccount account) =>
+      dataMutationQueue.run(() => _prepare(account));
+
+  Future<void> _prepare(XboardAccount account) async {
     final currentId = ref.read(currentProfileIdProvider);
     final current = ref.read(profilesProvider).getProfile(currentId);
     if (isXboardProfileForAccount(current, account.accountId)) {
@@ -94,7 +98,10 @@ class RiverpodXboardManagedProfileGateway
   }
 
   @override
-  Future<void> reconcile(Uri subscription, XboardAccount account) async {
+  Future<void> reconcile(Uri subscription, XboardAccount account) =>
+      dataMutationQueue.run(() => _reconcile(subscription, account));
+
+  Future<void> _reconcile(Uri subscription, XboardAccount account) async {
     await prepare(account);
     final profiles = ref.read(profilesProvider);
     final managedProfiles = profiles
@@ -109,7 +116,7 @@ class RiverpodXboardManagedProfileGateway
       account: account,
     );
     final updated = await _updateProfile(candidate);
-    ref.read(profilesActionProvider.notifier).putProfile(updated);
+    await ref.read(profilesActionProvider.notifier).putProfile(updated);
     ref.read(currentProfileIdProvider.notifier).value = updated.id;
     for (final stale in managedProfiles.where(
       (profile) => profile.id != updated.id,
@@ -124,7 +131,9 @@ class RiverpodXboardManagedProfileGateway
   }
 
   @override
-  Future<void> stopAndRemove() async {
+  Future<void> stopAndRemove() => dataMutationQueue.run(() => _stopAndRemove());
+
+  Future<void> _stopAndRemove() async {
     final profiles = ref.read(profilesProvider);
     final managedProfiles = profiles
         .where((profile) => profile.source == ProfileSource.xboard)

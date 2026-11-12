@@ -13,6 +13,7 @@ import 'common/common.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
+    if (system.isDesktop && !await singleInstanceLock.acquire()) exit(0);
     if (system.isDesktop) {
       await RustLib.init();
     }

@@ -4,7 +4,9 @@ import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+import 'package:drift/native.dart';
+import 'package:fl_clash/common/backup.dart';
+import 'package:fl_clash/common/migration.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/config_overrides.dart';
 import 'package:fl_clash/database/database.dart';
@@ -507,153 +509,210 @@ Future<MigrationData> _oldToNowTask(
 
 Future<String> backupTask(
   Map<String, dynamic> configMap,
-  Iterable<String> fileNames,
+  String snapshotPath,
 ) async {
-  return compute<
-    VM3<Map<String, dynamic>, Iterable<String>, RootIsolateToken>,
-    String
-  >(_backupTask, VM3(configMap, fileNames, RootIsolateToken.instance!));
+  return compute<VM3<Map<String, dynamic>, String, RootIsolateToken>, String>(
+    _backupTask,
+    VM3(configMap, snapshotPath, RootIsolateToken.instance!),
+  );
 }
 
-Future<String> _backupTask<T>(
-  VM3<Map<String, dynamic>, Iterable<String>, RootIsolateToken> args,
+Future<String> _backupTask(
+  VM3<Map<String, dynamic>, String, RootIsolateToken> args,
 ) async {
-  final configMap = args.a;
-  final fileNames = args.b;
-  final token = args.c;
-  BackgroundIsolateBinaryMessenger.ensureInitialized(token);
-  final dbPath = await appPath.databasePath;
-  final configStr = json.encode(configMap);
-  final profilesDir = Directory(await appPath.profilesPath);
-  final scriptsDir = Directory(await appPath.scriptsDirPath);
-  final tempZipFilePath = await appPath.tempFilePath;
-  final tempDBFile = File(await appPath.tempFilePath);
-  final tempConfigFile = File(await appPath.tempFilePath);
-  final dbFile = File(dbPath);
-  if (await dbFile.exists()) {
-    await dbFile.copy(tempDBFile.path);
+  BackgroundIsolateBinaryMessenger.ensureInitialized(args.c);
+  return createBackupArchive(
+    configMap: args.a,
+    snapshotPath: args.b,
+    homeRoot: await appPath.homeDirPath,
+    outputPath: await appPath.tempFilePath,
+    temporaryConfigPath: await appPath.tempFilePath,
+  );
+}
+
+Future<String> createBackupArchive({
+  required Map<String, dynamic> configMap,
+  required String snapshotPath,
+  required String homeRoot,
+  required String outputPath,
+  required String temporaryConfigPath,
+}) async {
+  final snapshot = File(snapshotPath);
+  final sourceDatabase = Database(NativeDatabase(snapshot));
+  final List<String> profileNames;
+  final List<String> scriptNames;
+  try {
+    profileNames = await sourceDatabase.profilesDao.fileNames().get();
+    scriptNames = await sourceDatabase.scriptsDao.fileNames().get();
+  } finally {
+    await sourceDatabase.close();
   }
+  final fileNames = {...profileNames, ...scriptNames};
+  final profilesDir = Directory(join(homeRoot, 'profiles'));
+  final scriptsDir = Directory(join(homeRoot, 'scripts'));
+  for (final paths in [
+    (profilesDir, profileNames),
+    (scriptsDir, scriptNames),
+  ]) {
+    for (final name in paths.$2) {
+      if (!RegExp(r'^[0-9]+\.(yaml|js)$').hasMatch(name) ||
+          await FileSystemEntity.type(
+                join(paths.$1.path, name),
+                followLinks: false,
+              ) !=
+              FileSystemEntityType.file) {
+        throw const FormatException('Backup configuration file is missing');
+      }
+    }
+  }
+  final configFile = File(temporaryConfigPath);
   final encoder = ZipFileEncoder();
-  encoder.create(tempZipFilePath);
-  await tempConfigFile.writeAsString(configStr);
-  await encoder.addFile(tempDBFile, backupDatabaseName);
-  await encoder.addFile(tempConfigFile, configJsonName);
-  if (await profilesDir.exists()) {
-    await encoder.addDirectory(
-      profilesDir,
-      filter: (file, _) {
-        if (!fileNames.contains(basename(file.path))) {
-          return ZipFileOperation.skip;
-        }
-        return ZipFileOperation.include;
-      },
-    );
+  var closed = false;
+  var succeeded = false;
+  try {
+    encoder.create(outputPath);
+    await configFile.writeAsString(json.encode(configMap));
+    await encoder.addFile(snapshot, backupDatabaseName);
+    await encoder.addFile(configFile, configJsonName);
+    for (final directory in [profilesDir, scriptsDir]) {
+      if (!await directory.exists()) continue;
+      await encoder.addDirectory(
+        directory,
+        filter: (file, _) => fileNames.contains(basename(file.path))
+            ? ZipFileOperation.include
+            : ZipFileOperation.skip,
+      );
+    }
+    encoder.close();
+    closed = true;
+    succeeded = true;
+    return outputPath;
+  } finally {
+    if (!closed) {
+      try {
+        encoder.close();
+      } on Object catch (error) {
+        commonPrint.log(
+          'Backup cleanup failed: $error',
+          logLevel: LogLevel.warning,
+        );
+      }
+    }
+    await configFile.safeDelete();
+    if (!succeeded) await File(outputPath).safeDelete();
   }
-  if (await scriptsDir.exists()) {
-    await encoder.addDirectory(
-      scriptsDir,
-      filter: (file, _) {
-        if (!fileNames.contains(basename(file.path))) {
-          return ZipFileOperation.skip;
-        }
-        return ZipFileOperation.include;
-      },
-    );
-  }
-  encoder.close();
-  await tempConfigFile.safeDelete();
-  await tempDBFile.safeDelete();
-  return tempZipFilePath;
 }
 
-Future<MigrationData> restoreTask() async {
-  return compute<RootIsolateToken, MigrationData>(
+Future<StagedRestore> restoreTask() async {
+  return compute<RootIsolateToken, StagedRestore>(
     _restoreTask,
     RootIsolateToken.instance!,
   );
 }
 
-Future<MigrationData> _restoreTask(RootIsolateToken token) async {
+Future<StagedRestore> _restoreTask(RootIsolateToken token) async {
   BackgroundIsolateBinaryMessenger.ensureInitialized(token);
-  final backupFilePath = await appPath.backupFilePath;
-  final restoreDirPath = await appPath.restoreDirPath;
-  final homeDirPath = await appPath.homeDirPath;
-  final zipDecoder = ZipDecoder();
-  final input = InputFileStream(backupFilePath);
-  final archive = zipDecoder.decodeStream(input);
-  final dir = Directory(restoreDirPath);
-  await dir.create(recursive: true);
-  for (final file in archive.files) {
-    final outPath = join(restoreDirPath, posix.normalize(file.name));
-    final outputStream = OutputFileStream(outPath);
-    file.writeContent(outputStream);
-    await outputStream.close();
-  }
-  await input.close();
-  final restoreConfigFile = File(join(restoreDirPath, configJsonName));
-  if (!await restoreConfigFile.exists()) {
-    throw currentAppLocalizations.invalidBackupFile;
-  }
-  final restoreConfigMap =
-      json.decode(await restoreConfigFile.readAsString())
-          as Map<String, Object?>?;
-  final version = restoreConfigMap?['version'] ?? 0;
-  MigrationData migrationData = MigrationData(configMap: restoreConfigMap);
-  if (version == 0 && restoreConfigMap != null) {
-    migrationData = await _oldToNowTask(
-      VM3(restoreConfigMap, restoreDirPath, homeDirPath),
-    );
-    return migrationData;
-  }
-  final backupDatabaseFile = File(join(restoreDirPath, backupDatabaseName));
-  if (!await backupDatabaseFile.exists()) {
-    return migrationData;
-  }
-  final database = Database(
-    driftDatabase(
-      name: 'database',
-      native: DriftNativeOptions(
-        databaseDirectory: () async => Directory(restoreDirPath),
-      ),
-    ),
+  return stageBackup(
+    backupFilePath: await appPath.backupFilePath,
+    stagingRoot: await appPath.restoreDirPath,
   );
-  final results = await Future.wait([
-    database.profilesDao.query().get(),
-    database.scriptsDao.query().get(),
-    database.rules.all().map((item) => item.toRule()).get(),
-    database.profileRuleLinks.all().map((item) => item.toLink()).get(),
-    database.proxyGroups.all().map((item) => item.toProxyGroup()).get(),
-  ]);
-  final profiles = results[0].cast<Profile>();
-  final scripts = results[1].cast<Script>();
-  final profilesMigration = profiles.map(
-    (item) => VM2(
-      _getProfilePath(restoreDirPath, item.id.toString()),
-      _getProfilePath(homeDirPath, item.id.toString()),
-    ),
-  );
-  final scriptsMigration = scripts.map(
-    (item) => VM2(
-      _getScriptPath(restoreDirPath, item.id.toString()),
-      _getScriptPath(homeDirPath, item.id.toString()),
-    ),
-  );
-  await _copyWithMapList([...profilesMigration, ...scriptsMigration]);
-  migrationData = migrationData.copyWith(
-    profiles: profiles,
-    scripts: scripts,
-    rules: results[2].cast<Rule>(),
-    links: results[3].cast<ProfileRuleLink>(),
-    proxyGroups: results[4].cast<ProxyGroup>(),
-  );
-  await database.close();
-  return migrationData;
 }
 
-Future<void> _copyWithMapList(List<VM2<String, String>> copyMapList) async {
-  await Future.wait(
-    copyMapList.map((item) => File(item.a).safeCopy(item.b)).toList(),
-  );
+Future<StagedRestore> stageBackup({
+  required String backupFilePath,
+  required String stagingRoot,
+}) async {
+  final root = await Directory(stagingRoot).create(recursive: true);
+  final staging = await root.createTemp('restore-');
+  try {
+    final input = InputFileStream(backupFilePath);
+    try {
+      final archive = ZipDecoder().decodeStream(input);
+      await extractBackupArchive(archive, staging);
+    } finally {
+      await input.close();
+    }
+    final configFile = File(join(staging.path, configJsonName));
+    if (!await configFile.exists()) {
+      throw const FormatException('Backup configuration is missing');
+    }
+    if (await configFile.length() > 16 * 1024 * 1024) {
+      throw const FormatException('Backup settings exceed size limit');
+    }
+    final raw = json.decode(await configFile.readAsString());
+    if (raw is! Map) {
+      throw const FormatException('Invalid backup configuration');
+    }
+    final configMap = Map<String, Object?>.from(raw);
+    final version = int.tryParse(configMap['version']?.toString() ?? '0');
+    if (version == null || version < 0 || version > Migration.currentVersion) {
+      throw const FormatException('Unsupported backup version');
+    }
+    var data = MigrationData(configMap: configMap);
+    if (version == 0) {
+      for (final profile in configMap['profiles'] as List? ?? []) {
+        final id = (profile as Map)['id']?.toString() ?? '';
+        if (!RegExp(r'^[a-zA-Z0-9_-]+$').hasMatch(id) ||
+            !await File(_getProfilePath(staging.path, id)).exists()) {
+          throw const FormatException('Invalid legacy profile file');
+        }
+      }
+      data = await _oldToNowTask(VM3(configMap, staging.path, staging.path));
+    } else {
+      final databaseFile = File(join(staging.path, backupDatabaseName));
+      if (!await databaseFile.exists()) {
+        throw const FormatException('Backup database is missing');
+      }
+      final sourceDatabase = Database(
+        NativeDatabase(
+          databaseFile,
+          setup: (raw) {
+            final version =
+                raw.select('PRAGMA user_version').first['user_version'] as int;
+            if (version > Database.currentSchemaVersion) {
+              throw const FormatException(
+                'Backup database is newer than this app',
+              );
+            }
+          },
+        ),
+      );
+      try {
+        data = data.copyWith(
+          profiles: await sourceDatabase.profilesDao.query().get(),
+          scripts: await sourceDatabase.scriptsDao.query().get(),
+          rules: await sourceDatabase.rules
+              .all()
+              .map((item) => item.toRule())
+              .get(),
+          links: await sourceDatabase.profileRuleLinks
+              .all()
+              .map((item) => item.toLink())
+              .get(),
+          proxyGroups: await sourceDatabase.proxyGroups
+              .all()
+              .map((item) => item.toProxyGroup())
+              .get(),
+        );
+      } finally {
+        await sourceDatabase.close();
+      }
+    }
+    Config.fromJson(data.configMap!);
+    final files = RestoreFileTransaction(
+      stagingRoot: staging.path,
+      activeRoot: staging.path,
+      files: [
+        for (final profile in data.profiles) 'profiles/${profile.id}.yaml',
+        for (final script in data.scripts) 'scripts/${script.id}.js',
+      ],
+    );
+    await files.validate();
+    return StagedRestore(data: data, directory: staging.path);
+  } on Object {
+    await staging.delete(recursive: true);
+    rethrow;
+  }
 }
 
 String _getScriptPath(String root, String fileName) {

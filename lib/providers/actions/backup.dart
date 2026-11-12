@@ -5,58 +5,156 @@ class BackupAction extends _$BackupAction {
   @override
   void build() {}
 
-  Future<String> backup() async {
-    final res = await Future.wait([
-      database.profilesDao.fileNames().get(),
-      database.scriptsDao.fileNames().get(),
-    ]);
-    final profileFileNames = res[0];
-    final scriptFileNames = res[1];
-    final configMap = ref.read(configProvider).toJson();
-    configMap['version'] = await preferences.getVersion();
-    return backupTask(configMap, [...profileFileNames, ...scriptFileNames]);
+  Future<void>? _restoreOperation;
+  Future<String>? _backupOperation;
+
+  Future<String> backup() {
+    return _backupOperation ??= dataMutationQueue
+        .run(_backup)
+        .whenComplete(() => _backupOperation = null);
   }
 
-  Future<void> restore(RestoreOption option) async {
-    final restoreDirPath = await appPath.restoreDirPath;
-    final restoreDir = Directory(restoreDirPath);
+  Future<String> _backup() async {
+    await _recoverPendingRestore();
+    final configMap = ref.read(configProvider).toJson();
+    configMap['version'] = await preferences.getVersion();
+    final snapshot = File(await appPath.tempFilePath);
+    try {
+      await database.createBackup(snapshot.path);
+      return await backupTask(configMap, snapshot.path);
+    } finally {
+      await snapshot.safeDelete();
+    }
+  }
+
+  Future<void> restore(RestoreOption option) {
+    return _restoreOperation ??= dataMutationQueue
+        .run(() => _restore(option))
+        .whenComplete(() => _restoreOperation = null);
+  }
+
+  @protected
+  Future<StagedRestore> prepareRestore() => restoreTask();
+
+  @protected
+  Database get restoreDatabase => database;
+
+  @protected
+  Future<String> get restoreRoot => appPath.homeDirPath;
+
+  @protected
+  Future<bool> persistRestoredConfig(Config config) =>
+      preferences.saveConfig(config);
+
+  @protected
+  Future<Map<String, Object?>?> get restoreSettingsSnapshot =>
+      preferences.getConfigMap();
+
+  Future<void> _recoverPendingRestore() async {
+    await RestoreFileTransaction.recover(
+      activeRoot: await restoreRoot,
+      isCommitted: restoreDatabase.isRestoreCommitted,
+      forgetCommit: restoreDatabase.forgetRestoreCommit,
+      persistConfig: (config, previousDigest) async {
+        if (!shouldRecoverConfiguration(
+          await restoreSettingsSnapshot,
+          config,
+          previousDigest,
+        )) {
+          return;
+        }
+        if (!await persistRestoredConfig(config)) {
+          throw StateError('Restored settings could not be saved');
+        }
+        _applyRestoredConfig(config);
+      },
+    );
+  }
+
+  void _applyRestoredConfig(Config config) {
+    if (!ref.mounted) return;
+    ref.read(davSettingProvider.notifier).update((_) => config.davProps);
+    ref.read(patchClashConfigProvider.notifier).value = config.patchClashConfig;
+    ref.read(appSettingProvider.notifier).value = config.appSettingProps;
+    ref.read(currentProfileIdProvider.notifier).value = config.currentProfileId;
+    ref.read(themeSettingProvider.notifier).value = config.themeProps;
+    ref.read(windowSettingProvider.notifier).value = config.windowProps;
+    ref.read(vpnSettingProvider.notifier).value = config.vpnProps;
+    ref.read(proxiesStyleSettingProvider.notifier).value =
+        config.proxiesStyleProps;
+    ref.read(overrideDnsProvider.notifier).value = config.overrideDns;
+    ref.read(networkSettingProvider.notifier).value = config.networkProps;
+    ref.read(hotKeyActionsProvider.notifier).value = config.hotKeyActions;
+  }
+
+  Future<void> _restore(RestoreOption option) async {
+    StagedRestore? staged;
+    RestoreFileTransaction? files;
+    var committed = false;
     final restoreStrategy = ref.read(
       appSettingProvider.select((state) => state.restoreStrategy),
     );
     final isOverride = restoreStrategy == RestoreStrategy.override;
     try {
-      final migrationData = await restoreTask();
-      if (!await restoreDir.exists()) {
-        throw currentAppLocalizations.restoreException;
-      }
-      await database.restore(
-        migrationData.profiles,
-        migrationData.scripts,
-        migrationData.rules,
-        migrationData.links,
-        migrationData.proxyGroups,
-        isOverride: isOverride,
-      );
+      await _recoverPendingRestore();
+      staged = await prepareRestore();
+      final migrationData = staged.data;
       final configMap = migrationData.configMap;
-      if (option == RestoreOption.onlyProfiles || configMap == null) return;
-      final config = Config.fromJson(configMap);
-      ref.read(davSettingProvider.notifier).update((_) => config.davProps);
-      ref.read(patchClashConfigProvider.notifier).value =
-          config.patchClashConfig;
-      ref.read(appSettingProvider.notifier).value = config.appSettingProps;
-      ref.read(currentProfileIdProvider.notifier).value =
-          config.currentProfileId;
-      ref.read(themeSettingProvider.notifier).value = config.themeProps;
-      ref.read(windowSettingProvider.notifier).value = config.windowProps;
-      ref.read(vpnSettingProvider.notifier).value = config.vpnProps;
-      ref.read(proxiesStyleSettingProvider.notifier).value =
-          config.proxiesStyleProps;
-      ref.read(overrideDnsProvider.notifier).value = config.overrideDns;
-      ref.read(networkSettingProvider.notifier).value = config.networkProps;
-      ref.read(hotKeyActionsProvider.notifier).value = config.hotKeyActions;
+      final config = configMap == null ? null : Config.fromJson(configMap);
+      files = RestoreFileTransaction(
+        stagingRoot: staged.directory,
+        activeRoot: await restoreRoot,
+        pendingConfig: option == RestoreOption.all ? config : null,
+        previousConfigDigest: option == RestoreOption.all && config != null
+            ? configurationDigest(await restoreSettingsSnapshot)
+            : null,
+        files: [
+          for (final profile in migrationData.profiles)
+            'profiles/${profile.id}.yaml',
+          for (final script in migrationData.scripts) 'scripts/${script.id}.js',
+        ],
+      );
+      await files.validate();
+      await restoreDatabase.transaction(() async {
+        await restoreDatabase.restore(
+          migrationData.profiles,
+          migrationData.scripts,
+          migrationData.rules,
+          migrationData.links,
+          migrationData.proxyGroups,
+          isOverride: isOverride,
+        );
+        await files!.apply();
+        await restoreDatabase.markRestoreCommitted(files.id!);
+      });
+      committed = true;
+      if (option == RestoreOption.all && config != null) {
+        if (!await persistRestoredConfig(config)) {
+          throw StateError('Restored settings could not be saved');
+        }
+      }
+      final restoreId = files.id;
+      await files.commit();
+      if (!files.recoveryRequired && restoreId != null) {
+        await restoreDatabase.forgetRestoreCommit(restoreId);
+      }
+      if (option == RestoreOption.onlyProfiles ||
+          config == null ||
+          !ref.mounted) {
+        return;
+      }
+      _applyRestoredConfig(config);
       return;
+    } on Object {
+      if (!committed) {
+        await files?.rollback();
+        await files?.commit();
+      }
+      rethrow;
     } finally {
-      await restoreDir.safeDelete(recursive: true);
+      if (staged != null) {
+        await Directory(staged.directory).safeDelete(recursive: true);
+      }
     }
   }
 }
