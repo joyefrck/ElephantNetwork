@@ -12,7 +12,9 @@ Future<void> main() async {
     for (final size in [16, 32, 64, 128, 256, 512, 1024]) {
       await _render(_source, '$_macos/app_icon_$size.png', size);
     }
-    await File('$_macos/app_icon_1024.png').copy('assets/images/icon.png');
+    await File(
+      'assets/images/icon.png',
+    ).writeAsBytes(await File('$_macos/app_icon_1024.png').readAsBytes());
 
     final icoFrames = <Uint8List>[];
     const icoSizes = [16, 24, 32, 48, 64, 128, 256];
