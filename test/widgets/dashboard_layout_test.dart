@@ -1,8 +1,9 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/theme.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
-import 'package:fl_clash/providers/state.dart';
+import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/views/dashboard/dashboard.dart';
 import 'package:fl_clash/widgets/grid.dart';
@@ -12,6 +13,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('dashboard includes hidden widgets from existing settings', () {
+    final container = ProviderContainer(
+      overrides: [
+        appSettingProvider.overrideWithBuild(
+          (_, _) => const AppSettingProps(
+            dashboardWidgets: [DashboardWidget.intranetIp],
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final widgets = container.read(dashboardStateProvider).dashboardWidgets;
+    expect(widgets.first, DashboardWidget.intranetIp);
+    expect(widgets, unorderedEquals(DashboardWidget.values));
+    expect(container.read(checkIpProvider).c, isTrue);
+  });
+
   testWidgets('dashboard limits a wide grid to 16 centered columns', (
     tester,
   ) async {
@@ -22,8 +41,8 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
-        dashboardStateProvider.overrideWithValue(
-          const DashboardState(dashboardWidgets: []),
+        appSettingProvider.overrideWithBuild(
+          (_, _) => const AppSettingProps(dashboardWidgets: []),
         ),
       ],
     );
@@ -39,9 +58,21 @@ void main() {
     await tester.pump();
 
     final grid = find.byType(Grid);
-    expect(tester.widget<Grid>(grid).crossAxisCount, 16);
+    final dashboardGrid = tester.widget<Grid>(grid);
+    expect(dashboardGrid.crossAxisCount, 16);
+    expect(
+      dashboardGrid.children,
+      DashboardWidget.values
+          .where(
+            (item) => item.platforms.contains(SupportPlatform.currentPlatform),
+          )
+          .map((item) => item.widget),
+    );
     expect(tester.getSize(grid).width, 1120);
     expect(tester.getTopLeft(grid).dx, 240);
+    expect(find.byIcon(Icons.edit), findsNothing);
+    expect(find.byIcon(Icons.save), findsNothing);
+    expect(find.byIcon(Icons.add_circle), findsNothing);
     expect(tester.takeException(), null);
   });
 }

@@ -337,7 +337,6 @@ class SetupAction extends _$SetupAction {
     if (result != _SetupTaskResult.handoffToCoreRestart) {
       return;
     }
-    // Release the current serial task before restartCore reapplies the profile.
     await _restartCoreAfterAuthorization();
   }
 
@@ -347,6 +346,7 @@ class SetupAction extends _$SetupAction {
     } catch (_) {
       ref.read(authorizedTunEnableProvider.notifier).value =
           TunAuthorizationState.none;
+      _fallbackToSystemProxy();
       rethrow;
     }
   }
@@ -441,6 +441,36 @@ class SetupAction extends _$SetupAction {
     return system.authorizeCore();
   }
 
+  Future<void> prepareDesktopTun() async {
+    if (ref.read(authorizedTunEnableProvider) ==
+        TunAuthorizationState.unauthorized) {
+      ref.read(authorizedTunEnableProvider.notifier).value =
+          TunAuthorizationState.none;
+    }
+    final ready = await requestAdmin(true);
+    if (ref.read(authorizedTunEnableProvider) !=
+        TunAuthorizationState.authorized) {
+      throw StateError(currentAppLocalizations.tunAuthorizationFailed);
+    }
+    if (!ready) await _restartCoreAfterAuthorization();
+  }
+
+  Future<void> applyDesktopTun(bool enable) async {
+    if (!ref.read(initProvider)) return;
+    await coreController.setTunEnabled(enable);
+    ref.read(checkIpNumProvider.notifier).add();
+  }
+
+  void _fallbackToSystemProxy() {
+    if (!system.isDesktop) return;
+    ref
+        .read(patchClashConfigProvider.notifier)
+        .update((state) => state.copyWith.tun(enable: false));
+    ref
+        .read(networkSettingProvider.notifier)
+        .update((state) => state.copyWith(systemProxy: true));
+  }
+
   @visibleForTesting
   Future<bool> requestAdmin(bool enableTun) async {
     if (!enableTun) {
@@ -466,6 +496,7 @@ class SetupAction extends _$SetupAction {
         authorizationNotifier.value = TunAuthorizationState.authorized;
         return true;
       case AuthorizeCode.error:
+        _fallbackToSystemProxy();
         return true;
     }
   }
@@ -543,11 +574,18 @@ class SetupAction extends _$SetupAction {
       () async {
         final configFilePath = await appPath.configFilePath;
         await File(configFilePath).safeWriteAsString(yamlString);
-        final message = await coreController.setupConfig(
-          params: _setupParams,
-          preloadInvoke: preloadInvoke,
-        );
+        final String message;
+        try {
+          message = await coreController.setupConfig(
+            params: _setupParams,
+            preloadInvoke: preloadInvoke,
+          );
+        } catch (_) {
+          if (effectiveTunEnable) _fallbackToSystemProxy();
+          rethrow;
+        }
         if (message.isNotEmpty && !message.endsWith('is empty')) {
+          if (effectiveTunEnable) _fallbackToSystemProxy();
           throw message;
         }
         globalState.lastConfigMd5 = yamlMd5;

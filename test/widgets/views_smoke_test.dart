@@ -83,6 +83,17 @@ void main() {
         ),
       );
       await tester.pump();
+      if (entry.key == 'tools') {
+        final context = tester.element(find.byType(ToolsView));
+        expect(
+          find.text(context.appLocalizations.backupAndRestore),
+          findsNothing,
+        );
+        expect(
+          find.text(context.appLocalizations.hotkeyManagement),
+          findsNothing,
+        );
+      }
       if (entry.key == 'access control') {
         await tester.pump(const Duration(milliseconds: 301));
       }
@@ -103,7 +114,6 @@ void main() {
 
   final toolDestinations = <String, Type>{
     'Theme': ThemeView,
-    'Backup and Restore': BackupAndRestore,
     'Subscription updates': ManagedSubscriptionUpdateView,
     'Basic configuration': ConfigView,
     'Advanced configuration': AdvancedConfigView,

@@ -1,6 +1,5 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/theme.dart';
-import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -251,7 +250,9 @@ void main() {
     expect(find.byType(TextField), findsNothing);
   });
 
-  testWidgets('inactive page scope exits dashboard edit layer', (tester) async {
+  testWidgets('dashboard stays non-editable when page activity changes', (
+    tester,
+  ) async {
     final container = ProviderContainer(
       overrides: [
         dashboardStateProvider.overrideWithValue(
@@ -277,15 +278,18 @@ void main() {
     );
     await tester.pump();
 
-    await tester.tap(find.byKey(const ValueKey('edit-icon')));
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.byKey(const ValueKey('save-icon')), findsOneWidget);
+    expect(find.byType(SuperGrid), findsNothing);
+    expect(find.byIcon(Icons.edit), findsNothing);
 
     isActive.value = false;
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.byKey(const ValueKey('edit-icon')), findsOneWidget);
+    isActive.value = true;
+    await tester.pump();
+    expect(find.byType(Grid), findsOneWidget);
+    expect(find.byType(SuperGrid), findsNothing);
+    expect(find.byIcon(Icons.edit), findsNothing);
   });
 
   testWidgets('inactive page scope exits access search layer', (tester) async {
@@ -320,7 +324,7 @@ void main() {
     expect(find.byType(TextField), findsNothing);
   });
 
-  testWidgets('save and system back cannot re-enter dashboard edit mode', (
+  testWidgets('dashboard back reaches the parent without an edit layer', (
     tester,
   ) async {
     final container = ProviderContainer(
@@ -333,79 +337,30 @@ void main() {
     addTearDown(container.dispose);
     globalState.container = container;
 
+    var backCount = 0;
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const _DashboardTestApp(),
-      ),
-    );
-    await tester.pump();
-
-    await tester.tap(find.byKey(const ValueKey('edit-icon')));
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.byKey(const ValueKey('save-icon')), findsOneWidget);
-
-    tester.widget<IconButton>(find.byKey(const ValueKey(true))).onPressed!();
-    await tester.binding.handlePopRoute();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.byKey(const ValueKey('edit-icon')), findsOneWidget);
-  });
-
-  testWidgets('system back preserves a pending dashboard deletion', (
-    tester,
-  ) async {
-    final container = ProviderContainer(
-      overrides: [
-        dashboardStateProvider.overrideWithValue(
-          const DashboardState(
-            dashboardWidgets: [
-              DashboardWidget.networkSpeed,
-              DashboardWidget.outboundModeV2,
-            ],
+        child: _DashboardTestApp(
+          child: CommonPopScope(
+            onPop: (_) {
+              backCount++;
+              return false;
+            },
+            child: const DashboardView(),
           ),
         ),
-      ],
-    );
-    addTearDown(container.dispose);
-    final appSettingSubscription = container.listen(
-      appSettingProvider,
-      (_, _) {},
-      fireImmediately: true,
-    );
-    addTearDown(appSettingSubscription.close);
-    globalState.container = container;
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const _DashboardTestApp(),
       ),
     );
     await tester.pump();
 
-    await tester.tap(find.byKey(const ValueKey('edit-icon')));
-    await tester.pump(const Duration(milliseconds: 500));
-
-    final deleteButton = find.ancestor(
-      of: find.byIcon(Icons.close).first,
-      matching: find.byType(IconButton),
-    );
-    tester.widget<IconButton>(deleteButton).onPressed!();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 301));
-    await tester.pump();
-    expect(
-      tester.state<SuperGridState>(find.byType(SuperGrid)).snapshotChildren,
-      [DashboardWidget.outboundModeV2.widget],
-    );
     await tester.binding.handlePopRoute();
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.byKey(const ValueKey('edit-icon')), findsOneWidget);
-    expect(container.read(appSettingProvider).dashboardWidgets, [
-      DashboardWidget.outboundModeV2,
-    ]);
+    expect(backCount, 1);
+    expect(find.byType(Grid), findsOneWidget);
+    expect(find.byType(SuperGrid), findsNothing);
+    expect(find.byIcon(Icons.edit), findsNothing);
   });
 }
 

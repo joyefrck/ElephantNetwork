@@ -654,5 +654,15 @@
   "probeComingSoon": "Скоро появится",
   "probeTimeout": "Время ожидания истекло",
   "probeFailed": "Ошибка проверки",
-  "diagnosticsRefresh": "Обновить"
+  "diagnosticsRefresh": "Обновить",
+  "systemProxyUsageScenario": "Браузер и повседневные приложения",
+  "tunUsageScenario": "Игры, ChatGPT, Claude и другие",
+  "proxyModeSwitchFailed": "Не удалось переключить режим прокси",
+  "tunAuthorizationFailed": "Авторизация TUN отменена или не удалась",
+  "restoreDefaultSettings": "Восстановить настройки по умолчанию",
+  "restoreDefaultSettingsDesc": "Вернуть все настройки к исходным значениям",
+  "restoreDefaultsConfirm": "Восстановить исходные настройки и остановить подключение? Аккаунт, подписки и данные узлов будут сохранены.",
+  "restoreDefaultsSuccess": "Настройки по умолчанию восстановлены",
+  "restoreDefaultsFailed": "Не удалось восстановить настройки",
+  "restoreDefaultsSaveFailed": "Не удалось сохранить настройки по умолчанию. Повторите попытку."
 }

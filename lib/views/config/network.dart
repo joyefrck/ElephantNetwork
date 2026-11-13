@@ -1,6 +1,6 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
-import 'package:fl_clash/providers/config.dart';
+import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,9 +43,7 @@ class TUNItem extends ConsumerWidget {
       subtitle: Text(appLocalizations.tunDesc),
       value: enable,
       onChanged: (value) async {
-        ref
-            .read(patchClashConfigProvider.notifier)
-            .update((state) => state.copyWith.tun(enable: value));
+        ref.read(systemActionProvider.notifier).selectProxyMode(tun: true);
       },
     );
   }
@@ -110,9 +108,7 @@ class SystemProxyItem extends ConsumerWidget {
       subtitle: Text(appLocalizations.systemProxyDesc),
       value: systemProxy,
       onChanged: (bool value) async {
-        ref
-            .read(networkSettingProvider.notifier)
-            .update((state) => state.copyWith(systemProxy: value));
+        ref.read(systemActionProvider.notifier).selectProxyMode(tun: false);
       },
     );
   }

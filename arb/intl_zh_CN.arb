@@ -35,7 +35,7 @@
   "override": "覆写",
   "allowLan": "局域网代理",
   "allowLanDesc": "允许通过局域网访问代理",
-  "tun": "虚拟网卡",
+  "tun": "虚拟网卡（TUN）",
   "tunDesc": "仅在管理员模式生效",
   "minimizeOnExit": "退出时最小化",
   "minimizeOnExitDesc": "修改系统默认退出事件",
@@ -654,5 +654,15 @@
   "probeComingSoon": "尚未开放",
   "probeTimeout": "超时",
   "probeFailed": "检测失败",
-  "diagnosticsRefresh": "刷新"
+  "diagnosticsRefresh": "刷新",
+  "systemProxyUsageScenario": "网页与日常应用",
+  "tunUsageScenario": "游戏、ChatGPT、Claude等",
+  "proxyModeSwitchFailed": "代理模式切换失败",
+  "tunAuthorizationFailed": "TUN 授权已取消或失败",
+  "restoreDefaultSettings": "恢复默认配置",
+  "restoreDefaultSettingsDesc": "将所有设置恢复为初始值",
+  "restoreDefaultsConfirm": "确定恢复所有设置到初始值并停止当前加速？登录账号、订阅和节点数据将保留。",
+  "restoreDefaultsSuccess": "已恢复默认配置",
+  "restoreDefaultsFailed": "恢复默认配置失败",
+  "restoreDefaultsSaveFailed": "无法保存默认配置，请重试"
 }

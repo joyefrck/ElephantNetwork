@@ -40,6 +40,8 @@ mixin CoreInterface {
 
   Future<String> updateConfig(UpdateParams updateParams);
 
+  Future<void> setTunEnabled(bool enable);
+
   Future<String> setupConfig(SetupParams setupParams);
 
   Future<ProxiesData> getProxies();
@@ -260,6 +262,14 @@ abstract class CoreHandlerInterface with CoreInterface {
     );
     return '';
   }
+
+  @override
+  Future<void> setTunEnabled(bool enable) => _invokeCommand(
+    method: CoreMethod.configUpdate,
+    arguments: {
+      'tun': {'enable': enable},
+    },
+  );
 
   @override
   Future<Map<String, dynamic>> getConfig(String path) async {

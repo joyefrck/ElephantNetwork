@@ -10,9 +10,7 @@ import 'package:fl_clash/providers/update.dart';
 import 'package:fl_clash/features/update/update_controller.dart';
 import 'package:fl_clash/views/access.dart';
 import 'package:fl_clash/views/application_setting.dart';
-import 'package:fl_clash/views/backup_and_restore.dart';
 import 'package:fl_clash/views/config/config.dart';
-import 'package:fl_clash/views/hotkey.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,14 +73,13 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       items: [
         const _LocaleItem(),
         const _ThemeItem(),
-        const _BackupItem(),
         const _SubscriptionUpdateItem(),
-        if (system.isDesktop) const _HotkeyItem(),
         if (system.isWindows) const _LoopbackItem(),
         if (system.isAndroid) const _AccessItem(),
         const _ConfigItem(),
         const _AdvancedConfigItem(),
         const _SettingItem(),
+        const _ResetSettingsItem(),
         ListItem.open(
           leading: const Icon(Icons.network_check),
           title: Text(context.appLocalizations.networkDiagnostics),
@@ -176,20 +173,6 @@ class _ThemeItem extends StatelessWidget {
   }
 }
 
-class _BackupItem extends StatelessWidget {
-  const _BackupItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const Icon(Icons.cloud_sync),
-      title: Text(context.appLocalizations.backupAndRestore),
-      subtitle: Text(context.appLocalizations.backupAndRestoreDesc),
-      widget: const BackupAndRestore(),
-    );
-  }
-}
-
 class _SubscriptionUpdateItem extends StatelessWidget {
   const _SubscriptionUpdateItem();
 
@@ -200,20 +183,6 @@ class _SubscriptionUpdateItem extends StatelessWidget {
       title: Text(context.appLocalizations.subscriptionUpdate),
       subtitle: Text(context.appLocalizations.subscriptionUpdateDesc),
       widget: const ManagedSubscriptionUpdateView(),
-    );
-  }
-}
-
-class _HotkeyItem extends StatelessWidget {
-  const _HotkeyItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem.open(
-      leading: const Icon(Icons.keyboard),
-      title: Text(context.appLocalizations.hotkeyManagement),
-      subtitle: Text(context.appLocalizations.hotkeyManagementDesc),
-      widget: const HotKeyView(),
     );
   }
 }
@@ -289,6 +258,64 @@ class _SettingItem extends StatelessWidget {
       title: Text(context.appLocalizations.application),
       subtitle: Text(context.appLocalizations.applicationDesc),
       widget: const ApplicationSettingView(),
+    );
+  }
+}
+
+class _ResetSettingsItem extends ConsumerStatefulWidget {
+  const _ResetSettingsItem();
+
+  @override
+  ConsumerState<_ResetSettingsItem> createState() => _ResetSettingsItemState();
+}
+
+class _ResetSettingsItemState extends ConsumerState<_ResetSettingsItem> {
+  bool _busy = false;
+  bool _confirming = false;
+
+  Future<void> _restoreDefaults() async {
+    if (_busy || _confirming) return;
+    _confirming = true;
+    try {
+      final confirmed = await globalState.showMessage(
+        context: context,
+        title: context.appLocalizations.restoreDefaultSettings,
+        message: TextSpan(
+          text: context.appLocalizations.restoreDefaultsConfirm,
+        ),
+        confirmText: context.appLocalizations.reset,
+      );
+      if (confirmed != true || !mounted) return;
+      setState(() => _busy = true);
+      await ref.read(systemActionProvider.notifier).restoreDefaultSettings();
+      if (mounted) {
+        context.showNotifier(context.appLocalizations.restoreDefaultsSuccess);
+      }
+    } catch (error) {
+      if (mounted) {
+        context.showNotifier(
+          '${context.appLocalizations.restoreDefaultsFailed}: $error',
+        );
+      }
+    } finally {
+      _confirming = false;
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListItem(
+      leading: _busy
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.settings_backup_restore),
+      title: Text(context.appLocalizations.restoreDefaultSettings),
+      subtitle: Text(context.appLocalizations.restoreDefaultSettingsDesc),
+      onTap: _busy ? null : _restoreDefaults,
     );
   }
 }

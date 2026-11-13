@@ -216,7 +216,9 @@ DashboardState dashboardState(Ref ref) {
   final dashboardWidgets = ref.watch(
     appSettingProvider.select((state) => state.dashboardWidgets),
   );
-  return DashboardState(dashboardWidgets: dashboardWidgets);
+  return DashboardState(
+    dashboardWidgets: {...dashboardWidgets, ...DashboardWidget.values}.toList(),
+  );
 }
 
 @riverpod

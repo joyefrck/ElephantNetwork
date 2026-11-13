@@ -5338,6 +5338,106 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Web and everyday apps`
+  String get systemProxyUsageScenario {
+    return Intl.message(
+      'Web and everyday apps',
+      name: 'systemProxyUsageScenario',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Games, ChatGPT, Claude, etc.`
+  String get tunUsageScenario {
+    return Intl.message(
+      'Games, ChatGPT, Claude, etc.',
+      name: 'tunUsageScenario',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unable to switch proxy mode`
+  String get proxyModeSwitchFailed {
+    return Intl.message(
+      'Unable to switch proxy mode',
+      name: 'proxyModeSwitchFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `TUN authorization was cancelled or failed`
+  String get tunAuthorizationFailed {
+    return Intl.message(
+      'TUN authorization was cancelled or failed',
+      name: 'tunAuthorizationFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Restore default settings`
+  String get restoreDefaultSettings {
+    return Intl.message(
+      'Restore default settings',
+      name: 'restoreDefaultSettings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reset all settings to their initial values`
+  String get restoreDefaultSettingsDesc {
+    return Intl.message(
+      'Reset all settings to their initial values',
+      name: 'restoreDefaultSettingsDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Restore all settings to their initial values and stop acceleration? Your account, subscriptions and node data will be kept.`
+  String get restoreDefaultsConfirm {
+    return Intl.message(
+      'Restore all settings to their initial values and stop acceleration? Your account, subscriptions and node data will be kept.',
+      name: 'restoreDefaultsConfirm',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Default settings restored`
+  String get restoreDefaultsSuccess {
+    return Intl.message(
+      'Default settings restored',
+      name: 'restoreDefaultsSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unable to restore default settings`
+  String get restoreDefaultsFailed {
+    return Intl.message(
+      'Unable to restore default settings',
+      name: 'restoreDefaultsFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unable to save default settings. Please try again.`
+  String get restoreDefaultsSaveFailed {
+    return Intl.message(
+      'Unable to save default settings. Please try again.',
+      name: 'restoreDefaultsSaveFailed',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

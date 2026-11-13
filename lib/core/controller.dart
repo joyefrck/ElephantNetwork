@@ -110,6 +110,8 @@ class CoreController implements DiagnosticsCore {
     }
   }
 
+  Future<void> setTunEnabled(bool enable) => _interface.setTunEnabled(enable);
+
   Future<String> updateConfig(UpdateParams updateParams) async {
     return _interface.updateConfig(updateParams);
   }

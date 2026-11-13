@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:io';
 
+import 'package:fl_clash/common/desktop_proxy.dart';
 import 'package:fl_clash/common/local_control.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/profile_import.dart';

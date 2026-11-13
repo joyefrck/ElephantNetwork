@@ -3,6 +3,10 @@ part of '../action.dart';
 @Riverpod(keepAlive: true)
 class SystemAction extends _$SystemAction {
   SystemExitCoordinator? _exitCoordinator;
+  final _proxyModeScheduler = SerialTaskScheduler();
+  int _proxyModeRevision = 0;
+  bool _proxyModeNeedsApply = false;
+  Future<void>? _resetSettingsOperation;
 
   @override
   void build() {}
@@ -96,16 +100,87 @@ class SystemAction extends _$SystemAction {
     }
   }
 
-  void updateTun() {
-    ref
-        .read(patchClashConfigProvider.notifier)
-        .update((state) => state.copyWith.tun(enable: !state.tun.enable));
+  Future<void> selectProxyMode({required bool tun}) {
+    final revision = ++_proxyModeRevision;
+    return _proxyModeScheduler.run(() async {
+      if (!ref.mounted || revision != _proxyModeRevision) return;
+      final previousTun = ref.read(patchClashConfigProvider).tun.enable;
+      final previousProxy = ref.read(networkSettingProvider).systemProxy;
+      if (previousTun == tun && previousProxy != tun && !_proxyModeNeedsApply) {
+        return;
+      }
+      final setup = ref.read(setupActionProvider.notifier);
+      try {
+        if (tun) await setup.prepareDesktopTun();
+        if (!ref.mounted || revision != _proxyModeRevision) return;
+        _proxyModeNeedsApply = true;
+        await setup.applyDesktopTun(tun);
+        if (!ref.mounted) return;
+        if (revision != _proxyModeRevision) return;
+        _proxyModeNeedsApply = false;
+        ref
+            .read(patchClashConfigProvider.notifier)
+            .update((state) => state.copyWith.tun(enable: tun));
+        ref
+            .read(networkSettingProvider.notifier)
+            .update((state) => state.copyWith(systemProxy: !tun));
+      } catch (error) {
+        if (!ref.mounted || revision != _proxyModeRevision) return;
+        reportProxyModeFailure(error);
+      }
+    });
   }
 
-  void updateSystemProxy() {
-    ref
-        .read(networkSettingProvider.notifier)
-        .update((state) => state.copyWith(systemProxy: !state.systemProxy));
+  @protected
+  void reportProxyModeFailure(Object error) {
+    globalState.showNotifier(
+      '${currentAppLocalizations.proxyModeSwitchFailed}: $error',
+    );
+  }
+
+  Future<void> updateTun() => selectProxyMode(tun: true);
+
+  Future<void> updateSystemProxy() => selectProxyMode(tun: false);
+
+  Future<void> restoreDefaultSettings() {
+    if (_resetSettingsOperation != null) return _resetSettingsOperation!;
+    ++_proxyModeRevision;
+    return _resetSettingsOperation = _proxyModeScheduler
+        .run(() => dataMutationQueue.run(_restoreDefaultSettings))
+        .whenComplete(() => _resetSettingsOperation = null);
+  }
+
+  @protected
+  Future<bool> persistSettings(Config config) => preferences.saveConfig(config);
+
+  Future<void> _restoreDefaultSettings() async {
+    if (!ref.mounted) return;
+    final previous = ref.read(configProvider);
+    final setup = ref.read(setupActionProvider.notifier);
+    if (_proxyModeNeedsApply) {
+      await setup.applyDesktopTun(previous.patchClashConfig.tun.enable);
+      if (!ref.mounted) return;
+      _proxyModeNeedsApply = false;
+    }
+    final defaults = Config.realFromJson(
+      null,
+    ).copyWith(currentProfileId: previous.currentProfileId);
+    debouncer.cancel(FunctionTag.savePreferences);
+    if (!await persistSettings(defaults)) {
+      throw StateError(currentAppLocalizations.restoreDefaultsSaveFailed);
+    }
+    if (!ref.mounted) return;
+    final wasRunning = ref.read(isStartProvider);
+    try {
+      if (wasRunning) await setup.setRunning(false);
+    } catch (_) {
+      await persistSettings(previous);
+      if (ref.mounted && wasRunning) await setup.setRunning(true);
+      rethrow;
+    }
+    if (!ref.mounted) return;
+    applyConfigSettings(ref, defaults);
+    _proxyModeNeedsApply = false;
   }
 
   void updateAutoLaunch() {

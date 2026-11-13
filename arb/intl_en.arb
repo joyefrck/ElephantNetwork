@@ -661,5 +661,15 @@
   "probeComingSoon": "Coming soon",
   "probeTimeout": "Timed out",
   "probeFailed": "Check failed",
-  "diagnosticsRefresh": "Refresh"
+  "diagnosticsRefresh": "Refresh",
+  "systemProxyUsageScenario": "Web and everyday apps",
+  "tunUsageScenario": "Games, ChatGPT, Claude, etc.",
+  "proxyModeSwitchFailed": "Unable to switch proxy mode",
+  "tunAuthorizationFailed": "TUN authorization was cancelled or failed",
+  "restoreDefaultSettings": "Restore default settings",
+  "restoreDefaultSettingsDesc": "Reset all settings to their initial values",
+  "restoreDefaultsConfirm": "Restore all settings to their initial values and stop acceleration? Your account, subscriptions and node data will be kept.",
+  "restoreDefaultsSuccess": "Default settings restored",
+  "restoreDefaultsFailed": "Unable to restore default settings",
+  "restoreDefaultsSaveFailed": "Unable to save default settings. Please try again."
 }

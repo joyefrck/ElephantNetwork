@@ -194,6 +194,7 @@ func updateConfig(params *UpdateParams) error {
 		}
 	}
 	general := currentConfig.General
+	previousTun := general.Tun
 	applyGeoURLs(params.GeoXURL)
 	if params.DelayTestTimeout != nil {
 		provider.SetDefaultTestTimeout(hostDelayTimeout(*params.DelayTestTimeout))
@@ -312,6 +313,11 @@ func updateConfig(params *UpdateParams) error {
 	}
 
 	updateListeners()
+	if params.Tun != nil && general.Tun.Enable && isRunning.Load() && !features.Android && !listener.GetTunConf().Enable {
+		general.Tun = previousTun
+		updateListeners()
+		return errors.New("TUN could not be started")
+	}
 	if updater.GeoAutoUpdate() {
 		updater.RegisterGeoUpdaterWithCancel()
 	}
@@ -346,6 +352,11 @@ func applyConfig(params *SetupParams) error {
 	refreshRouteLocked(routeReset)
 	selectMu.Unlock()
 	updateListeners()
+	if currentConfig.General.Tun.Enable && isRunning.Load() && !features.Android && !listener.GetTunConf().Enable {
+		currentConfig.General.Tun.Enable = false
+		updateListeners()
+		return errors.New("TUN could not be started")
+	}
 	if updater.GeoAutoUpdate() {
 		updater.RegisterGeoUpdaterWithCancel()
 	}

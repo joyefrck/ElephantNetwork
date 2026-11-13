@@ -73,18 +73,7 @@ class BackupAction extends _$BackupAction {
 
   void _applyRestoredConfig(Config config) {
     if (!ref.mounted) return;
-    ref.read(davSettingProvider.notifier).update((_) => config.davProps);
-    ref.read(patchClashConfigProvider.notifier).value = config.patchClashConfig;
-    ref.read(appSettingProvider.notifier).value = config.appSettingProps;
-    ref.read(currentProfileIdProvider.notifier).value = config.currentProfileId;
-    ref.read(themeSettingProvider.notifier).value = config.themeProps;
-    ref.read(windowSettingProvider.notifier).value = config.windowProps;
-    ref.read(vpnSettingProvider.notifier).value = config.vpnProps;
-    ref.read(proxiesStyleSettingProvider.notifier).value =
-        config.proxiesStyleProps;
-    ref.read(overrideDnsProvider.notifier).value = config.overrideDns;
-    ref.read(networkSettingProvider.notifier).value = config.networkProps;
-    ref.read(hotKeyActionsProvider.notifier).value = config.hotKeyActions;
+    applyConfigSettings(ref, config);
   }
 
   Future<void> _restore(RestoreOption option) async {
@@ -102,7 +91,9 @@ class BackupAction extends _$BackupAction {
       final configMap = migrationData.configMap;
       final config = configMap == null
           ? null
-          : normalizeLocalControlConfig(Config.fromJson(configMap));
+          : normalizeDesktopProxyConfig(
+              normalizeLocalControlConfig(Config.fromJson(configMap)),
+            );
       files = RestoreFileTransaction(
         stagingRoot: staged.directory,
         activeRoot: await restoreRoot,

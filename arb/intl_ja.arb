@@ -654,5 +654,15 @@
   "probeComingSoon": "近日公開",
   "probeTimeout": "タイムアウト",
   "probeFailed": "診断失敗",
-  "diagnosticsRefresh": "再読み込み"
+  "diagnosticsRefresh": "再読み込み",
+  "systemProxyUsageScenario": "ウェブと日常のアプリ",
+  "tunUsageScenario": "ゲーム、ChatGPT、Claudeなど",
+  "proxyModeSwitchFailed": "プロキシモードの切り替えに失敗しました",
+  "tunAuthorizationFailed": "TUN の認証がキャンセルされたか失敗しました",
+  "restoreDefaultSettings": "初期設定に戻す",
+  "restoreDefaultSettingsDesc": "すべての設定を初期値に戻します",
+  "restoreDefaultsConfirm": "すべての設定を初期値に戻し、接続を停止しますか？アカウント、サブスクリプション、ノードのデータは保持されます。",
+  "restoreDefaultsSuccess": "初期設定に戻しました",
+  "restoreDefaultsFailed": "初期設定に戻せませんでした",
+  "restoreDefaultsSaveFailed": "初期設定を保存できません。もう一度お試しください。"
 }

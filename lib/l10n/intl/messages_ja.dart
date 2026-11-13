@@ -671,6 +671,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "proxyGroupNameEmpty": MessageLookupByLibrary.simpleMessage(
       "プロキシグループ名は空にできません",
     ),
+    "proxyModeSwitchFailed": MessageLookupByLibrary.simpleMessage(
+      "プロキシモードの切り替えに失敗しました",
+    ),
     "proxyNameserver": MessageLookupByLibrary.simpleMessage("プロキシネームサーバー"),
     "proxyNameserverDesc": MessageLookupByLibrary.simpleMessage(
       "プロキシノード解決用ドメイン",
@@ -725,6 +728,22 @@ class MessageLookup extends MessageLookupByLibrary {
     "restartCoreTip": MessageLookupByLibrary.simpleMessage("コアを再起動してもよろしいですか？"),
     "restore": MessageLookupByLibrary.simpleMessage("復元"),
     "restoreAllData": MessageLookupByLibrary.simpleMessage("すべてのデータを復元する"),
+    "restoreDefaultSettings": MessageLookupByLibrary.simpleMessage("初期設定に戻す"),
+    "restoreDefaultSettingsDesc": MessageLookupByLibrary.simpleMessage(
+      "すべての設定を初期値に戻します",
+    ),
+    "restoreDefaultsConfirm": MessageLookupByLibrary.simpleMessage(
+      "すべての設定を初期値に戻し、接続を停止しますか？アカウント、サブスクリプション、ノードのデータは保持されます。",
+    ),
+    "restoreDefaultsFailed": MessageLookupByLibrary.simpleMessage(
+      "初期設定に戻せませんでした",
+    ),
+    "restoreDefaultsSaveFailed": MessageLookupByLibrary.simpleMessage(
+      "初期設定を保存できません。もう一度お試しください。",
+    ),
+    "restoreDefaultsSuccess": MessageLookupByLibrary.simpleMessage(
+      "初期設定に戻しました",
+    ),
     "restoreException": MessageLookupByLibrary.simpleMessage("復元例外"),
     "restoreFromFileDesc": MessageLookupByLibrary.simpleMessage(
       "ファイルを介してデータを復元する",
@@ -926,6 +945,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "systemProxyDesc": MessageLookupByLibrary.simpleMessage(
       "HTTPプロキシをVpnServiceに接続",
     ),
+    "systemProxyUsageScenario": MessageLookupByLibrary.simpleMessage(
+      "ウェブと日常のアプリ",
+    ),
     "tab": MessageLookupByLibrary.simpleMessage("タブ"),
     "tabAnimation": MessageLookupByLibrary.simpleMessage("タブアニメーション"),
     "tabAnimationDesc": MessageLookupByLibrary.simpleMessage("モバイル表示でのみ有効"),
@@ -952,7 +974,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "trafficPackage": MessageLookupByLibrary.simpleMessage("追加通信量"),
     "trafficUsage": MessageLookupByLibrary.simpleMessage("トラフィック使用量"),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
+    "tunAuthorizationFailed": MessageLookupByLibrary.simpleMessage(
+      "TUN の認証がキャンセルされたか失敗しました",
+    ),
     "tunDesc": MessageLookupByLibrary.simpleMessage("管理者モードでのみ有効"),
+    "tunUsageScenario": MessageLookupByLibrary.simpleMessage(
+      "ゲーム、ChatGPT、Claudeなど",
+    ),
     "turnOff": MessageLookupByLibrary.simpleMessage("オフ"),
     "turnOn": MessageLookupByLibrary.simpleMessage("オン"),
     "unableToOpenPage": MessageLookupByLibrary.simpleMessage("ページを開けません"),

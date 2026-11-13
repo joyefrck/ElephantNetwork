@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:fl_clash/common/desktop_proxy.dart';
 import 'package:fl_clash/common/local_control.dart';
 import 'package:animations/animations.dart';
 import 'package:dynamic_color/dynamic_color.dart';
@@ -107,7 +108,9 @@ class GlobalState {
       },
     );
     final migrated = await migration.run();
-    var config = normalizeLocalControlConfig(migrated);
+    var config = normalizeDesktopProxyConfig(
+      normalizeLocalControlConfig(migrated),
+    );
     if (config != migrated && !await preferences.saveConfig(config)) {
       throw StateError('Local control settings could not be saved');
     }

@@ -126,6 +126,18 @@ class _EmptyConfigCoreHandler extends _RecordingCoreHandler {
 }
 
 void main() {
+  test('TUN mode changes only its enable flag through config.update', () async {
+    final handler = _RecordingCoreHandler();
+    await handler.setTunEnabled(true);
+    expect(handler.calls[CoreMethod.configUpdate], {
+      'tun': {'enable': true},
+    });
+    await handler.setTunEnabled(false);
+    expect(handler.calls[CoreMethod.configUpdate], {
+      'tun': {'enable': false},
+    });
+  });
+
   test(
     'cache, network reset, runtime patches and custom delay budgets cross Core',
     () async {

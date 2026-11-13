@@ -119,10 +119,10 @@ void main() {
 
     await _pumpDashboard(tester, container);
 
-    await tester.tapAt(tester.getCenter(find.byIcon(Icons.edit)));
+    await tester.tapAt(const Offset(600, 40));
     await tester.pump();
     expect(find.byType(DashboardAccelerationGuide), findsOneWidget);
-    expect(find.byIcon(Icons.edit), findsOneWidget);
+    expect(find.byIcon(Icons.edit), findsNothing);
     expect(find.byIcon(Icons.save), findsNothing);
     expect(events, isEmpty);
 

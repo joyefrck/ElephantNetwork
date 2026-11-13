@@ -837,6 +837,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "proxyGroupNameEmpty": MessageLookupByLibrary.simpleMessage(
       "Proxy group name cannot be empty",
     ),
+    "proxyModeSwitchFailed": MessageLookupByLibrary.simpleMessage(
+      "Unable to switch proxy mode",
+    ),
     "proxyNameserver": MessageLookupByLibrary.simpleMessage("Proxy nameserver"),
     "proxyNameserverDesc": MessageLookupByLibrary.simpleMessage(
       "Domain for resolving proxy nodes",
@@ -901,6 +904,24 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "restore": MessageLookupByLibrary.simpleMessage("Restore"),
     "restoreAllData": MessageLookupByLibrary.simpleMessage("Restore all data"),
+    "restoreDefaultSettings": MessageLookupByLibrary.simpleMessage(
+      "Restore default settings",
+    ),
+    "restoreDefaultSettingsDesc": MessageLookupByLibrary.simpleMessage(
+      "Reset all settings to their initial values",
+    ),
+    "restoreDefaultsConfirm": MessageLookupByLibrary.simpleMessage(
+      "Restore all settings to their initial values and stop acceleration? Your account, subscriptions and node data will be kept.",
+    ),
+    "restoreDefaultsFailed": MessageLookupByLibrary.simpleMessage(
+      "Unable to restore default settings",
+    ),
+    "restoreDefaultsSaveFailed": MessageLookupByLibrary.simpleMessage(
+      "Unable to save default settings. Please try again.",
+    ),
+    "restoreDefaultsSuccess": MessageLookupByLibrary.simpleMessage(
+      "Default settings restored",
+    ),
     "restoreException": MessageLookupByLibrary.simpleMessage(
       "Recovery exception",
     ),
@@ -1134,6 +1155,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "systemProxyDesc": MessageLookupByLibrary.simpleMessage(
       "Attach HTTP proxy to VpnService",
     ),
+    "systemProxyUsageScenario": MessageLookupByLibrary.simpleMessage(
+      "Web and everyday apps",
+    ),
     "tab": MessageLookupByLibrary.simpleMessage("Tab"),
     "tabAnimation": MessageLookupByLibrary.simpleMessage("Tab animation"),
     "tabAnimationDesc": MessageLookupByLibrary.simpleMessage(
@@ -1166,8 +1190,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "trafficPackage": MessageLookupByLibrary.simpleMessage("Traffic package"),
     "trafficUsage": MessageLookupByLibrary.simpleMessage("Traffic usage"),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
+    "tunAuthorizationFailed": MessageLookupByLibrary.simpleMessage(
+      "TUN authorization was cancelled or failed",
+    ),
     "tunDesc": MessageLookupByLibrary.simpleMessage(
       "only effective in administrator mode",
+    ),
+    "tunUsageScenario": MessageLookupByLibrary.simpleMessage(
+      "Games, ChatGPT, Claude, etc.",
     ),
     "turnOff": MessageLookupByLibrary.simpleMessage("Turn Off"),
     "turnOn": MessageLookupByLibrary.simpleMessage("Turn On"),

@@ -880,6 +880,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "proxyGroupNameEmpty": MessageLookupByLibrary.simpleMessage(
       "Имя группы прокси не может быть пустым",
     ),
+    "proxyModeSwitchFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось переключить режим прокси",
+    ),
     "proxyNameserver": MessageLookupByLibrary.simpleMessage(
       "Прокси-сервер имен",
     ),
@@ -949,6 +952,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "restore": MessageLookupByLibrary.simpleMessage("Восстановить"),
     "restoreAllData": MessageLookupByLibrary.simpleMessage(
       "Восстановить все данные",
+    ),
+    "restoreDefaultSettings": MessageLookupByLibrary.simpleMessage(
+      "Восстановить настройки по умолчанию",
+    ),
+    "restoreDefaultSettingsDesc": MessageLookupByLibrary.simpleMessage(
+      "Вернуть все настройки к исходным значениям",
+    ),
+    "restoreDefaultsConfirm": MessageLookupByLibrary.simpleMessage(
+      "Восстановить исходные настройки и остановить подключение? Аккаунт, подписки и данные узлов будут сохранены.",
+    ),
+    "restoreDefaultsFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось восстановить настройки",
+    ),
+    "restoreDefaultsSaveFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось сохранить настройки по умолчанию. Повторите попытку.",
+    ),
+    "restoreDefaultsSuccess": MessageLookupByLibrary.simpleMessage(
+      "Настройки по умолчанию восстановлены",
     ),
     "restoreException": MessageLookupByLibrary.simpleMessage(
       "Ошибка восстановления",
@@ -1195,6 +1216,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "systemProxyDesc": MessageLookupByLibrary.simpleMessage(
       "Прикрепить HTTP-прокси к VpnService",
     ),
+    "systemProxyUsageScenario": MessageLookupByLibrary.simpleMessage(
+      "Браузер и повседневные приложения",
+    ),
     "tab": MessageLookupByLibrary.simpleMessage("Вкладка"),
     "tabAnimation": MessageLookupByLibrary.simpleMessage("Анимация вкладок"),
     "tabAnimationDesc": MessageLookupByLibrary.simpleMessage(
@@ -1237,8 +1261,14 @@ class MessageLookup extends MessageLookupByLibrary {
       "Использование трафика",
     ),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
+    "tunAuthorizationFailed": MessageLookupByLibrary.simpleMessage(
+      "Авторизация TUN отменена или не удалась",
+    ),
     "tunDesc": MessageLookupByLibrary.simpleMessage(
       "действительно только в режиме администратора",
+    ),
+    "tunUsageScenario": MessageLookupByLibrary.simpleMessage(
+      "Игры, ChatGPT, Claude и другие",
     ),
     "turnOff": MessageLookupByLibrary.simpleMessage("Выключить"),
     "turnOn": MessageLookupByLibrary.simpleMessage("Включить"),

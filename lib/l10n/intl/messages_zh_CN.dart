@@ -591,6 +591,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "proxyGroupEmpty": MessageLookupByLibrary.simpleMessage("策略组为空"),
     "proxyGroupNameDuplicate": MessageLookupByLibrary.simpleMessage("策略组名称重复"),
     "proxyGroupNameEmpty": MessageLookupByLibrary.simpleMessage("策略组名称不能为空"),
+    "proxyModeSwitchFailed": MessageLookupByLibrary.simpleMessage("代理模式切换失败"),
     "proxyNameserver": MessageLookupByLibrary.simpleMessage("代理域名服务器"),
     "proxyNameserverDesc": MessageLookupByLibrary.simpleMessage("用于解析代理节点的域名"),
     "proxyPort": MessageLookupByLibrary.simpleMessage("代理端口"),
@@ -635,6 +636,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "restartCoreTip": MessageLookupByLibrary.simpleMessage("您确定要重启核心吗？"),
     "restore": MessageLookupByLibrary.simpleMessage("恢复"),
     "restoreAllData": MessageLookupByLibrary.simpleMessage("恢复所有数据"),
+    "restoreDefaultSettings": MessageLookupByLibrary.simpleMessage("恢复默认配置"),
+    "restoreDefaultSettingsDesc": MessageLookupByLibrary.simpleMessage(
+      "将所有设置恢复为初始值",
+    ),
+    "restoreDefaultsConfirm": MessageLookupByLibrary.simpleMessage(
+      "确定恢复所有设置到初始值并停止当前加速？登录账号、订阅和节点数据将保留。",
+    ),
+    "restoreDefaultsFailed": MessageLookupByLibrary.simpleMessage("恢复默认配置失败"),
+    "restoreDefaultsSaveFailed": MessageLookupByLibrary.simpleMessage(
+      "无法保存默认配置，请重试",
+    ),
+    "restoreDefaultsSuccess": MessageLookupByLibrary.simpleMessage("已恢复默认配置"),
     "restoreException": MessageLookupByLibrary.simpleMessage("恢复异常"),
     "restoreFromFileDesc": MessageLookupByLibrary.simpleMessage("通过文件恢复数据"),
     "restoreFromWebDAVDesc": MessageLookupByLibrary.simpleMessage(
@@ -798,6 +811,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "systemApp": MessageLookupByLibrary.simpleMessage("系统应用"),
     "systemProxy": MessageLookupByLibrary.simpleMessage("系统代理"),
     "systemProxyDesc": MessageLookupByLibrary.simpleMessage("设置系统代理"),
+    "systemProxyUsageScenario": MessageLookupByLibrary.simpleMessage("网页与日常应用"),
     "tab": MessageLookupByLibrary.simpleMessage("标签页"),
     "tabAnimation": MessageLookupByLibrary.simpleMessage("选项卡动画"),
     "tabAnimationDesc": MessageLookupByLibrary.simpleMessage("仅在移动视图中有效"),
@@ -823,8 +837,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "trafficOverview": MessageLookupByLibrary.simpleMessage("流量概览"),
     "trafficPackage": MessageLookupByLibrary.simpleMessage("独立流量包"),
     "trafficUsage": MessageLookupByLibrary.simpleMessage("流量统计"),
-    "tun": MessageLookupByLibrary.simpleMessage("虚拟网卡"),
+    "tun": MessageLookupByLibrary.simpleMessage("虚拟网卡（TUN）"),
+    "tunAuthorizationFailed": MessageLookupByLibrary.simpleMessage(
+      "TUN 授权已取消或失败",
+    ),
     "tunDesc": MessageLookupByLibrary.simpleMessage("仅在管理员模式生效"),
+    "tunUsageScenario": MessageLookupByLibrary.simpleMessage(
+      "游戏、ChatGPT、Claude等",
+    ),
     "turnOff": MessageLookupByLibrary.simpleMessage("关闭"),
     "turnOn": MessageLookupByLibrary.simpleMessage("开启"),
     "unableToOpenPage": MessageLookupByLibrary.simpleMessage("无法打开此页面"),

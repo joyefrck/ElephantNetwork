@@ -1,3 +1,4 @@
+import 'package:fl_clash/common/desktop_proxy.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -135,7 +136,24 @@ Config _config(Ref ref) {
   );
 }
 
+void applyConfigSettings(Ref ref, Config config) {
+  ref.read(davSettingProvider.notifier).value = config.davProps;
+  ref.read(patchClashConfigProvider.notifier).value = config.patchClashConfig;
+  ref.read(appSettingProvider.notifier).value = config.appSettingProps;
+  ref.read(currentProfileIdProvider.notifier).value = config.currentProfileId;
+  ref.read(themeSettingProvider.notifier).value = config.themeProps;
+  ref.read(windowSettingProvider.notifier).value = config.windowProps;
+  ref.read(vpnSettingProvider.notifier).value = config.vpnProps;
+  ref.read(proxiesStyleSettingProvider.notifier).value =
+      config.proxiesStyleProps;
+  ref.read(overrideDnsProvider.notifier).value = config.overrideDns;
+  ref.read(networkSettingProvider.notifier).value = config.networkProps;
+  ref.read(hotKeyActionsProvider.notifier).value = config.hotKeyActions;
+  ref.read(excludeSSIDsProvider.notifier).value = config.excludeSSIDs;
+}
+
 List<Override> buildConfigOverrides(Config config) {
+  config = normalizeDesktopProxyConfig(config);
   return [
     appSettingProvider.overrideWithBuild((_, _) => config.appSettingProps),
     windowSettingProvider.overrideWithBuild((_, _) => config.windowProps),
