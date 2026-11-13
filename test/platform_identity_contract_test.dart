@@ -123,8 +123,9 @@ void main() {
           }).toList(),
         )
         .toList();
-    expect(targets, hasLength(2));
+    expect(targets, hasLength(3));
     expect(targets.first, [('windows', 'exe')]);
+    expect(targets[1], [('windows', 'exe')]);
     expect(targets.last, [('windows', 'exe'), ('macos', 'dmg')]);
   });
 

@@ -224,6 +224,20 @@ jobs:
           flutter --version
           flutter pub get
 
+      - name: Test native Windows ARM64 components
+        if: matrix.arch == 'arm64' && matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          cargo test --manifest-path services/helper/Cargo.toml --features windows-service --target aarch64-pc-windows-msvc
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Push-Location core
+          $env:CGO_ENABLED = '0'
+          go test . ./mobile ./cmd/core
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          go vet . ./mobile ./cmd/core
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Pop-Location
+
       - name: Build unsigned package
         run: dart setup.dart ${{ matrix.platform }} --targets ${{ matrix.target }} --env ${{ inputs.build_environment || 'pre' }} -v
 
@@ -268,7 +282,11 @@ jobs:
             $ping = Invoke-WebRequest -Uri "http://127.0.0.1:47891/ping?coreSha256=$coreHash"
             if ($ping.Headers['x-elephant-network-helper-protocol'] -ne '7') { throw 'Unexpected helper protocol' }
             if ($ping.Content.Trim() -ne $helperPath) { throw 'Helper belongs to another installation' }
+            & .github/scripts/verify_windows_runtime.ps1 -InstallDirectory $installDir -Receipt (Join-Path $PWD 'dist/windows-runtime-acceptance.json')
             Write-Output "Verified Windows $versionLine, isolated storage identity, helper service and core hash"
+          } catch {
+            Invoke-RestMethod -Uri 'http://127.0.0.1:47891/logs' -ErrorAction Continue | ConvertTo-Json -Depth 30
+            throw
           } finally {
             $uninstaller = Join-Path $installDir 'unins000.exe'
             if (Test-Path $uninstaller) {
@@ -277,6 +295,17 @@ jobs:
             }
           }
           if (Get-Service 'ElephantNetworkHelperService' -ErrorAction SilentlyContinue) { throw 'Uninstall left the helper service registered' }
+
+      - name: Upload Windows test diagnostics
+        if: always() && matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-${{ matrix.arch }}-test-diagnostics
+          path: |
+            dist/windows-runtime-acceptance.json
+            dist/windows-runtime-logs
+            ${{ runner.temp }}/elephant-runtime-*
+          if-no-files-found: ignore
 
       - name: Read package version
         id: package-version
