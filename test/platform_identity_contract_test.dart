@@ -72,10 +72,7 @@ void main() {
         windows,
         contains('app_id: "{{5F1D7A6E-2B3C-4A91-9D74-E0C8F6B1A245}"'),
       );
-      expect(
-        windows,
-        contains(r'setup_icon_file: windows\runner\resources\app_icon.ico'),
-      );
+      expect(windows, contains(r'setup_icon_file: assets\images\icon.ico'));
       expect(
         windows,
         contains(r'file: ..\windows\packaging\exe\ChineseSimplified.isl'),

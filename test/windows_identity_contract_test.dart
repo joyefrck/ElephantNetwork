@@ -4,6 +4,22 @@ import 'package:fl_clash/common/constant.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('Windows desktop shortcut explicitly uses the white tile icon', () {
+    final installer = File(
+      'windows/packaging/exe/inno_setup.iss',
+    ).readAsLinesSync();
+    final shortcut = installer.singleWhere(
+      (line) => line.startsWith('Name: "{autodesktop}'),
+    );
+    expect(
+      shortcut,
+      contains(
+        r'IconFilename: "{app}\\data\\flutter_assets\\assets\\images\\icon.ico"',
+      ),
+    );
+    expect(shortcut, contains('Filename: "{app}\\\\{{EXECUTABLE_NAME}}"'));
+  });
+
   test('Windows storage identity is independent from FlClash', () {
     final resource = File('windows/runner/Runner.rc').readAsStringSync();
     String resourceValue(String key) =>

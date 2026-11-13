@@ -52,8 +52,10 @@ Use `flutter test`, not `dart test`, because models pull in Flutter types.
 
 ## Code Generation
 
-Application icons share the source `assets_source/images/app_icon.svg`. After changing it, regenerate the shared Flutter,
-macOS, Windows, Android phone and Android TV assets with `rsvg-convert` (librsvg) and `cwebp` (WebP) available:
+Application launcher icons use `assets_source/images/app_icon.svg`. The Windows window and taskbar icon uses the transparent
+`assets_source/images/tray_windows_active.svg`; the desktop shortcut and installer use the white-tile `assets/images/icon.ico`.
+After changing either source, regenerate the shared Flutter, macOS, Windows, Android phone and Android TV assets with
+`rsvg-convert` (librsvg) and `cwebp` (WebP) available:
 
 ```bash
 dart run tool/generate_app_icons.dart

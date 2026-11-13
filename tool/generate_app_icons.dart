@@ -17,19 +17,26 @@ Future<void> main() async {
     ).writeAsBytes(await File('$_macos/app_icon_1024.png').readAsBytes());
 
     final icoFrames = <Uint8List>[];
+    final windowsFrames = <Uint8List>[];
     const icoSizes = [16, 24, 32, 48, 64, 128, 256];
     for (final size in icoSizes) {
       final frame = '${temp.path}/icon_$size.png';
       await _render(_source, frame, size);
       icoFrames.add(await File(frame).readAsBytes());
+      final windowsFrame = '${temp.path}/windows_$size.png';
+      await _render(
+        'assets_source/images/tray_windows_active.svg',
+        windowsFrame,
+        size,
+      );
+      windowsFrames.add(await File(windowsFrame).readAsBytes());
     }
-    final ico = _buildIco(icoSizes, icoFrames);
-    for (final path in [
+    await File(
       'assets/images/icon.ico',
+    ).writeAsBytes(_buildIco(icoSizes, icoFrames));
+    await File(
       'windows/runner/resources/app_icon.ico',
-    ]) {
-      await File(path).writeAsBytes(ico);
-    }
+    ).writeAsBytes(_buildIco(icoSizes, windowsFrames));
 
     final roundSource = '${temp.path}/round.svg';
     await File(roundSource).writeAsString(

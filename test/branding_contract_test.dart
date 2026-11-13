@@ -30,18 +30,55 @@ void main() {
     expect(upstream.readAsStringSync(), contains('upstream/main'));
   });
 
-  test('desktop and shared app icons use the same artwork', () {
+  test('macOS and shared app icons use the same artwork', () {
     expect(
       File('assets/images/icon.png').readAsBytesSync(),
       File(
         'macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png',
       ).readAsBytesSync(),
     );
-    expect(
-      File('assets/images/icon.ico').readAsBytesSync(),
-      File('windows/runner/resources/app_icon.ico').readAsBytesSync(),
-    );
   });
+
+  test(
+    'Windows taskbar is transparent and desktop shortcut has a white tile',
+    () async {
+      for (final path in [
+        'windows/runner/resources/app_icon.ico',
+        'assets/images/icon.ico',
+      ]) {
+        final bytes = await File(path).readAsBytes();
+        final data = ByteData.sublistView(bytes);
+        final frameCount = data.getUint16(4, Endian.little);
+        for (var i = 0; i < frameCount; i++) {
+          final entry = 6 + i * 16;
+          final offset = data.getUint32(entry + 12, Endian.little);
+          final length = data.getUint32(entry + 8, Endian.little);
+          final codec = await ui.instantiateImageCodec(
+            Uint8List.sublistView(bytes, offset, offset + length),
+          );
+          final image = (await codec.getNextFrame()).image;
+          try {
+            final pixels = (await image.toByteData())!;
+            final hasWhiteTile = List.generate(image.width * image.height, (
+              index,
+            ) {
+              final pixel = index * 4;
+              return pixels.getUint32(pixel) == 0xffffffff;
+            }).any((white) => white);
+            expect(
+              hasWhiteTile,
+              path == 'assets/images/icon.ico',
+              reason: '$path frame ${image.width}',
+            );
+            expect(pixels.getUint8(3), 0, reason: path);
+          } finally {
+            image.dispose();
+            codec.dispose();
+          }
+        }
+      }
+    },
+  );
 
   test(
     'launcher artwork has a pure white tile and the E brand colors',

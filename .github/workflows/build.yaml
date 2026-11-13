@@ -220,7 +220,7 @@ jobs:
           if ($installers.Count -ne 1) { throw 'Expected one Windows installer' }
           $installDir = Join-Path $env:RUNNER_TEMP 'ElephantNetwork acceptance'
           try {
-            $install = Start-Process -FilePath $installers[0].FullName -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', "/DIR=`"$installDir`"") -Wait -PassThru
+            $install = Start-Process -FilePath $installers[0].FullName -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/MERGETASKS=desktopicon', "/DIR=`"$installDir`"") -Wait -PassThru
             if ($install.ExitCode -ne 0) { throw "Installer failed: $($install.ExitCode)" }
             $appPath = Join-Path $installDir 'ElephantNetwork.exe'
             $info = (Get-Item $appPath).VersionInfo
@@ -240,6 +240,36 @@ jobs:
               $installedHash = (Get-FileHash $installedIcon -Algorithm SHA256).Hash
               if ($sourceHash -ne $installedHash) { throw "Installed tray icon differs from source: $iconName" }
               Write-Output "Verified installed tray icon: $iconName SHA256=$installedHash"
+            }
+            $desktopIcon = Join-Path $installDir 'data\flutter_assets\assets\images\icon.ico'
+            if ((Get-FileHash $desktopIcon -Algorithm SHA256).Hash -ne (Get-FileHash 'assets/images/icon.ico' -Algorithm SHA256).Hash) { throw 'Installed desktop icon differs from source' }
+            $shortcutPath = Join-Path ([Environment]::GetFolderPath('CommonDesktopDirectory')) 'Elephant Network.lnk'
+            if (!(Test-Path $shortcutPath)) { throw 'Desktop shortcut is missing' }
+            $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($shortcutPath)
+            if ($shortcut.TargetPath -ne $appPath) { throw 'Desktop shortcut points to another installation' }
+            $shortcutIcon = $shortcut.IconLocation -replace ',\s*0$', ''
+            if ([IO.Path]::GetFullPath($shortcutIcon) -ne [IO.Path]::GetFullPath($desktopIcon)) { throw 'Desktop shortcut does not use the white tile icon' }
+            Write-Output 'Verified desktop shortcut uses the installed white tile icon'
+            Add-Type -AssemblyName System.Drawing
+            $windowIcon = [System.Drawing.Icon]::ExtractAssociatedIcon($appPath)
+            $bitmap = $windowIcon.ToBitmap()
+            try {
+              $opaquePixels = 0
+              for ($y = 0; $y -lt $bitmap.Height; $y++) {
+                for ($x = 0; $x -lt $bitmap.Width; $x++) {
+                  $pixel = $bitmap.GetPixel($x, $y)
+                  if ($pixel.A -eq 255) {
+                    $opaquePixels++
+                    if ($pixel.R -eq 255 -and $pixel.G -eq 255 -and $pixel.B -eq 255) { throw 'Embedded window icon contains a white tile' }
+                  }
+                }
+              }
+              if ($opaquePixels -eq 0) { throw 'Embedded window icon is empty' }
+              if ($bitmap.GetPixel(0, 0).A -ne 0) { throw 'Embedded window icon has an opaque background' }
+              Write-Output 'Verified embedded window icon is transparent without a white tile'
+            } finally {
+              $bitmap.Dispose()
+              $windowIcon.Dispose()
             }
             $signature = Get-AuthenticodeSignature $installers[0].FullName
             Write-Output "Installer Authenticode status: $($signature.Status)"
