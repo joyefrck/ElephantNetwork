@@ -11,7 +11,7 @@ void main() {
       'tool/verify_android_upgrade_signature.sh',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 2.1.0+22101'));
+    expect(pubspec, contains('version: 2.2.0+22200'));
     expect(gradle, contains('applicationId = "com.elephantroute"'));
     expect(verifier, contains('apksigner'));
     expect(verifier, contains('Android upgrade signature mismatch'));

@@ -1,3 +1,10 @@
+## v2.2.0
+
+- Add macOS APNs tunnel settings with one-click TUN and proxy configuration, selectable routing, and persistent outbound preferences.
+- Preserve existing routing exclusions outside APNs networks and restore APNs settings when applying a change fails.
+- Add proxy configuration upgrade validation and localized tunnel settings in Chinese, English, Japanese, and Russian.
+- APNs notification delivery, sleep/wake recovery, and network switching still require device validation; the current TUN implementation does not provide Apple Network Extension routing guarantees.
+
 ## v2.1.0
 
 - Fix missing Hysteria2 nodes in managed subscriptions and migrate saved subscription renderer parameters on refresh.
