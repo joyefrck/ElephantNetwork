@@ -34,6 +34,9 @@ class DioXboardTransport implements XboardTransport {
 
   final Dio _dio;
   final XboardDomainResolver _domainResolver;
+  Uri? _websiteBaseUri;
+
+  Uri? get websiteBaseUri => _websiteBaseUri;
 
   @override
   Future<Object?> request(
@@ -66,6 +69,9 @@ class DioXboardTransport implements XboardTransport {
     final statusCode = response.statusCode ?? 0;
     if (statusCode < 200 || statusCode >= 300) {
       throw XboardApiException(statusCode: statusCode);
+    }
+    if (path == XboardConfig.quickLoginPath) {
+      _websiteBaseUri = response.realUri;
     }
     return response.data;
   }
@@ -187,7 +193,20 @@ class XboardApi {
     if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
       throw const XboardApiException(message: 'invalid_quick_login_url');
     }
-    return uri;
+    final transport = _transport;
+    final baseUri = transport is DioXboardTransport
+        ? transport.websiteBaseUri
+        : null;
+    if (baseUri != null &&
+        (baseUri.scheme != 'https' || baseUri.host.isEmpty)) {
+      throw const XboardApiException(message: 'invalid_quick_login_url');
+    }
+    return uri.replace(
+      scheme: baseUri?.scheme,
+      host: baseUri?.host,
+      port: baseUri?.port,
+      path: uri.path.isEmpty || uri.path == '/' ? '/app' : uri.path,
+    );
   }
 
   static Map<String, Object?> _dataMap(Object? payload) {

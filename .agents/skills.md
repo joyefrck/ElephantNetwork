@@ -10,6 +10,11 @@ Repo-scoped Codex skills live under `.agents/skills/*/SKILL.md`. Codex can disco
 - `core-platform`: Core lifecycle/process ownership, Android services, Go event delivery, desktop IPC, platform managers,
   VPN/TUN, and Windows Helper flow.
 
+## User-Level Release Workflow
+
+The user-level `elephantnetwork-release` skill handles production installer releases for this checkout when available.
+It is maintained outside the repository because it includes the user's publication destinations and release preferences.
+
 ## Authoring Notes
 
 - Add new repeatable workflows as `.agents/skills/<skill-name>/SKILL.md`.

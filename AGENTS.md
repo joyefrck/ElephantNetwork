@@ -48,3 +48,7 @@ Read these only when the task touches their area:
 
 Use repo skills from `.agents/skills/` when a task matches their descriptions. Current skills cover localization,
 provider tests, UI work, and core/platform changes.
+
+For production installer releases, use the user-level `elephantnetwork-release` skill when available. It owns the
+build, package verification, file-host upload, software-center publication, and acceptance workflow; explicit
+package-only or platform-only requests keep their narrower scope.

@@ -39,7 +39,12 @@ class ElephantAccountView extends ConsumerWidget {
     if (uri == null || !context.mounted) return;
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) => ElephantWebViewPage(title: title, uri: uri),
+        builder: (_) => ElephantWebViewPage(
+          title: title,
+          uri: uri,
+          refreshUri: () =>
+              ref.read(xboardApiProvider).quickLogin(session.token, redirect),
+        ),
       ),
     );
   }

@@ -218,7 +218,7 @@ jobs:
           $expectedBuild = [int]$versionParts[1]
           $installers = @(Get-ChildItem dist -Recurse -Filter '*-setup.exe')
           if ($installers.Count -ne 1) { throw 'Expected one Windows installer' }
-          $installDir = Join-Path $env:RUNNER_TEMP 'ElephantNetwork-acceptance'
+          $installDir = Join-Path $env:RUNNER_TEMP 'ElephantNetwork acceptance'
           try {
             $install = Start-Process -FilePath $installers[0].FullName -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', "/DIR=`"$installDir`"") -Wait -PassThru
             if ($install.ExitCode -ne 0) { throw "Installer failed: $($install.ExitCode)" }
@@ -231,13 +231,13 @@ jobs:
             $manifest = Get-Content (Join-Path $installDir 'manifest.json') -Raw | ConvertFrom-Json
             $coreHash = (Get-FileHash (Join-Path $installDir 'FlClashCore.exe') -Algorithm SHA256).Hash.ToLowerInvariant()
             if ($coreHash -ne $manifest.coreSha256) { throw 'Bundled core hash differs from manifest' }
-            $helper = Start-Process -FilePath $helperPath -ArgumentList 'install' -Wait -PassThru
+            $helper = Start-Process -FilePath $helperPath -ArgumentList @('install', '--owner-pid', "$PID") -Wait -PassThru
             if ($helper.ExitCode -ne 0) { throw "Helper installation failed: $($helper.ExitCode)" }
             $service = Get-Service 'ElephantNetworkHelperService'
             if ($service.Status -ne 'Running') { throw 'Isolated helper service is not running' }
             $service.Dispose()
             $ping = Invoke-WebRequest -Uri "http://127.0.0.1:47891/ping?coreSha256=$coreHash"
-            if ($ping.Headers['x-elephant-network-helper-protocol'] -ne '6') { throw 'Unexpected helper protocol' }
+            if ($ping.Headers['x-elephant-network-helper-protocol'] -ne '7') { throw 'Unexpected helper protocol' }
             if ($ping.Content.Trim() -ne $helperPath) { throw 'Helper belongs to another installation' }
             Write-Output "Verified Windows $versionLine, isolated storage identity, helper service and core hash"
           } finally {

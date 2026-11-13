@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/metacubex/mihomo/config"
+	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/constant/features"
 	"github.com/metacubex/mihomo/listener"
 )
@@ -27,6 +28,7 @@ func TestRejectedTunStartupPreservesPreviousMode(t *testing.T) {
 		t.Fatal(err)
 	}
 	currentConfig.General.Tun.FileDescriptor = 1 << 30
+	currentConfig.General.Tun.Stack = constant.TUNStack(-1)
 	currentConfig.General.Tun.AutoDetectInterface = false
 	currentConfig.General.Tun.AutoRoute = false
 	isRunning.Store(true)

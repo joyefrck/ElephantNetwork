@@ -57,6 +57,8 @@ class ThemeManager extends ConsumerWidget {
 
     globalState.measure = Measure.of(context, textScaleFactor);
     globalState.theme = CommonTheme.of(context, textScaleFactor);
+    final theme = Theme.of(context);
+    final floatingActionButtonTheme = theme.floatingActionButtonTheme;
     final padding = MediaQuery.of(context).padding;
     final height = MediaQuery.of(context).size.height;
     return MediaQuery(
@@ -67,13 +69,14 @@ class ThemeManager extends ConsumerWidget {
         ),
       ),
       child: Theme(
-        data: Theme.of(context).copyWith(
-          floatingActionButtonTheme: Theme.of(context).floatingActionButtonTheme
-              .copyWith(
-                shape: const RoundedSuperellipseBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(16.0)),
-                ),
-              ),
+        data: theme.copyWith(
+          floatingActionButtonTheme: floatingActionButtonTheme.copyWith(
+            hoverColor: Colors.transparent,
+            hoverElevation: floatingActionButtonTheme.elevation ?? 6,
+            shape: const RoundedSuperellipseBorder(
+              borderRadius: BorderRadius.all(Radius.circular(16.0)),
+            ),
+          ),
         ),
         child: LayoutBuilder(
           builder: (_, constraints) {

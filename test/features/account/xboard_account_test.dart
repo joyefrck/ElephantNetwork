@@ -122,6 +122,63 @@ void main() {
       );
     });
 
+    for (final redirect in ['plan', 'order', 'ticket']) {
+      test(
+        'quick login for $redirect keeps the working API origin and skips the homepage',
+        () async {
+          final resolver = XboardDomainResolver(
+            transport: _FakeDomainTransport(
+              config: {
+                'domains': [
+                  {'url': 'https://working.example:8443', 'weight': 10},
+                ],
+              },
+              healthyHosts: {'working.example'},
+            ),
+            store: _MemoryDomainStore(),
+          );
+          final dio = Dio()
+            ..httpClientAdapter = _ResponseAdapter((options) {
+              expect(options.uri.host, 'working.example');
+              expect(options.data, {'redirect': redirect});
+              return _jsonResponse({
+                'data':
+                    'https://slow.example/#/login?verify=one-time-code&redirect=$redirect',
+              });
+            });
+          final api = XboardApi(
+            transport: DioXboardTransport(dio: dio, domainResolver: resolver),
+          );
+
+          expect(
+            await api.quickLogin('token', redirect),
+            Uri.parse(
+              'https://working.example:8443/app#/login?verify=one-time-code&redirect=$redirect',
+            ),
+          );
+        },
+      );
+    }
+
+    test(
+      'quick login preserves an explicit application path and encoded grant',
+      () async {
+        final api = XboardApi(
+          transport: _FakeTransport({
+            XboardConfig.quickLoginPath: {
+              'data':
+                  'https://active.example/custom/app?lang=en#/login?verify=a%2Bb&redirect=ticket',
+            },
+          }),
+        );
+
+        expect(
+          (await api.quickLogin('token', 'ticket')).toString(),
+          'https://active.example/custom/app?lang=en#/login?verify=a%2Bb&redirect=ticket',
+        );
+      },
+    );
+
     test('website launcher opens a signed dashboard URL externally', () async {
       final transport = _FakeTransport({
         XboardConfig.quickLoginPath: {
@@ -145,7 +202,7 @@ void main() {
       expect(launched, isTrue);
       expect(
         launchedUri,
-        Uri.parse('https://active.example/#/login?verify=one-time-code'),
+        Uri.parse('https://active.example/app#/login?verify=one-time-code'),
       );
       expect(launchedMode, LaunchMode.externalApplication);
       expect(transport.requests.single.token, 'session-token');
