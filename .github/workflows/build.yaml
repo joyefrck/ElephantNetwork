@@ -228,6 +228,21 @@ jobs:
             if ($info.FileMajorPart -ne $expectedVersion.Major -or $info.FileMinorPart -ne $expectedVersion.Minor -or $info.FileBuildPart -ne $expectedVersion.Build -or $info.FilePrivatePart -ne $expectedBuild) { throw "Unexpected executable version: $($info.FileVersion)" }
             $helperPath = Join-Path $installDir 'ElephantNetworkHelperService.exe'
             if (!(Test-Path $helperPath)) { throw 'Isolated Windows helper is missing' }
+            foreach ($binary in @($appPath, $helperPath, (Join-Path $installDir 'FlClashCore.exe'))) {
+              $bytes = [IO.File]::ReadAllBytes($binary)
+              $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+              if ([BitConverter]::ToUInt32($bytes, $peOffset) -ne 0x4550 -or [BitConverter]::ToUInt16($bytes, $peOffset + 4) -ne 0x8664) { throw "Expected x64 executable: $binary" }
+            }
+            foreach ($state in @('active', 'inactive')) {
+              $iconName = "tray_windows_$state.ico"
+              $installedIcon = Join-Path $installDir "data\flutter_assets\assets\images\$iconName"
+              $sourceHash = (Get-FileHash "assets/images/$iconName" -Algorithm SHA256).Hash
+              $installedHash = (Get-FileHash $installedIcon -Algorithm SHA256).Hash
+              if ($sourceHash -ne $installedHash) { throw "Installed tray icon differs from source: $iconName" }
+              Write-Output "Verified installed tray icon: $iconName SHA256=$installedHash"
+            }
+            $signature = Get-AuthenticodeSignature $installers[0].FullName
+            Write-Output "Installer Authenticode status: $($signature.Status)"
             $manifest = Get-Content (Join-Path $installDir 'manifest.json') -Raw | ConvertFrom-Json
             $coreHash = (Get-FileHash (Join-Path $installDir 'FlClashCore.exe') -Algorithm SHA256).Hash.ToLowerInvariant()
             if ($coreHash -ne $manifest.coreSha256) { throw 'Bundled core hash differs from manifest' }

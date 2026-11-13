@@ -13,6 +13,15 @@ import 'constant.dart';
 import 'system.dart';
 import 'window.dart';
 
+String trayIconPath({required String operatingSystem, required bool isStart}) {
+  return switch (operatingSystem) {
+    'windows' =>
+      'assets/images/tray_windows_${isStart ? 'active' : 'inactive'}.ico',
+    'macos' => 'assets/images/tray_macos.png',
+    _ => 'assets/images/icon.png',
+  };
+}
+
 class Tray {
   static Tray? _instance;
 
@@ -23,27 +32,16 @@ class Tray {
     return _instance!;
   }
 
-  String get trayIconSuffix {
-    return system.isWindows ? 'ico' : 'png';
-  }
-
   Future<void> destroy() async {
     await trayManager.destroy();
   }
 
-  String get trayIconPath {
-    if (system.isMacOS) {
-      return 'assets/images/tray_macos.png';
-    }
-    return 'assets/images/icon.$trayIconSuffix';
-  }
-
-  Future<void> _updateSystemTray() async {
+  Future<void> _updateSystemTray({required bool isStart}) async {
     if (Platform.isLinux) {
       await trayManager.destroy();
     }
     await trayManager.setIcon(
-      trayIconPath,
+      trayIconPath(operatingSystem: Platform.operatingSystem, isStart: isStart),
       isTemplate: system.isMacOS,
     );
     if (!Platform.isLinux) {
@@ -59,7 +57,7 @@ class Tray {
       return;
     }
     if (!system.isLinux) {
-      await _updateSystemTray();
+      await _updateSystemTray(isStart: trayState.isStart);
     }
     final List<MenuItem> menuItems = [];
     final ref = globalState.container;
@@ -183,7 +181,7 @@ class Tray {
     final menu = Menu(items: menuItems);
     await trayManager.setContextMenu(menu);
     if (system.isLinux) {
-      await _updateSystemTray();
+      await _updateSystemTray(isStart: trayState.isStart);
     }
     updateTrayTitle(showTrayTitle: trayState.showTrayTitle, traffic: traffic);
   }
