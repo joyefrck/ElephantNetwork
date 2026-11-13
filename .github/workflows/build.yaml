@@ -218,7 +218,7 @@ jobs:
           $expectedBuild = [int]$versionParts[1]
           $installers = @(Get-ChildItem dist -Recurse -Filter '*-setup.exe')
           if ($installers.Count -ne 1) { throw 'Expected one Windows installer' }
-          $installDir = Join-Path $env:RUNNER_TEMP 'ElephantNetwork-acceptance'
+          $installDir = Join-Path $env:RUNNER_TEMP 'ElephantNetwork acceptance'
           try {
             $install = Start-Process -FilePath $installers[0].FullName -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', "/DIR=`"$installDir`"") -Wait -PassThru
             if ($install.ExitCode -ne 0) { throw "Installer failed: $($install.ExitCode)" }

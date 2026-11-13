@@ -131,6 +131,19 @@ begin
   end;
 end;
 
+function IsOwnedHelperImagePath(const ImagePath, HelperPath: String): Boolean;
+var
+  Command: String;
+  Executable: String;
+begin
+  Command := Lowercase(Trim(ImagePath));
+  Executable := Lowercase(HelperPath);
+  Result := (Command = Executable) or
+    (Command = '"' + Executable + '"') or
+    (Pos(Executable + ' --owner-sid ', Command) = 1) or
+    (Pos('"' + Executable + '" --owner-sid ', Command) = 1);
+end;
+
 procedure UnregisterOwnedHelper(const FileName, ServiceName: String);
 var
   HelperPath: String;
@@ -141,8 +154,7 @@ begin
   if FileExists(HelperPath) and
      RegQueryStringValue(HKLM,
        'SYSTEM\CurrentControlSet\Services\' + ServiceName, 'ImagePath', ImagePath) and
-     ((CompareText(Trim(ImagePath), HelperPath) = 0) or
-      (CompareText(Trim(ImagePath), '"' + HelperPath + '"') = 0)) then
+     IsOwnedHelperImagePath(ImagePath, HelperPath) then
   begin
     Exec(HelperPath, 'uninstall', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   end;
