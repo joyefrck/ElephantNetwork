@@ -13,12 +13,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('dashboard includes hidden widgets from existing settings', () {
+  test('dashboard removes retired cards from existing settings', () {
     final container = ProviderContainer(
       overrides: [
         appSettingProvider.overrideWithBuild(
           (_, _) => const AppSettingProps(
-            dashboardWidgets: [DashboardWidget.intranetIp],
+            dashboardWidgets: [
+              DashboardWidget.outboundModeV2,
+              DashboardWidget.intranetIp,
+              DashboardWidget.memoryInfo,
+            ],
           ),
         ),
       ],
@@ -27,7 +31,9 @@ void main() {
 
     final widgets = container.read(dashboardStateProvider).dashboardWidgets;
     expect(widgets.first, DashboardWidget.intranetIp);
-    expect(widgets, unorderedEquals(DashboardWidget.values));
+    expect(widgets, isNot(contains(DashboardWidget.outboundModeV2)));
+    expect(widgets, isNot(contains(DashboardWidget.memoryInfo)));
+    expect(widgets, containsAll(defaultDashboardWidgets));
     expect(container.read(checkIpProvider).c, isTrue);
   });
 
@@ -64,12 +70,16 @@ void main() {
       dashboardGrid.children,
       DashboardWidget.values
           .where(
-            (item) => item.platforms.contains(SupportPlatform.currentPlatform),
+            (item) =>
+                item != DashboardWidget.outboundModeV2 &&
+                item != DashboardWidget.memoryInfo &&
+                item.platforms.contains(SupportPlatform.currentPlatform),
           )
           .map((item) => item.widget),
     );
     expect(tester.getSize(grid).width, 1120);
     expect(tester.getTopLeft(grid).dx, 240);
+    expect(find.text(AppLocalizations.current.memoryInfo), findsNothing);
     expect(find.byIcon(Icons.edit), findsNothing);
     expect(find.byIcon(Icons.save), findsNothing);
     expect(find.byIcon(Icons.add_circle), findsNothing);

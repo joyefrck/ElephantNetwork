@@ -216,9 +216,9 @@ DashboardState dashboardState(Ref ref) {
   final dashboardWidgets = ref.watch(
     appSettingProvider.select((state) => state.dashboardWidgets),
   );
-  return DashboardState(
-    dashboardWidgets: {...dashboardWidgets, ...DashboardWidget.values}.toList(),
-  );
+  final visibleWidgets = {...dashboardWidgets, ...DashboardWidget.values}
+    ..removeAll({DashboardWidget.outboundModeV2, DashboardWidget.memoryInfo});
+  return DashboardState(dashboardWidgets: visibleWidgets.toList());
 }
 
 @riverpod

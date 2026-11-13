@@ -434,7 +434,7 @@ final class DashboardStateProvider
   }
 }
 
-String _$dashboardStateHash() => r'af51ff6de9891644d3bcf696d869442f8a4848c8';
+String _$dashboardStateHash() => r'd7470eeeb70f806e6378d25ef05038a2534813a8';
 
 @ProviderFor(proxiesActionsState)
 final proxiesActionsStateProvider = ProxiesActionsStateProvider._();

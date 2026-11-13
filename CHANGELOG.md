@@ -1,5 +1,8 @@
 ## v2.2.0
 
+- Remove the duplicate dashboard mode selector and memory card, including from existing saved layouts.
+- Use a transparent black-and-green dashboard navigation mark sized consistently with the other menu icons.
+
 - Add macOS APNs tunnel settings with one-click TUN and proxy configuration, selectable routing, and persistent outbound preferences.
 - Preserve existing routing exclusions outside APNs networks and restore APNs settings when applying a change fails.
 - Add proxy configuration upgrade validation and localized tunnel settings in Chinese, English, Japanese, and Russian.
