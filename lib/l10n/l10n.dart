@@ -5438,6 +5438,171 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Tunnel settings`
+  String get tunnelSettings {
+    return Intl.message(
+      'Tunnel settings',
+      name: 'tunnelSettings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Configure Apple push notification connections`
+  String get tunnelSettingsDesc {
+    return Intl.message(
+      'Configure Apple push notification connections',
+      name: 'tunnelSettingsDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enable Apple push proxy`
+  String get apnsOneClick {
+    return Intl.message(
+      'Enable Apple push proxy',
+      name: 'apnsOneClick',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Include APNs`
+  String get apnsInclude {
+    return Intl.message(
+      'Include APNs',
+      name: 'apnsInclude',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Include push service networks in TUN. Turning this off restores the original routing configuration.`
+  String get apnsIncludeDesc {
+    return Intl.message(
+      'Include push service networks in TUN. Turning this off restores the original routing configuration.',
+      name: 'apnsIncludeDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `APNs connection`
+  String get apnsConnection {
+    return Intl.message(
+      'APNs connection',
+      name: 'apnsConnection',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Follow rules`
+  String get apnsFollowRules {
+    return Intl.message(
+      'Follow rules',
+      name: 'apnsFollowRules',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy`
+  String get apnsViaProxy {
+    return Intl.message('Proxy', name: 'apnsViaProxy', desc: '', args: []);
+  }
+
+  /// `Direct`
+  String get apnsDirect {
+    return Intl.message('Direct', name: 'apnsDirect', desc: '', args: []);
+  }
+
+  /// `Proxy outbound`
+  String get apnsProxyTarget {
+    return Intl.message(
+      'Proxy outbound',
+      name: 'apnsProxyTarget',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Automatic (profile default)`
+  String get apnsAutomatic {
+    return Intl.message(
+      'Automatic (profile default)',
+      name: 'apnsAutomatic',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Applying…`
+  String get apnsApplying {
+    return Intl.message('Applying…', name: 'apnsApplying', desc: '', args: []);
+  }
+
+  /// `Settings saved`
+  String get apnsSaved {
+    return Intl.message(
+      'Settings saved',
+      name: 'apnsSaved',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unable to apply push settings`
+  String get apnsApplyFailed {
+    return Intl.message(
+      'Unable to apply push settings',
+      name: 'apnsApplyFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Requires TUN. The button above enables TUN and configures a proxy outbound.`
+  String get apnsTunRequired {
+    return Intl.message(
+      'Requires TUN. The button above enables TUN and configures a proxy outbound.',
+      name: 'apnsTunRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Global and Direct modes take precedence over this connection setting. Use Rule mode for APNs-specific routing.`
+  String get apnsModeNotice {
+    return Intl.message(
+      'Global and Direct modes take precedence over this connection setting. Use Rule mode for APNs-specific routing.',
+      name: 'apnsModeNotice',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Changes affect new connections. Verify notification delivery after reconnecting; this does not guarantee native Apple VPN capture.`
+  String get apnsTunnelNotice {
+    return Intl.message(
+      'Changes affect new connections. Verify notification delivery after reconnecting; this does not guarantee native Apple VPN capture.',
+      name: 'apnsTunnelNotice',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enables TUN, switches to Rule mode, and routes APNs through the selected proxy outbound.`
+  String get apnsOneClickDesc {
+    return Intl.message(
+      'Enables TUN, switches to Rule mode, and routes APNs through the selected proxy outbound.',
+      name: 'apnsOneClickDesc',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

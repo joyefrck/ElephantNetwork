@@ -122,6 +122,34 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "allowLan": MessageLookupByLibrary.simpleMessage("LANを許可"),
     "allowLanDesc": MessageLookupByLibrary.simpleMessage("LAN経由でのプロキシアクセスを許可"),
+    "apnsApplyFailed": MessageLookupByLibrary.simpleMessage(
+      "プッシュ設定を適用できませんでした",
+    ),
+    "apnsApplying": MessageLookupByLibrary.simpleMessage("適用中…"),
+    "apnsAutomatic": MessageLookupByLibrary.simpleMessage("自動（プロファイルの既定）"),
+    "apnsConnection": MessageLookupByLibrary.simpleMessage("APNs の接続方法"),
+    "apnsDirect": MessageLookupByLibrary.simpleMessage("直接接続"),
+    "apnsFollowRules": MessageLookupByLibrary.simpleMessage("ルールに従う"),
+    "apnsInclude": MessageLookupByLibrary.simpleMessage("APNs を含める"),
+    "apnsIncludeDesc": MessageLookupByLibrary.simpleMessage(
+      "プッシュサービスのネットワークを TUN に含めます。オフにすると元のルーティングに戻ります。",
+    ),
+    "apnsModeNotice": MessageLookupByLibrary.simpleMessage(
+      "グローバル／直接接続モードが優先されます。APNs の個別設定にはルールモードを使用してください。",
+    ),
+    "apnsOneClick": MessageLookupByLibrary.simpleMessage("Apple プッシュのプロキシを有効化"),
+    "apnsOneClickDesc": MessageLookupByLibrary.simpleMessage(
+      "TUN とルールモードを有効にし、選択したプロキシ接続先に APNs を転送します。",
+    ),
+    "apnsProxyTarget": MessageLookupByLibrary.simpleMessage("プロキシ接続先"),
+    "apnsSaved": MessageLookupByLibrary.simpleMessage("設定を保存しました"),
+    "apnsTunRequired": MessageLookupByLibrary.simpleMessage(
+      "TUN が必要です。上のボタンで TUN とプロキシ接続先を設定できます。",
+    ),
+    "apnsTunnelNotice": MessageLookupByLibrary.simpleMessage(
+      "新しい接続に適用されます。再接続後に通知を確認してください。Apple 標準 VPN と同じ取り込みを保証するものではありません。",
+    ),
+    "apnsViaProxy": MessageLookupByLibrary.simpleMessage("プロキシ"),
     "app": MessageLookupByLibrary.simpleMessage("アプリ"),
     "appAccessControl": MessageLookupByLibrary.simpleMessage("アプリアクセス制御"),
     "appendSystemDns": MessageLookupByLibrary.simpleMessage("システムDNSを追加"),
@@ -980,6 +1008,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "tunDesc": MessageLookupByLibrary.simpleMessage("管理者モードでのみ有効"),
     "tunUsageScenario": MessageLookupByLibrary.simpleMessage(
       "ゲーム、ChatGPT、Claudeなど",
+    ),
+    "tunnelSettings": MessageLookupByLibrary.simpleMessage("トンネル設定"),
+    "tunnelSettingsDesc": MessageLookupByLibrary.simpleMessage(
+      "Apple プッシュ通知の接続を設定",
     ),
     "turnOff": MessageLookupByLibrary.simpleMessage("オフ"),
     "turnOn": MessageLookupByLibrary.simpleMessage("オン"),

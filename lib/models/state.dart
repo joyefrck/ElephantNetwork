@@ -336,6 +336,7 @@ abstract class MakeRealProfileState with _$MakeRealProfileState {
     required PatchClashConfig realPatchConfig,
     required bool overrideDns,
     required bool appendSystemDns,
+    @Default(NetworkProps()) NetworkProps networkProps,
     @Default([]) List<String> authentication,
     @Default(false) bool safeMode,
     @Default(ProfileSource.user) ProfileSource profileSource,

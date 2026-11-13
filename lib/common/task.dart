@@ -1,4 +1,5 @@
 import 'package:fl_clash/common/local_control.dart';
+import 'package:fl_clash/common/apns.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -304,6 +305,9 @@ Future<CompiledProfile> _compileProfileTask(MakeRealProfileState data) async {
   );
   if (data.profileSource == ProfileSource.xboard) {
     applyXboardDnsPolicy(rawConfig);
+  }
+  if (system.isMacOS) {
+    applyApnsPolicy(rawConfig, data.networkProps);
   }
   final yaml = await _encodeYaml(Map<String, dynamic>.from(rawConfig));
   const runtimeKeys = {'dns', 'hosts', 'ntp', 'sniffer'};

@@ -37,6 +37,8 @@ const desktopPlatforms = [
   SupportPlatform.Windows,
 ];
 
+enum ApnsRoute { rule, proxy, direct }
+
 enum GroupName { GLOBAL }
 
 enum GroupType {

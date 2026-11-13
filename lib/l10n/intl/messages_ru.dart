@@ -147,6 +147,38 @@ class MessageLookup extends MessageLookupByLibrary {
     "allowLanDesc": MessageLookupByLibrary.simpleMessage(
       "Разрешить доступ к прокси через локальную сеть",
     ),
+    "apnsApplyFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось применить настройки push",
+    ),
+    "apnsApplying": MessageLookupByLibrary.simpleMessage("Применение…"),
+    "apnsAutomatic": MessageLookupByLibrary.simpleMessage(
+      "Автоматически (из профиля)",
+    ),
+    "apnsConnection": MessageLookupByLibrary.simpleMessage("Подключение APNs"),
+    "apnsDirect": MessageLookupByLibrary.simpleMessage("Напрямую"),
+    "apnsFollowRules": MessageLookupByLibrary.simpleMessage("По правилам"),
+    "apnsInclude": MessageLookupByLibrary.simpleMessage("Включать APNs"),
+    "apnsIncludeDesc": MessageLookupByLibrary.simpleMessage(
+      "Направлять сети push-службы в TUN. При отключении восстанавливается исходная маршрутизация.",
+    ),
+    "apnsModeNotice": MessageLookupByLibrary.simpleMessage(
+      "Глобальный и прямой режимы имеют приоритет. Для отдельных правил APNs используйте режим правил.",
+    ),
+    "apnsOneClick": MessageLookupByLibrary.simpleMessage(
+      "Включить прокси для push Apple",
+    ),
+    "apnsOneClickDesc": MessageLookupByLibrary.simpleMessage(
+      "Включает TUN и режим правил, направляя APNs через выбранный выходной прокси.",
+    ),
+    "apnsProxyTarget": MessageLookupByLibrary.simpleMessage("Выходной прокси"),
+    "apnsSaved": MessageLookupByLibrary.simpleMessage("Настройки сохранены"),
+    "apnsTunRequired": MessageLookupByLibrary.simpleMessage(
+      "Требуется TUN. Кнопка выше включает TUN и настраивает выходной прокси.",
+    ),
+    "apnsTunnelNotice": MessageLookupByLibrary.simpleMessage(
+      "Настройки действуют для новых подключений. Проверьте доставку после переподключения; поведение может отличаться от встроенного VPN Apple.",
+    ),
+    "apnsViaProxy": MessageLookupByLibrary.simpleMessage("Прокси"),
     "app": MessageLookupByLibrary.simpleMessage("Приложение"),
     "appAccessControl": MessageLookupByLibrary.simpleMessage(
       "Контроль доступа приложений",
@@ -1269,6 +1301,10 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "tunUsageScenario": MessageLookupByLibrary.simpleMessage(
       "Игры, ChatGPT, Claude и другие",
+    ),
+    "tunnelSettings": MessageLookupByLibrary.simpleMessage("Настройки туннеля"),
+    "tunnelSettingsDesc": MessageLookupByLibrary.simpleMessage(
+      "Подключения push-уведомлений Apple",
     ),
     "turnOff": MessageLookupByLibrary.simpleMessage("Выключить"),
     "turnOn": MessageLookupByLibrary.simpleMessage("Включить"),

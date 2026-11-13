@@ -4,6 +4,7 @@ part of '../action.dart';
 class SystemAction extends _$SystemAction {
   SystemExitCoordinator? _exitCoordinator;
   final _proxyModeScheduler = SerialTaskScheduler();
+  final _apnsScheduler = SerialTaskScheduler();
   int _proxyModeRevision = 0;
   bool _proxyModeNeedsApply = false;
   Future<void>? _resetSettingsOperation;
@@ -136,6 +137,60 @@ class SystemAction extends _$SystemAction {
     globalState.showNotifier(
       '${currentAppLocalizations.proxyModeSwitchFailed}: $error',
     );
+  }
+
+  Future<void> configureApns(NetworkProps settings, {bool enableTun = false}) =>
+      _apnsScheduler.run(() async {
+        final previousMode = ref.read(patchClashConfigProvider).mode;
+        if (enableTun) {
+          await selectProxyMode(tun: true);
+          if (!ref.read(patchClashConfigProvider).tun.enable) {
+            throw StateError(currentAppLocalizations.tunAuthorizationFailed);
+          }
+          ref
+              .read(patchClashConfigProvider.notifier)
+              .update((state) => state.copyWith(mode: Mode.rule));
+        }
+        final previous = ref.read(networkSettingProvider);
+        ref
+            .read(networkSettingProvider.notifier)
+            .update(
+              (state) => state.copyWith(
+                includeApns: settings.includeApns,
+                apnsRoute: settings.apnsRoute,
+                apnsProxy: settings.apnsProxy,
+              ),
+            );
+        try {
+          await applyApnsProfile();
+        } catch (_) {
+          if (enableTun &&
+              ref.read(patchClashConfigProvider).mode == Mode.rule) {
+            ref
+                .read(patchClashConfigProvider.notifier)
+                .update((state) => state.copyWith(mode: previousMode));
+          }
+          ref
+              .read(networkSettingProvider.notifier)
+              .update(
+                (state) => state.copyWith(
+                  includeApns: previous.includeApns,
+                  apnsRoute: previous.apnsRoute,
+                  apnsProxy: previous.apnsProxy,
+                ),
+              );
+          ref
+              .read(setupActionProvider.notifier)
+              .applyProfileDebounce(silence: true);
+          rethrow;
+        }
+      });
+
+  @protected
+  Future<void> applyApnsProfile() async {
+    if (!ref.read(initProvider)) return;
+    if (ref.read(currentProfileIdProvider) == null) return;
+    await ref.read(setupActionProvider.notifier).applyProfileChecked();
   }
 
   Future<void> updateTun() => selectProxyMode(tun: true);

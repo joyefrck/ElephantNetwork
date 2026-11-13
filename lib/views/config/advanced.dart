@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'rules.dart';
+import 'tunnel.dart';
 
 class AdvancedConfigView extends StatelessWidget {
   const AdvancedConfigView({super.key});
@@ -20,6 +21,14 @@ class AdvancedConfigView extends StatelessWidget {
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
     final List<Widget> items = [
+      if (system.isMacOS)
+        ListItem.open(
+          title: Text(appLocalizations.tunnelSettings),
+          subtitle: Text(appLocalizations.tunnelSettingsDesc),
+          leading: const Icon(Icons.notifications_active_outlined),
+          blur: false,
+          widget: const TunnelConfigView(),
+        ),
       ListItem.open(
         title: Text(appLocalizations.network),
         subtitle: Text(appLocalizations.networkDesc),

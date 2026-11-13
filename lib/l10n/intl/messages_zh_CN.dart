@@ -118,6 +118,32 @@ class MessageLookup extends MessageLookupByLibrary {
     "allowBypassDesc": MessageLookupByLibrary.simpleMessage("开启后部分应用可绕过VPN"),
     "allowLan": MessageLookupByLibrary.simpleMessage("局域网代理"),
     "allowLanDesc": MessageLookupByLibrary.simpleMessage("允许通过局域网访问代理"),
+    "apnsApplyFailed": MessageLookupByLibrary.simpleMessage("推送设置应用失败"),
+    "apnsApplying": MessageLookupByLibrary.simpleMessage("正在应用…"),
+    "apnsAutomatic": MessageLookupByLibrary.simpleMessage("自动（订阅默认出口）"),
+    "apnsConnection": MessageLookupByLibrary.simpleMessage("APNs 连接方式"),
+    "apnsDirect": MessageLookupByLibrary.simpleMessage("直连"),
+    "apnsFollowRules": MessageLookupByLibrary.simpleMessage("跟随规则"),
+    "apnsInclude": MessageLookupByLibrary.simpleMessage("包括 APNs"),
+    "apnsIncludeDesc": MessageLookupByLibrary.simpleMessage(
+      "将推送服务网段纳入 TUN；关闭后恢复原有路由配置。",
+    ),
+    "apnsModeNotice": MessageLookupByLibrary.simpleMessage(
+      "全局／直连模式优先于此连接设置；APNs 单独分流需使用规则模式。",
+    ),
+    "apnsOneClick": MessageLookupByLibrary.simpleMessage("一键开启苹果推送代理"),
+    "apnsOneClickDesc": MessageLookupByLibrary.simpleMessage(
+      "启用 TUN、切换到规则模式，并让 APNs 通过所选代理出口连接。",
+    ),
+    "apnsProxyTarget": MessageLookupByLibrary.simpleMessage("代理出口"),
+    "apnsSaved": MessageLookupByLibrary.simpleMessage("设置已保存"),
+    "apnsTunRequired": MessageLookupByLibrary.simpleMessage(
+      "需要 TUN 模式。点击上方按钮会启用 TUN 并配置代理出口。",
+    ),
+    "apnsTunnelNotice": MessageLookupByLibrary.simpleMessage(
+      "设置影响新连接，重新连接后请验证通知到达情况；当前接管方式不等同于苹果原生 VPN。",
+    ),
+    "apnsViaProxy": MessageLookupByLibrary.simpleMessage("代理"),
     "app": MessageLookupByLibrary.simpleMessage("应用"),
     "appAccessControl": MessageLookupByLibrary.simpleMessage("应用访问控制"),
     "appendSystemDns": MessageLookupByLibrary.simpleMessage("追加系统DNS"),
@@ -845,6 +871,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "tunUsageScenario": MessageLookupByLibrary.simpleMessage(
       "游戏、ChatGPT、Claude等",
     ),
+    "tunnelSettings": MessageLookupByLibrary.simpleMessage("隧道设置"),
+    "tunnelSettingsDesc": MessageLookupByLibrary.simpleMessage("配置苹果推送连接"),
     "turnOff": MessageLookupByLibrary.simpleMessage("关闭"),
     "turnOn": MessageLookupByLibrary.simpleMessage("开启"),
     "unableToOpenPage": MessageLookupByLibrary.simpleMessage("无法打开此页面"),

@@ -192,6 +192,11 @@ Map<String, dynamic> _$AuthenticationPropsToJson(
 
 _NetworkProps _$NetworkPropsFromJson(Map<String, dynamic> json) =>
     _NetworkProps(
+      includeApns: json['includeApns'] as bool? ?? false,
+      apnsRoute:
+          $enumDecodeNullable(_$ApnsRouteEnumMap, json['apnsRoute']) ??
+          ApnsRoute.rule,
+      apnsProxy: json['apnsProxy'] as String?,
       systemProxy: json['systemProxy'] as bool? ?? true,
       bypassDomain:
           (json['bypassDomain'] as List<dynamic>?)
@@ -212,6 +217,9 @@ _NetworkProps _$NetworkPropsFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$NetworkPropsToJson(_NetworkProps instance) =>
     <String, dynamic>{
+      'includeApns': instance.includeApns,
+      'apnsRoute': _$ApnsRouteEnumMap[instance.apnsRoute]!,
+      'apnsProxy': instance.apnsProxy,
       'systemProxy': instance.systemProxy,
       'bypassDomain': instance.bypassDomain,
       'routeMode': _$RouteModeEnumMap[instance.routeMode]!,
@@ -219,6 +227,12 @@ Map<String, dynamic> _$NetworkPropsToJson(_NetworkProps instance) =>
       'appendSystemDns': instance.appendSystemDns,
       'authentication': instance.authentication,
     };
+
+const _$ApnsRouteEnumMap = {
+  ApnsRoute.rule: 'rule',
+  ApnsRoute.proxy: 'proxy',
+  ApnsRoute.direct: 'direct',
+};
 
 const _$RouteModeEnumMap = {
   RouteMode.bypassPrivate: 'bypassPrivate',

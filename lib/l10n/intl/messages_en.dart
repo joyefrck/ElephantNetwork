@@ -148,6 +148,38 @@ class MessageLookup extends MessageLookupByLibrary {
     "allowLanDesc": MessageLookupByLibrary.simpleMessage(
       "Allow access proxy through the LAN",
     ),
+    "apnsApplyFailed": MessageLookupByLibrary.simpleMessage(
+      "Unable to apply push settings",
+    ),
+    "apnsApplying": MessageLookupByLibrary.simpleMessage("Applying…"),
+    "apnsAutomatic": MessageLookupByLibrary.simpleMessage(
+      "Automatic (profile default)",
+    ),
+    "apnsConnection": MessageLookupByLibrary.simpleMessage("APNs connection"),
+    "apnsDirect": MessageLookupByLibrary.simpleMessage("Direct"),
+    "apnsFollowRules": MessageLookupByLibrary.simpleMessage("Follow rules"),
+    "apnsInclude": MessageLookupByLibrary.simpleMessage("Include APNs"),
+    "apnsIncludeDesc": MessageLookupByLibrary.simpleMessage(
+      "Include push service networks in TUN. Turning this off restores the original routing configuration.",
+    ),
+    "apnsModeNotice": MessageLookupByLibrary.simpleMessage(
+      "Global and Direct modes take precedence over this connection setting. Use Rule mode for APNs-specific routing.",
+    ),
+    "apnsOneClick": MessageLookupByLibrary.simpleMessage(
+      "Enable Apple push proxy",
+    ),
+    "apnsOneClickDesc": MessageLookupByLibrary.simpleMessage(
+      "Enables TUN, switches to Rule mode, and routes APNs through the selected proxy outbound.",
+    ),
+    "apnsProxyTarget": MessageLookupByLibrary.simpleMessage("Proxy outbound"),
+    "apnsSaved": MessageLookupByLibrary.simpleMessage("Settings saved"),
+    "apnsTunRequired": MessageLookupByLibrary.simpleMessage(
+      "Requires TUN. The button above enables TUN and configures a proxy outbound.",
+    ),
+    "apnsTunnelNotice": MessageLookupByLibrary.simpleMessage(
+      "Changes affect new connections. Verify notification delivery after reconnecting; this does not guarantee native Apple VPN capture.",
+    ),
+    "apnsViaProxy": MessageLookupByLibrary.simpleMessage("Proxy"),
     "app": MessageLookupByLibrary.simpleMessage("App"),
     "appAccessControl": MessageLookupByLibrary.simpleMessage(
       "App access control",
@@ -1198,6 +1230,10 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "tunUsageScenario": MessageLookupByLibrary.simpleMessage(
       "Games, ChatGPT, Claude, etc.",
+    ),
+    "tunnelSettings": MessageLookupByLibrary.simpleMessage("Tunnel settings"),
+    "tunnelSettingsDesc": MessageLookupByLibrary.simpleMessage(
+      "Configure Apple push notification connections",
     ),
     "turnOff": MessageLookupByLibrary.simpleMessage("Turn Off"),
     "turnOn": MessageLookupByLibrary.simpleMessage("Turn On"),

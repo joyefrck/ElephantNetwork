@@ -192,6 +192,9 @@ abstract class AuthenticationProps with _$AuthenticationProps {
 @freezed
 abstract class NetworkProps with _$NetworkProps {
   const factory NetworkProps({
+    @Default(false) bool includeApns,
+    @Default(ApnsRoute.rule) ApnsRoute apnsRoute,
+    String? apnsProxy,
     @Default(true) bool systemProxy,
     @Default(defaultBypassDomain) List<String> bypassDomain,
     @Default(RouteMode.config) RouteMode routeMode,

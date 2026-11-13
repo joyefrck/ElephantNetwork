@@ -1,6 +1,6 @@
 part of '../action.dart';
 
-enum _SetupTaskResult { completed, handoffToCoreRestart }
+enum _SetupTaskResult { completed, failed, handoffToCoreRestart }
 
 class _RunRequest {
   final bool running;
@@ -318,7 +318,11 @@ class SetupAction extends _$SetupAction {
     );
   }
 
+  Future<void> applyProfileChecked() =>
+      _runSetup(silence: true, throwOnFailure: true);
+
   Future<void> _runSetup({
+    bool throwOnFailure = false,
     bool silence = false,
     bool force = false,
     Future<void> Function()? preloadInvoke,
@@ -334,6 +338,9 @@ class SetupAction extends _$SetupAction {
         },
       );
     });
+    if (result == _SetupTaskResult.failed && throwOnFailure) {
+      throw StateError(currentAppLocalizations.apnsApplyFailed);
+    }
     if (result != _SetupTaskResult.handoffToCoreRestart) {
       return;
     }
@@ -402,6 +409,7 @@ class SetupAction extends _$SetupAction {
         realPatchConfig: realPatchConfig,
         overrideDns: overrideDns,
         appendSystemDns: appendSystemDns,
+        networkProps: ref.read(networkSettingProvider),
         authentication: ref
             .read(networkSettingProvider)
             .authentication
@@ -555,14 +563,17 @@ class SetupAction extends _$SetupAction {
         built.structureMd5 == _appliedStructureMd5 &&
         profile?.id == _appliedProfileId &&
         supportsRuntimeConfig(built.runtimeConfig)) {
-      await globalState.safeRun(() async {
+      final applied = await globalState.safeRun(() async {
         final message = await applyRuntimeSections(built.runtimeConfig);
         if (message.isNotEmpty) throw StateError(message);
         await writeRuntimeProfile(yamlString, yamlMd5);
         globalState.lastConfigMd5 = yamlMd5;
         await preloadInvoke?.call();
+        return true;
       });
-      return _SetupTaskResult.completed;
+      return applied == true
+          ? _SetupTaskResult.completed
+          : _SetupTaskResult.failed;
     }
     if (system.isAndroid) {
       globalState.lastVpnState = ref.read(vpnStateProvider);
@@ -570,7 +581,7 @@ class SetupAction extends _$SetupAction {
       await preferences.saveShareState(sharedState);
       await preferences.saveAppliedConfigMd5(null);
     }
-    await globalState.loadingRun(
+    final applied = await globalState.loadingRun(
       () async {
         final configFilePath = await appPath.configFilePath;
         await File(configFilePath).safeWriteAsString(yamlString);
@@ -596,10 +607,13 @@ class SetupAction extends _$SetupAction {
         }
         ref.read(checkIpNumProvider.notifier).add();
         await onUpdated?.call();
+        return true;
       },
       silence: true,
       tag: !silence ? LoadingTag.proxies : null,
     );
-    return _SetupTaskResult.completed;
+    return applied == true
+        ? _SetupTaskResult.completed
+        : _SetupTaskResult.failed;
   }
 }

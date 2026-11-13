@@ -132,6 +132,18 @@ class _CoreContainerState extends ConsumerState<CoreManager>
         }
       },
     );
+    ref.listenManual(
+      networkSettingProvider.select(
+        (value) => (value.includeApns, value.apnsRoute, value.apnsProxy),
+      ),
+      (previous, next) {
+        if (previous != next && ref.read(initProvider)) {
+          ref
+              .read(setupActionProvider.notifier)
+              .applyProfileDebounce(silence: true);
+        }
+      },
+    );
     ref.listenManual(overrideDnsProvider, (previous, next) {
       if (previous != next && ref.read(initProvider)) {
         ref

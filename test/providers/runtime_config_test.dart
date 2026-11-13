@@ -4,6 +4,8 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/state.dart';
 import 'package:fl_clash/providers/action.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/l10n/l10n.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
 
@@ -45,6 +47,7 @@ class _RuntimeSetupAction extends SetupAction {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() => AppLocalizations.load(const Locale('en')));
   test(
     'failed hot updates keep the accepted digest and allow a later retry',
     () async {
@@ -88,11 +91,13 @@ void main() {
       await action.applyProfile();
       expect(globalState.lastConfigMd5, 'accepted');
       expect(action.written, isEmpty);
+      await expectLater(action.applyProfileChecked(), throwsStateError);
+      expect(globalState.lastConfigMd5, 'accepted');
       action.rejection = '';
       await action.applyProfile();
       expect(globalState.lastConfigMd5, 'new-dns');
       expect(action.written, ['new-dns']);
-      expect(action.runtimeCalls, 2);
+      expect(action.runtimeCalls, 3);
     },
   );
 }
