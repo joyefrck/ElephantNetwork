@@ -16,6 +16,14 @@ on:
         required: false
         type: boolean
         default: false
+      windows_architecture:
+        description: Windows package architecture
+        required: false
+        type: choice
+        default: amd64
+        options:
+          - amd64
+          - arm64
       windows_package_version:
         description: Optional Windows version override including build number
         required: false
@@ -147,7 +155,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include: ${{ fromJSON(inputs.build_windows_only && '[{"platform":"windows","os":"windows-2022","arch":"amd64","target":"exe"}]' || '[{"platform":"windows","os":"windows-2022","arch":"amd64","target":"exe"},{"platform":"macos","os":"macos-latest","arch":"arm64","target":"dmg"}]') }}
+        include: ${{ fromJSON(inputs.windows_architecture == 'arm64' && '[{"platform":"windows","os":"windows-11-arm","arch":"arm64","target":"exe"}]' || inputs.build_windows_only && '[{"platform":"windows","os":"windows-2022","arch":"amd64","target":"exe"}]' || '[{"platform":"windows","os":"windows-2022","arch":"amd64","target":"exe"},{"platform":"macos","os":"macos-latest","arch":"arm64","target":"dmg"}]') }}
 
     steps:
       - name: Checkout
@@ -170,7 +178,19 @@ jobs:
         with:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          architecture: ${{ matrix.platform == 'windows' && 'x64' || 'arm64' }}
           cache: true
+
+      - name: Inspect Windows host architecture
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version, BuildNumber, OSArchitecture
+          Write-Output "Process architecture: $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)"
+          Write-Output "OS architecture: $([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)"
+          Write-Output "PROCESSOR_ARCHITECTURE: $env:PROCESSOR_ARCHITECTURE"
+          rustc -Vv
+          go env GOHOSTARCH
 
       - name: Show Xcode version
         if: matrix.platform == 'macos'
@@ -223,6 +243,15 @@ jobs:
             $install = Start-Process -FilePath $installers[0].FullName -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', "/DIR=`"$installDir`"") -Wait -PassThru
             if ($install.ExitCode -ne 0) { throw "Installer failed: $($install.ExitCode)" }
             $appPath = Join-Path $installDir 'ElephantNetwork.exe'
+            $expectedMachine = if ('${{ matrix.arch }}' -eq 'arm64') { 0xAA64 } else { 0x8664 }
+            $nativeFiles = @(Get-ChildItem $installDir -Recurse -File | Where-Object { $_.Extension -in @('.exe', '.dll') -and $_.Name -notin @('EnableLoopback.exe', 'unins000.exe') })
+            foreach ($nativeFile in $nativeFiles) {
+              $bytes = [IO.File]::ReadAllBytes($nativeFile.FullName)
+              $peOffset = [BitConverter]::ToInt32($bytes, 0x3C)
+              $machine = [BitConverter]::ToUInt16($bytes, $peOffset + 4)
+              Write-Output ("{0}: machine=0x{1:X4}" -f $nativeFile.Name, $machine)
+              if ($machine -ne $expectedMachine) { throw "Wrong native architecture: $($nativeFile.FullName)" }
+            }
             $info = (Get-Item $appPath).VersionInfo
             if ($info.CompanyName -ne 'com.elephantroute' -or $info.ProductName -ne 'ElephantNetwork') { throw 'Windows storage identity is not isolated' }
             if ($info.FileMajorPart -ne $expectedVersion.Major -or $info.FileMinorPart -ne $expectedVersion.Minor -or $info.FileBuildPart -ne $expectedVersion.Build -or $info.FilePrivatePart -ne $expectedBuild) { throw "Unexpected executable version: $($info.FileVersion)" }
