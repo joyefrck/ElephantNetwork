@@ -48,7 +48,7 @@ with tempfile.TemporaryDirectory(prefix='elephant-core-accept-') as temp:
                         raise RuntimeError('Core disconnected')
                     result += part
                 return result
-            def call(method, arguments=None):
+            def call(method, arguments=None, expected_error=None):
                 global counter
                 counter += 1
                 ident = str(counter)
@@ -59,6 +59,9 @@ with tempfile.TemporaryDirectory(prefix='elephant-core-accept-') as temp:
                     answer = json.loads(read_exact(size))
                     if answer.get('id') != ident:
                         continue
+                    if expected_error is not None:
+                        assert answer.get('error', {}).get('code') == expected_error, answer
+                        return answer['error']
                     assert not answer.get('error'), answer
                     if answer.get('file'):
                         path = pathlib.Path(answer['file'])
@@ -69,7 +72,8 @@ with tempfile.TemporaryDirectory(prefix='elephant-core-accept-') as temp:
                         assert answer['id'] == ident
                         checks['large_response'] = {'frame_bytes': size, 'file_bytes': stored}
                     return answer.get('result')
-            assert call('initClash', {'home-dir': str(home), 'version': 20007}) is True
+            assert call('core.init', {'home-dir': str(home), 'version': 22200}) is None
+            assert call('core.initialized') is True
             config = {
                 'mixed-port': 0,
                 'mode': 'rule',
@@ -78,38 +82,38 @@ with tempfile.TemporaryDirectory(prefix='elephant-core-accept-') as temp:
                 'rules': ['MATCH,Exit'],
             }
             (home / 'config.yaml').write_text(json.dumps(config))
-            setup = call('setupConfig', {'selected-map': {'Exit': 'DIRECT'}, 'test-url': 'https://example.com'})
-            assert setup == '', setup
-            before = call('getProxies')
+            setup = call('config.setup', {'selected-map': {'Exit': 'DIRECT'}, 'test-url': 'https://example.com'})
+            assert setup is None, setup
+            before = call('proxy.list')
             patch = {'dns': {**config['dns'], 'cache-max-size': 8192}, 'hosts': {'test.invalid': '127.0.0.2'}, 'ntp': {'enable': False}, 'sniffer': {'enable': False}}
-            assert call('updateRuntimeConfig', patch) == ''
-            after = call('getProxies')
+            assert call('config.updateRuntime', patch) is None
+            after = call('proxy.list')
             if before != after:
                 (home / 'proxies-before.json').write_text(json.dumps(before, indent=2))
                 (home / 'proxies-after.json').write_text(json.dumps(after, indent=2))
             assert before == after
             checks['runtime_update_preserves_groups'] = True
-            failure = call('updateRuntimeConfig', {'dns': {'enable': True, 'nameserver': ['unsupported://resolver']}})
+            failure = call('config.updateRuntime', {'dns': {'enable': True, 'nameserver': ['unsupported://resolver']}}, expected_error='core_error')
             assert failure, failure
-            assert call('getProxies') == before
+            assert call('proxy.list') == before
             checks['invalid_runtime_update_preserves_groups'] = True
-            assert call('clearDnsCache') is True
-            assert call('resetNetwork') is True
+            assert call('dns.clearCache') is None
+            assert call('network.changed') is None
             checks['network_and_cache_methods'] = True
-            fast = call('asyncTestDelay', {'proxy-name': 'DIRECT', 'timeout': 3000, 'test-url': f'http://127.0.0.1:{http.server_port}/fast'})
+            fast = call('proxy.testDelay', {'proxy-name': 'DIRECT', 'timeout': 3000, 'test-url': f'http://127.0.0.1:{http.server_port}/fast'})
             assert fast['value'] >= 1, fast
-            slow = call('asyncTestDelay', {'proxy-name': 'DIRECT', 'timeout': 100, 'test-url': f'http://127.0.0.1:{http.server_port}/slow'})
+            slow = call('proxy.testDelay', {'proxy-name': 'DIRECT', 'timeout': 100, 'test-url': f'http://127.0.0.1:{http.server_port}/slow'})
             assert slow['value'] == -1, slow
             checks['delay_timeout_and_submillisecond_result'] = True
             config['proxies'] = [{'name': f'node-{i}', 'type': 'socks5', 'server': '127.0.0.1', 'port': 1080} for i in range(20000)]
             profile = home / 'large.yaml'
             profile.write_text(json.dumps(config))
-            result = call('getConfig', str(profile))
+            result = call('config.read', {'path': str(profile)})
             assert len(result['proxies']) == 20000
             assert checks['large_response']['file_bytes'] > 1024 * 1024
             assert not list((home / 'responses').glob('*.json'))
             checks['large_response_count'] = 20000
-            assert call('shutdown') is True
+            assert call('core.shutdown') is None
             connection.close()
             proc.wait(timeout=10)
             assert proc.returncode == 0, proc.returncode

@@ -126,6 +126,19 @@ class _EmptyConfigCoreHandler extends _RecordingCoreHandler {
 }
 
 void main() {
+  test('package runtime verifier uses current Core wire methods', () {
+    final verifier = File(
+      '.github/scripts/verify_core_runtime.py',
+    ).readAsStringSync();
+    final methods = RegExp(
+      r"call\('([^']+)'",
+    ).allMatches(verifier).map((match) => match.group(1)!).toSet();
+    expect(methods, isNotEmpty);
+    for (final method in methods) {
+      expect(CoreMethod.fromWireName(method).wireName, method);
+    }
+  });
+
   test('TUN mode changes only its enable flag through config.update', () async {
     final handler = _RecordingCoreHandler();
     await handler.setTunEnabled(true);
