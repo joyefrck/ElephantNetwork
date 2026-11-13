@@ -8,6 +8,7 @@ import 'package:fl_clash/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
+import 'package:yaml/yaml.dart';
 
 class _RuntimeSetupAction extends SetupAction {
   CompiledProfile compiled = (
@@ -48,6 +49,38 @@ class _RuntimeSetupAction extends SetupAction {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() => AppLocalizations.load(const Locale('en')));
+  test('no selected profile produces a valid default configuration', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final action = container.read(setupActionProvider.notifier);
+    final result = await action.getProfile(
+      setupState: const SetupState(
+        profileId: null,
+        profileLastUpdateDate: null,
+        overwriteType: OverwriteType.standard,
+        rules: [],
+        proxyGroups: [],
+        addedRules: [],
+        script: null,
+        overrideDns: false,
+        dns: Dns(),
+      ),
+      patchConfig: const PatchClashConfig(tun: Tun(enable: true)),
+      baseConfig: {
+        'proxies': [
+          {'name': 'Previous account node'},
+        ],
+      },
+    );
+
+    expect(result.a, isNotEmpty);
+    expect(
+      loadYaml(result.a),
+      isA<Map>().having((value) => value.isEmpty, 'empty', isTrue),
+    );
+    expect(result.b, result.a.toMd5());
+    expect(result.b, hasLength(32));
+  });
   test(
     'failed hot updates keep the accepted digest and allow a later retry',
     () async {

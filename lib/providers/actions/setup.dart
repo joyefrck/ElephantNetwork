@@ -365,7 +365,10 @@ class SetupAction extends _$SetupAction {
     void Function(CompiledProfile)? onCompiled,
   }) async {
     final profileId = setupState.profileId;
-    if (profileId == null) return const VM2('', '');
+    if (profileId == null) {
+      const yaml = '{}';
+      return VM2(yaml, yaml.toMd5());
+    }
     final defaultUA = globalState.packageInfo.ua;
     final networkVM2 = ref.read(
       networkSettingProvider.select(
@@ -595,7 +598,7 @@ class SetupAction extends _$SetupAction {
           if (effectiveTunEnable) _fallbackToSystemProxy();
           rethrow;
         }
-        if (message.isNotEmpty && !message.endsWith('is empty')) {
+        if (message.isNotEmpty) {
           if (effectiveTunEnable) _fallbackToSystemProxy();
           throw message;
         }

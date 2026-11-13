@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:fl_clash/common/constant.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yaml/yaml.dart';
 
@@ -125,5 +126,29 @@ void main() {
     expect(targets, hasLength(2));
     expect(targets.first, [('windows', 'exe')]);
     expect(targets.last, [('windows', 'exe'), ('macos', 'dmg')]);
+  });
+
+  test('Windows package acceptance uses the current helper contract', () {
+    final workflow =
+        loadYaml(File('.github/workflows/build.yaml').readAsStringSync())
+            as YamlMap;
+    final steps =
+        workflow['jobs']['unsigned-desktop-build']['steps'] as YamlList;
+    final verification =
+        steps.cast<YamlMap>().singleWhere(
+              (step) => step['name'] == 'Verify Windows installer and helper',
+            )['run']
+            as String;
+
+    expect(
+      verification,
+      contains(r'''-ArgumentList @('install', '--owner-pid', "$PID")'''),
+    );
+    expect(
+      verification,
+      contains(
+        "['x-elephant-network-helper-protocol'] -ne '$helperProtocolVersion'",
+      ),
+    );
   });
 }
