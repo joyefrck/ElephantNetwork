@@ -46,7 +46,10 @@ void main() {
       expect(installer, isNot(contains("'FlClash.exe'")));
       expect(installer, isNot(contains("'/f /im '")));
       expect(installer, contains('GetDirectoryName(\$_.ExecutablePath) -eq'));
-      expect(installer, contains('CompareText(Trim(ImagePath), HelperPath)'));
+      expect(
+        installer,
+        contains('IsOwnedHelperImagePath(ImagePath, HelperPath)'),
+      );
     },
   );
 }
