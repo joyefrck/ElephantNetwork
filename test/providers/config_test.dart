@@ -85,7 +85,8 @@ void main() {
   group('ThemeSetting provider', () {
     test('default value is light mode', () {
       final value = container.read(themeSettingProvider);
-      expect(value.primaryColor, null);
+      expect(value.primaryColor, defaultSkinSeedColor);
+      expect(value.skin, ThemeSkin.ocean);
       expect(value.themeMode, ThemeMode.light);
     });
 

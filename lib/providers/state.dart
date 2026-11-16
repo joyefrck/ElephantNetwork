@@ -513,12 +513,10 @@ ColorScheme genColorScheme(
   Color? color,
   bool ignoreConfig = false,
 }) {
-  final vm2 = ref.watch(
-    themeSettingProvider.select(
-      (state) => VM2(state.primaryColor, state.schemeVariant),
-    ),
+  final primaryColor = ref.watch(
+    themeSettingProvider.select((state) => state.primaryColor),
   );
-  if (color == null && (ignoreConfig == true || vm2.a == null)) {
+  if (color == null && (ignoreConfig == true || primaryColor == null)) {
     return ColorScheme.fromSeed(
       seedColor:
           globalState.corePalette
@@ -526,13 +524,13 @@ ColorScheme genColorScheme(
               .primary ??
           globalState.accentColor,
       brightness: brightness,
-      dynamicSchemeVariant: vm2.b,
+      dynamicSchemeVariant: DynamicSchemeVariant.content,
     );
   }
   return ColorScheme.fromSeed(
-    seedColor: color ?? Color(vm2.a!),
+    seedColor: color ?? Color(primaryColor!),
     brightness: brightness,
-    dynamicSchemeVariant: vm2.b,
+    dynamicSchemeVariant: DynamicSchemeVariant.content,
   );
 }
 

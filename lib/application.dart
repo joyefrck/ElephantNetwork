@@ -11,6 +11,7 @@ import 'package:fl_clash/manager/manager.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/widgets/theme_skin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -43,6 +44,16 @@ class ApplicationState extends ConsumerState<Application> {
     int? primaryColor,
   }) {
     return ref.read(genColorSchemeProvider(brightness));
+  }
+
+  ColorScheme _withMinimalSurface(ColorScheme scheme, ThemeSkin skin) {
+    if (skin != ThemeSkin.none) {
+      return scheme;
+    }
+    return scheme.copyWith(
+      surface: Colors.white,
+      surfaceContainerLowest: Colors.white,
+    );
   }
 
   @override
@@ -140,7 +151,9 @@ class ApplicationState extends ConsumerState<Application> {
   }
 
   Widget _buildApp({required Widget child}) {
-    return StatusManager(child: ThemeManager(child: child));
+    return StatusManager(
+      child: ThemeManager(child: ThemeSkinOverlay(child: child)),
+    );
   }
 
   @override
@@ -178,9 +191,12 @@ class ApplicationState extends ConsumerState<Application> {
           theme: ThemeData(
             useMaterial3: true,
             pageTransitionsTheme: _pageTransitionsTheme,
-            colorScheme: _getAppColorScheme(
-              brightness: Brightness.light,
-              primaryColor: themeProps.primaryColor,
+            colorScheme: _withMinimalSurface(
+              _getAppColorScheme(
+                brightness: Brightness.light,
+                primaryColor: themeProps.primaryColor,
+              ),
+              themeProps.skin,
             ),
           ),
           darkTheme: ThemeData(
@@ -189,7 +205,7 @@ class ApplicationState extends ConsumerState<Application> {
             colorScheme: _getAppColorScheme(
               brightness: Brightness.dark,
               primaryColor: themeProps.primaryColor,
-            ).toPureBlack(themeProps.pureBlack),
+            ),
           ),
           home: child!,
         );

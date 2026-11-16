@@ -84,7 +84,12 @@ class SystemAction extends _$SystemAction {
   Future<void> handleClose([bool exit = true]) async {
     if (ref.read(appSettingProvider).minimizeOnExit || !exit) {
       if (system.isDesktop) {
-        await preferences.saveConfig(ref.read(configProvider));
+        try {
+          await preferences.saveConfig(ref.read(configProvider));
+        } catch (error) {
+          // Hiding the window must not depend on the settings being saved.
+          commonPrint.log('save config on close failed: $error');
+        }
       }
       await system.back();
     } else {

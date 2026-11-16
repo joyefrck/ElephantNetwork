@@ -1,17 +1,20 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/providers/config.dart';
-import 'package:fl_clash/state.dart';
+import 'package:fl_clash/providers/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:material_color_utilities/hct/hct.dart';
+import 'package:path/path.dart' show isWithin, join;
 
 class ThemeModeItem {
   final ThemeMode themeMode;
@@ -44,10 +47,9 @@ class ThemeView extends StatelessWidget {
         slivers: [
           _ThemeModeItem(),
           SliverToBoxAdapter(child: SizedBox(height: 16)),
-          _PrimaryColorItem(),
+          _ThemeSkinItem(),
           SliverToBoxAdapter(child: SizedBox(height: 16)),
-          _PrueBlackItem(),
-          SliverToBoxAdapter(child: SizedBox(height: 16)),
+          _SkinOpacityItem(),
           _TextScaleFactorItem(),
           SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
@@ -154,263 +156,180 @@ class _ThemeModeItem extends ConsumerWidget {
   }
 }
 
-class _PrimaryColorItem extends ConsumerStatefulWidget {
-  const _PrimaryColorItem();
+class _ThemeSkinItem extends ConsumerStatefulWidget {
+  const _ThemeSkinItem();
 
   @override
-  ConsumerState<_PrimaryColorItem> createState() => _PrimaryColorItemState();
+  ConsumerState<_ThemeSkinItem> createState() => _ThemeSkinItemState();
 }
 
-class _PrimaryColorItemState extends ConsumerState<_PrimaryColorItem> {
-  int? _removablePrimaryColor;
+class _ThemeSkinItemState extends ConsumerState<_ThemeSkinItem> {
+  bool _isPicking = false;
 
   int _calcColumns(double maxWidth) {
-    return max((maxWidth / 96).ceil(), 3);
+    return max((maxWidth / 200).floor(), 2);
   }
 
-  Future<void> _handleReset() async {
-    final res = await globalState.showMessage(
-      message: TextSpan(text: context.appLocalizations.resetTip),
-    );
-    if (res != true) {
-      return;
-    }
+  void _selectSkin(ThemeSkin skin) {
     ref.read(themeSettingProvider.notifier).update((state) {
-      return state.copyWith(
-        primaryColors: defaultPrimaryColors,
-        primaryColor: defaultPrimaryColor,
-        schemeVariant: DynamicSchemeVariant.content,
-      );
+      return switch (skin) {
+        ThemeSkin.custom => state.copyWith(skin: skin),
+        _ => state.copyWith(skin: skin, primaryColor: skin.seedColor),
+      };
     });
   }
 
-  Future<void> _handleDel() async {
-    final appLocalizations = context.appLocalizations;
-    if (_removablePrimaryColor == null) {
+  Future<void> _pickImage() async {
+    if (_isPicking) {
       return;
     }
-    final res = await globalState.showMessage(
-      message: TextSpan(
-        text: appLocalizations.deleteTip(appLocalizations.colorSchemes),
-      ),
-    );
-    if (res != true) {
-      return;
-    }
-    ref.read(themeSettingProvider.notifier).update((state) {
-      final newPrimaryColors = List<int>.from(state.primaryColors)
-        ..remove(_removablePrimaryColor);
-      int? newPrimaryColor = state.primaryColor;
-      if (state.primaryColor == _removablePrimaryColor) {
-        if (newPrimaryColors.contains(defaultPrimaryColor)) {
-          newPrimaryColor = defaultPrimaryColor;
-        } else {
-          newPrimaryColor = null;
-        }
-      }
-      return state.copyWith(
-        primaryColors: newPrimaryColors,
-        primaryColor: newPrimaryColor,
-      );
-    });
     setState(() {
-      _removablePrimaryColor = null;
+      _isPicking = true;
     });
+    try {
+      final file = await FilePicker.pickFile(type: FileType.image);
+      if (file == null) {
+        return;
+      }
+      final bytes = await file.readAsBytes();
+      final seed = await _seedColorOf(bytes);
+      final path = await _storeImage(file.extension, bytes);
+      final previous = ref.read(themeSettingProvider).skinImagePath;
+      ref.read(themeSettingProvider.notifier).update((state) {
+        return state.copyWith(
+          skin: ThemeSkin.custom,
+          skinImagePath: path,
+          primaryColor: seed ?? state.primaryColor,
+        );
+      });
+      if (previous != null && previous != path) {
+        await _deleteStoredImage(previous);
+      }
+    } catch (_) {
+      if (mounted) {
+        context.showNotifier(context.appLocalizations.skinImageFailed);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPicking = false;
+        });
+      }
+    }
   }
 
-  Future<void> _handleAdd() async {
-    final appLocalizations = context.appLocalizations;
-    final res = await globalState.showCommonDialog<int>(
-      child: const _PaletteDialog(),
-    );
-    if (res == null) {
-      return;
-    }
-    final isExists = ref.read(
-      themeSettingProvider.select((state) => state.primaryColors.contains(res)),
-    );
-    if (isExists && mounted) {
-      context.showNotifier(
-        appLocalizations.existsTip(appLocalizations.colorSchemes),
+  Future<int?> _seedColorOf(Uint8List bytes) async {
+    try {
+      final scheme = await ColorScheme.fromImageProvider(
+        provider: ResizeImage(MemoryImage(bytes), width: 112, height: 112),
       );
-      return;
+      return scheme.primary.toARGB32();
+    } catch (_) {
+      return null;
     }
-    ref.read(themeSettingProvider.notifier).update((state) {
-      return state.copyWith(
-        primaryColors: List.from(state.primaryColors)..add(res),
-      );
-    });
   }
 
-  Future<void> _handleChangeSchemeVariant() async {
-    final schemeVariant = ref.read(
-      themeSettingProvider.select((state) => state.schemeVariant),
+  Future<String> _storeImage(String? extension, Uint8List bytes) async {
+    final directory = Directory(join(await appPath.homeDirPath, 'theme'));
+    await directory.create(recursive: true);
+    final suffix = (extension == null || extension.isEmpty)
+        ? 'img'
+        : extension.toLowerCase();
+    final path = join(
+      directory.path,
+      'skin_${DateTime.now().millisecondsSinceEpoch}.$suffix',
     );
-    final value = await globalState.showCommonDialog<DynamicSchemeVariant>(
-      child: OptionsDialog<DynamicSchemeVariant>(
-        title: context.appLocalizations.colorSchemes,
-        options: DynamicSchemeVariant.values,
-        textBuilder: (item) => Intl.message('${item.name}Scheme'),
-        value: schemeVariant,
-      ),
-    );
-    if (value == null) {
+    await File(path).writeAsBytes(bytes, flush: true);
+    return path;
+  }
+
+  Future<void> _deleteStoredImage(String path) async {
+    final directory = join(await appPath.homeDirPath, 'theme');
+    if (!isWithin(directory, path)) {
       return;
     }
-    ref.read(themeSettingProvider.notifier).update((state) {
-      return state.copyWith(schemeVariant: value);
-    });
+    final file = File(path);
+    if (await file.exists()) {
+      await file.delete();
+    }
+  }
+
+  void _handleTap(ThemeSkin skin, String? imagePath) {
+    if (skin == ThemeSkin.custom && (imagePath == null || imagePath.isEmpty)) {
+      _pickImage();
+      return;
+    }
+    _selectSkin(skin);
   }
 
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    final vm4 = ref.watch(
+    final currentSkin = ref.watch(
+      themeSettingProvider.select((state) => state.skin),
+    );
+    final imagePath = ref.watch(
+      themeSettingProvider.select((state) => state.skinImagePath),
+    );
+    final customSeed = ref.watch(
       themeSettingProvider.select(
-        (state) => VM4(
-          state.primaryColor,
-          state.primaryColors,
-          state.schemeVariant,
-          state.primaryColor == defaultPrimaryColor &&
-              intListEquality.equals(
-                state.primaryColors,
-                defaultPrimaryColors,
-              ) &&
-              state.schemeVariant == DynamicSchemeVariant.content,
-        ),
+        (state) => state.skin == ThemeSkin.custom ? state.primaryColor : null,
       ),
     );
-    final primaryColor = vm4.a;
-    final primaryColors = [null, ...vm4.b];
-    final schemeVariant = vm4.c;
-    final isEquals = vm4.d;
-
+    final hasImage = imagePath != null && imagePath.isNotEmpty;
     return SliverToBoxAdapter(
-      child: CommonPopScope(
-        onPop: (context) {
-          if (_removablePrimaryColor != null) {
-            setState(() {
-              _removablePrimaryColor = null;
-            });
-            return false;
-          }
-          return true;
-        },
-        child: ItemCard(
-          info: Info(
-            label: appLocalizations.themeColor,
-            iconData: Icons.palette,
-          ),
-          actions: genActions([
-            if (_removablePrimaryColor == null)
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                ),
-                onPressed: _handleChangeSchemeVariant,
-                child: Text(Intl.message('${schemeVariant.name}Scheme')),
-              ),
-            if (_removablePrimaryColor != null)
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _removablePrimaryColor = null;
-                  });
-                },
-                child: Text(appLocalizations.cancel),
-              ),
-            if (_removablePrimaryColor == null && !isEquals)
-              IconButton.filledTonal(
-                iconSize: 20,
-                padding: const EdgeInsets.all(4),
+      child: ItemCard(
+        info: Info(
+          label: appLocalizations.themeSkin,
+          iconData: Icons.wallpaper,
+        ),
+        actions: genActions([
+          if (currentSkin == ThemeSkin.custom && hasImage)
+            FilledButton.tonalIcon(
+              style: FilledButton.styleFrom(
                 visualDensity: VisualDensity.compact,
-                onPressed: _handleReset,
-                icon: const Icon(Icons.replay),
               ),
-          ], space: 8),
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            child: LayoutBuilder(
-              builder: (_, constraints) {
-                final columns = _calcColumns(constraints.maxWidth);
-                final itemWidth =
-                    (constraints.maxWidth - (columns - 1) * 16) / columns;
-                return Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  children: [
-                    for (final color in primaryColors)
-                      Container(
-                        clipBehavior: Clip.none,
-                        width: itemWidth,
-                        height: itemWidth,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          clipBehavior: Clip.none,
-                          children: [
-                            EffectGestureDetector(
-                              child: ColorSchemeBox(
-                                isSelected: color == primaryColor,
-                                primaryColor: color != null
-                                    ? Color(color)
-                                    : null,
-                                onPressed: () {
-                                  setState(() {
-                                    _removablePrimaryColor = null;
-                                  });
-                                  ref
-                                      .read(themeSettingProvider.notifier)
-                                      .update(
-                                        (state) =>
-                                            state.copyWith(primaryColor: color),
-                                      );
-                                },
-                              ),
-                              onLongPress: () {
-                                setState(() {
-                                  _removablePrimaryColor = color;
-                                });
-                              },
-                            ),
-                            if (_removablePrimaryColor != null &&
-                                _removablePrimaryColor == color)
-                              Container(
-                                color: Colors.white.opacity0,
-                                padding: const EdgeInsets.all(8),
-                                child: IconButton.filledTonal(
-                                  onPressed: _handleDel,
-                                  padding: const EdgeInsets.all(12),
-                                  iconSize: 30,
-                                  icon: Icon(
-                                    color: context.colorScheme.primary,
-                                    Icons.delete,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    if (_removablePrimaryColor == null)
-                      Container(
-                        width: itemWidth,
-                        height: itemWidth,
-                        padding: const EdgeInsets.all(4),
-                        child: IconButton.filledTonal(
-                          onPressed: _handleAdd,
-                          iconSize: 32,
-                          icon: Icon(
-                            color: context.colorScheme.primary,
-                            Icons.add,
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
+              onPressed: _isPicking ? null : _pickImage,
+              icon: const Icon(Icons.image_outlined, size: 18),
+              label: Text(appLocalizations.skinChangeImage),
             ),
+        ], space: 8),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: LayoutBuilder(
+            builder: (_, constraints) {
+              final columns = _calcColumns(constraints.maxWidth);
+              final itemWidth =
+                  (constraints.maxWidth - (columns - 1) * 16) / columns;
+              return Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  for (final skin in ThemeSkin.values)
+                    SizedBox(
+                      width: itemWidth,
+                      child: ThemeSkinCard(
+                        key: ValueKey('theme_skin_${skin.name}'),
+                        skin: skin,
+                        label: _skinLabel(appLocalizations, skin),
+                        seedColor: switch (skin) {
+                          ThemeSkin.custom =>
+                            customSeed ?? defaultSkinSeedColor,
+                          _ => skin.seedColor!,
+                        },
+                        imagePath: imagePath,
+                        hint: skin == ThemeSkin.custom && !hasImage
+                            ? appLocalizations.skinPickImage
+                            : null,
+                        isSelected:
+                            currentSkin == skin &&
+                            (skin != ThemeSkin.custom || hasImage),
+                        onPressed: () => _handleTap(skin, imagePath),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -418,31 +337,230 @@ class _PrimaryColorItemState extends ConsumerState<_PrimaryColorItem> {
   }
 }
 
-class _PrueBlackItem extends ConsumerWidget {
-  const _PrueBlackItem();
+String _skinLabel(AppLocalizations appLocalizations, ThemeSkin skin) {
+  return switch (skin) {
+    ThemeSkin.none => appLocalizations.skinNone,
+    ThemeSkin.crayon => appLocalizations.skinCrayon,
+    ThemeSkin.ocean => appLocalizations.skinOcean,
+    ThemeSkin.sakura => appLocalizations.skinSakura,
+    ThemeSkin.starry => appLocalizations.skinStarry,
+    ThemeSkin.kitty => appLocalizations.skinKitty,
+    ThemeSkin.detective => appLocalizations.skinDetective,
+    ThemeSkin.captain => appLocalizations.skinCaptain,
+    ThemeSkin.lantern => appLocalizations.skinLantern,
+    ThemeSkin.custom => appLocalizations.skinCustom,
+  };
+}
+
+class ThemeSkinCard extends ConsumerWidget {
+  final ThemeSkin skin;
+  final String label;
+  final int seedColor;
+  final String? imagePath;
+  final String? hint;
+  final bool isSelected;
+  final VoidCallback onPressed;
+
+  const ThemeSkinCard({
+    super.key,
+    required this.skin,
+    required this.label,
+    required this.seedColor,
+    required this.isSelected,
+    required this.onPressed,
+    this.imagePath,
+    this.hint,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final appLocalizations = context.appLocalizations;
-    final prueBlack = ref.watch(
-      themeSettingProvider.select((state) => state.pureBlack),
+    final brightness = Theme.of(context).brightness;
+    final scheme = ref.watch(
+      genColorSchemeProvider(brightness, color: Color(seedColor)),
     );
-    return SliverToBoxAdapter(
-      child: ListItem.toggle(
-        leading: const Icon(Icons.contrast),
-        horizontalTitleGap: 12,
-        title: Text(
-          appLocalizations.pureBlackMode,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            color: context.colorScheme.onSurfaceVariant,
-          ),
+    final layer = ThemeSkinLayer(skin: skin, imagePath: imagePath);
+    return CommonCard(
+      isSelected: isSelected,
+      onPressed: onPressed,
+      padding: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AspectRatio(
+              aspectRatio: 1.6,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Theme(
+                  data: Theme.of(context).copyWith(colorScheme: scheme),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      DecoratedBox(
+                        decoration: skin == ThemeSkin.none
+                            ? BoxDecoration(
+                                color: brightness == Brightness.light
+                                    ? Colors.white
+                                    : scheme.surface,
+                                border: Border.all(
+                                  color: scheme.outlineVariant,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              )
+                            : BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    scheme.surfaceContainerLowest,
+                                    scheme.primaryContainer,
+                                  ],
+                                ),
+                              ),
+                      ),
+                      if (layer.isVisible)
+                        Opacity(
+                          opacity: skin == ThemeSkin.custom ? 0.85 : 0.6,
+                          child: layer,
+                        ),
+                      if (hint != null)
+                        Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.add_photo_alternate_outlined,
+                                color: scheme.primary,
+                                size: 28,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                hint!,
+                                style: context.textTheme.labelMedium?.copyWith(
+                                  color: scheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (isSelected)
+                        const Positioned(top: 6, right: 6, child: SelectIcon()),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 8, 6, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.titleSmall,
+                    ),
+                  ),
+                  for (final color in [
+                    scheme.primary,
+                    scheme.secondary,
+                    scheme.tertiary,
+                  ])
+                    Container(
+                      margin: const EdgeInsets.only(left: 4),
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
-        value: prueBlack,
-        onChanged: (value) {
-          ref
-              .read(themeSettingProvider.notifier)
-              .update((state) => state.copyWith(pureBlack: value));
-        },
+      ),
+    );
+  }
+}
+
+class _SkinOpacityItem extends ConsumerWidget {
+  const _SkinOpacityItem();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final vm2 = ref.watch(
+      themeSettingProvider.select(
+        (state) => VM2(
+          ThemeSkinLayer(
+            skin: state.skin,
+            imagePath: state.skinImagePath,
+          ).isVisible,
+          state.skinOpacity,
+        ),
+      ),
+    );
+    if (!vm2.a) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+    final opacity = vm2.b.clamp(minSkinOpacity, maxSkinOpacity);
+    final percent = (opacity * 100).round();
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListItem(
+              leading: const Icon(Icons.opacity),
+              horizontalTitleGap: 12,
+              title: Text(
+                context.appLocalizations.skinOpacity,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                spacing: 32,
+                children: [
+                  Expanded(
+                    child: SliderTheme(
+                      data: SliderDefaultsM3(context),
+                      child: Slider(
+                        key: const ValueKey('theme_skin_opacity'),
+                        padding: EdgeInsets.zero,
+                        min: minSkinOpacity,
+                        max: maxSkinOpacity,
+                        value: opacity,
+                        onChanged: (value) {
+                          ref
+                              .read(themeSettingProvider.notifier)
+                              .update(
+                                (state) => state.copyWith(skinOpacity: value),
+                              );
+                        },
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Text(
+                      '$percent%',
+                      style: context.textTheme.titleMedium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -520,45 +638,6 @@ class _TextScaleFactorItem extends ConsumerWidget {
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PaletteDialog extends StatefulWidget {
-  const _PaletteDialog();
-
-  @override
-  State<_PaletteDialog> createState() => _PaletteDialogState();
-}
-
-class _PaletteDialogState extends State<_PaletteDialog> {
-  final _controller = ValueNotifier<Color>(Color(Hct.from(0, 0, 60).toInt()));
-
-  @override
-  Widget build(BuildContext context) {
-    final appLocalizations = context.appLocalizations;
-    return CommonDialog(
-      title: appLocalizations.palette,
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text(appLocalizations.cancel),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(_controller.value.toARGB32());
-          },
-          child: Text(appLocalizations.confirm),
-        ),
-      ],
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(width: 300, child: Palette(controller: _controller)),
         ],
       ),
     );

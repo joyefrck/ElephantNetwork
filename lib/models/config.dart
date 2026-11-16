@@ -34,7 +34,7 @@ const defaultNetworkProps = NetworkProps();
 const defaultProxiesStyleProps = ProxiesStyleProps();
 const defaultWindowProps = WindowProps();
 const defaultAccessControlProps = AccessControlProps();
-const defaultThemeProps = ThemeProps(primaryColor: defaultPrimaryColor);
+const defaultThemeProps = ThemeProps(primaryColor: defaultSkinSeedColor);
 
 const List<DashboardWidget> defaultDashboardWidgets = [
   DashboardWidget.networkSpeed,
@@ -237,11 +237,13 @@ abstract class TextScale with _$TextScale {
 abstract class ThemeProps with _$ThemeProps {
   const factory ThemeProps({
     int? primaryColor,
-    @Default(defaultPrimaryColors) List<int> primaryColors,
     @Default(ThemeMode.light) ThemeMode themeMode,
-    @Default(DynamicSchemeVariant.content) DynamicSchemeVariant schemeVariant,
-    @Default(false) bool pureBlack,
     @Default(TextScale()) TextScale textScale,
+    @JsonKey(unknownEnumValue: ThemeSkin.none)
+    @Default(ThemeSkin.ocean)
+    ThemeSkin skin,
+    String? skinImagePath,
+    @Default(defaultSkinOpacity) double skinOpacity,
   }) = _ThemeProps;
 
   factory ThemeProps.fromJson(Map<String, Object?> json) =>
@@ -252,10 +254,21 @@ abstract class ThemeProps with _$ThemeProps {
       return defaultThemeProps;
     }
     try {
-      return ThemeProps.fromJson(json);
+      return ThemeProps.fromJson(_withDefaultSkinColor(json));
     } catch (_) {
       return defaultThemeProps;
     }
+  }
+
+  static Map<String, Object?> _withDefaultSkinColor(Map<String, Object?> json) {
+    if (json.containsKey('skin')) {
+      return json;
+    }
+    final primaryColor = json['primaryColor'];
+    if (primaryColor != null && primaryColor != defaultPrimaryColor) {
+      return json;
+    }
+    return {...json, 'primaryColor': defaultSkinSeedColor};
   }
 }
 

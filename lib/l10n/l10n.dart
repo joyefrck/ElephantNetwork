@@ -1664,16 +1664,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Pure black mode`
-  String get pureBlackMode {
-    return Intl.message(
-      'Pure black mode',
-      name: 'pureBlackMode',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Tcp keep alive interval`
   String get keepAliveIntervalDesc {
     return Intl.message(
@@ -2674,86 +2664,6 @@ class AppLocalizations {
     return Intl.message(
       'Effective only in mobile view',
       name: 'tabAnimationDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Color schemes`
-  String get colorSchemes {
-    return Intl.message(
-      'Color schemes',
-      name: 'colorSchemes',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Palette`
-  String get palette {
-    return Intl.message('Palette', name: 'palette', desc: '', args: []);
-  }
-
-  /// `TonalSpot`
-  String get tonalSpotScheme {
-    return Intl.message(
-      'TonalSpot',
-      name: 'tonalSpotScheme',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Fidelity`
-  String get fidelityScheme {
-    return Intl.message('Fidelity', name: 'fidelityScheme', desc: '', args: []);
-  }
-
-  /// `Monochrome`
-  String get monochromeScheme {
-    return Intl.message(
-      'Monochrome',
-      name: 'monochromeScheme',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Neutral`
-  String get neutralScheme {
-    return Intl.message('Neutral', name: 'neutralScheme', desc: '', args: []);
-  }
-
-  /// `Vibrant`
-  String get vibrantScheme {
-    return Intl.message('Vibrant', name: 'vibrantScheme', desc: '', args: []);
-  }
-
-  /// `Expressive`
-  String get expressiveScheme {
-    return Intl.message(
-      'Expressive',
-      name: 'expressiveScheme',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Content`
-  String get contentScheme {
-    return Intl.message('Content', name: 'contentScheme', desc: '', args: []);
-  }
-
-  /// `Rainbow`
-  String get rainbowScheme {
-    return Intl.message('Rainbow', name: 'rainbowScheme', desc: '', args: []);
-  }
-
-  /// `FruitSalad`
-  String get fruitSaladScheme {
-    return Intl.message(
-      'FruitSalad',
-      name: 'fruitSaladScheme',
       desc: '',
       args: [],
     );
@@ -5599,6 +5509,126 @@ class AppLocalizations {
     return Intl.message(
       'Enables TUN, switches to Rule mode, and routes APNs through the selected proxy outbound.',
       name: 'apnsOneClickDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Theme skin`
+  String get themeSkin {
+    return Intl.message('Theme skin', name: 'themeSkin', desc: '', args: []);
+  }
+
+  /// `Minimal`
+  String get skinNone {
+    return Intl.message('Minimal', name: 'skinNone', desc: '', args: []);
+  }
+
+  /// `Crayon doodle`
+  String get skinCrayon {
+    return Intl.message(
+      'Crayon doodle',
+      name: 'skinCrayon',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ocean voyage`
+  String get skinOcean {
+    return Intl.message('Ocean voyage', name: 'skinOcean', desc: '', args: []);
+  }
+
+  /// `Sakura`
+  String get skinSakura {
+    return Intl.message('Sakura', name: 'skinSakura', desc: '', args: []);
+  }
+
+  /// `Starry night`
+  String get skinStarry {
+    return Intl.message('Starry night', name: 'skinStarry', desc: '', args: []);
+  }
+
+  /// `My picture`
+  String get skinCustom {
+    return Intl.message('My picture', name: 'skinCustom', desc: '', args: []);
+  }
+
+  /// `Choose picture`
+  String get skinPickImage {
+    return Intl.message(
+      'Choose picture',
+      name: 'skinPickImage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Change picture`
+  String get skinChangeImage {
+    return Intl.message(
+      'Change picture',
+      name: 'skinChangeImage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Background strength`
+  String get skinOpacity {
+    return Intl.message(
+      'Background strength',
+      name: 'skinOpacity',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unable to read this picture`
+  String get skinImageFailed {
+    return Intl.message(
+      'Unable to read this picture',
+      name: 'skinImageFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Kitty afternoon`
+  String get skinKitty {
+    return Intl.message(
+      'Kitty afternoon',
+      name: 'skinKitty',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Little detective`
+  String get skinDetective {
+    return Intl.message(
+      'Little detective',
+      name: 'skinDetective',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Little captain`
+  String get skinCaptain {
+    return Intl.message(
+      'Little captain',
+      name: 'skinCaptain',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Lantern night`
+  String get skinLantern {
+    return Intl.message(
+      'Lantern night',
+      name: 'skinLantern',
       desc: '',
       args: [],
     );

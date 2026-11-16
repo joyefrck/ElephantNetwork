@@ -303,34 +303,31 @@ Map<String, dynamic> _$TextScaleToJson(_TextScale instance) =>
 
 _ThemeProps _$ThemePropsFromJson(Map<String, dynamic> json) => _ThemeProps(
   primaryColor: (json['primaryColor'] as num?)?.toInt(),
-  primaryColors:
-      (json['primaryColors'] as List<dynamic>?)
-          ?.map((e) => (e as num).toInt())
-          .toList() ??
-      defaultPrimaryColors,
   themeMode:
       $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
       ThemeMode.light,
-  schemeVariant:
-      $enumDecodeNullable(
-        _$DynamicSchemeVariantEnumMap,
-        json['schemeVariant'],
-      ) ??
-      DynamicSchemeVariant.content,
-  pureBlack: json['pureBlack'] as bool? ?? false,
   textScale: json['textScale'] == null
       ? const TextScale()
       : TextScale.fromJson(json['textScale'] as Map<String, dynamic>),
+  skin:
+      $enumDecodeNullable(
+        _$ThemeSkinEnumMap,
+        json['skin'],
+        unknownValue: ThemeSkin.none,
+      ) ??
+      ThemeSkin.ocean,
+  skinImagePath: json['skinImagePath'] as String?,
+  skinOpacity: (json['skinOpacity'] as num?)?.toDouble() ?? defaultSkinOpacity,
 );
 
 Map<String, dynamic> _$ThemePropsToJson(_ThemeProps instance) =>
     <String, dynamic>{
       'primaryColor': instance.primaryColor,
-      'primaryColors': instance.primaryColors,
       'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
-      'schemeVariant': _$DynamicSchemeVariantEnumMap[instance.schemeVariant]!,
-      'pureBlack': instance.pureBlack,
       'textScale': instance.textScale,
+      'skin': _$ThemeSkinEnumMap[instance.skin]!,
+      'skinImagePath': instance.skinImagePath,
+      'skinOpacity': instance.skinOpacity,
     };
 
 const _$ThemeModeEnumMap = {
@@ -339,16 +336,17 @@ const _$ThemeModeEnumMap = {
   ThemeMode.dark: 'dark',
 };
 
-const _$DynamicSchemeVariantEnumMap = {
-  DynamicSchemeVariant.tonalSpot: 'tonalSpot',
-  DynamicSchemeVariant.fidelity: 'fidelity',
-  DynamicSchemeVariant.monochrome: 'monochrome',
-  DynamicSchemeVariant.neutral: 'neutral',
-  DynamicSchemeVariant.vibrant: 'vibrant',
-  DynamicSchemeVariant.expressive: 'expressive',
-  DynamicSchemeVariant.content: 'content',
-  DynamicSchemeVariant.rainbow: 'rainbow',
-  DynamicSchemeVariant.fruitSalad: 'fruitSalad',
+const _$ThemeSkinEnumMap = {
+  ThemeSkin.none: 'none',
+  ThemeSkin.crayon: 'crayon',
+  ThemeSkin.ocean: 'ocean',
+  ThemeSkin.sakura: 'sakura',
+  ThemeSkin.starry: 'starry',
+  ThemeSkin.kitty: 'kitty',
+  ThemeSkin.detective: 'detective',
+  ThemeSkin.captain: 'captain',
+  ThemeSkin.lantern: 'lantern',
+  ThemeSkin.custom: 'custom',
 };
 
 _Config _$ConfigFromJson(Map<String, dynamic> json) => _Config(

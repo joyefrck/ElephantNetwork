@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:fl_clash/common/constant.dart';
 import 'package:fl_clash/common/context.dart';
 import 'package:fl_clash/common/system.dart';
 import 'package:fl_clash/views/dashboard/widgets/widgets.dart';
@@ -540,3 +541,20 @@ enum IpQualitySource {
 }
 
 enum IpQualitySourceStatus { noType, timeout, rateLimited, failed, ipMismatch }
+
+enum ThemeSkin {
+  none(minimalSkinSeedColor),
+  crayon(0xFFF4A259),
+  ocean(defaultSkinSeedColor),
+  sakura(0xFFE68AA6),
+  starry(0xFF5C5BD4),
+  kitty(0xFFF29A4A),
+  detective(0xFF9C7448),
+  captain(0xFF2E7FD0),
+  lantern(0xFF8A5CD6),
+  custom(null);
+
+  const ThemeSkin(this.seedColor);
+
+  final int? seedColor;
+}

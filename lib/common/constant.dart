@@ -125,6 +125,12 @@ const profilesStoreKey = PageStorageKey<String>('profiles');
 
 const defaultPrimaryColor = 0XFFD8C0C3;
 
+const defaultSkinSeedColor = 0xFF2B7BB9;
+const minimalSkinSeedColor = 0xFFFFFFFF;
+const defaultSkinOpacity = 0.12;
+const minSkinOpacity = 0.04;
+const maxSkinOpacity = 0.3;
+
 double getWidgetHeight(num lines) {
   final space = 14.mAp;
   return max(lines * (80.ap + space) - space, 0);
@@ -135,16 +141,6 @@ const maxLength = 1000;
 const mainIsolate = 'FlClashMainIsolate';
 
 const serviceIsolate = 'FlClashServiceIsolate';
-
-const defaultPrimaryColors = [
-  0xFF795548,
-  0xFF03A9F4,
-  0xFFFFFF00,
-  0XFFBBC9CC,
-  0XFFABD397,
-  defaultPrimaryColor,
-  0XFF665390,
-];
 
 const scriptTemplate = '''
 const main = (config) => {

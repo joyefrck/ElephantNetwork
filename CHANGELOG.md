@@ -1,5 +1,10 @@
 ## v2.2.0
 
+- Add named theme skins with original Crayon doodle, Ocean voyage, Sakura and Starry night artwork, plus a custom background picture with adjustable strength; Ocean voyage is the default.
+- Add original anime-style character skins: Kitty afternoon, Little detective, Little captain and Lantern night.
+- Rename the plain skin to Minimal with a pure white color scheme, and remove the custom colors section and pure black mode.
+- Fix character skins not being saved, which also stopped the window close button from hiding the window; closing now hides the window even if saving settings fails.
+
 - Remove the duplicate dashboard mode selector and memory card, including from existing saved layouts.
 - Use a transparent black-and-green dashboard navigation mark sized consistently with the other menu icons.
 
